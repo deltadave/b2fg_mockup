@@ -85,26 +85,21 @@ $(function(){ //update button value to selection and call
       charURL = `https://raw.githubusercontent.com/deltadave/DandD_Beyond-2-FantasyGrounds/master/data/xerseris.json`
     }
 
-    characterJSON = fetchJSON(charURL)
-    console.log(characterJSON)
-    removeEmpty(characterJSON)
-    showCharacter(characterJSON)
+    fetch(charURL)
+      .then(function(resp) {
+         return resp.json()
+      })
+      .then(function(data) {
+         console.log(data)
+         characterJSON = data
+         removeEmpty(characterJSON)
+         showCharacter(characterJSON)
+      })
+      .catch(function(error) {
+         console.log('Looks like there was a problem: \n', error);
+      })
+
     /*
-
-        fetch(charURL)
-            .then(function(resp) {
-              return resp.json()
-            })
-            .then(function(data) {
-              console.log(data)
-              characterJSON = data
-              removeEmpty(characterJSON)
-              showCharacter()
-            })
-            .catch(function(error) {
-              console.log('Looks like there was a problem: \n', error);
-            })
-
 
         //let y = document.createTextNode("characterJSON.valueOf()")
         //outputElement.appendChild(y)
@@ -115,6 +110,10 @@ $(function(){ //update button value to selection and call
           cache: 'default',
         });
 
+    characterJSON = fetchJSON(charURL)
+    console.log(characterJSON)
+    removeEmpty(characterJSON)
+    showCharacter(characterJSON)
 
             /*
             then(function (response) {
