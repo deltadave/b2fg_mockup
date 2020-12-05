@@ -3,7 +3,6 @@ characterID = 0
 charFmt = ''
 charURL = ''
 const outputElement = document.getElementById("characterXMLData")
-const myHeaders = new Headers();
 
 function characterTypeButton() {
   document.getElementById("exportCharType").innerHTML = `
@@ -17,62 +16,124 @@ function characterTypeButton() {
 
 characterTypeButton()
 
+let characterJSON;
+
+const removeEmpty = (obj) => {
+  Object.keys(obj).forEach(k =>
+      (obj[k] && typeof obj[k] === 'object') && removeEmpty(obj[k]) ||
+      //(obj[k] && obj[k] instanceof Array && !obj[k].length) && removeEmpty(obj[k]) ||
+      (!obj[k] && obj[k] !== undefined) && delete obj[k]
+  )
+  for(let prop in obj) {
+    if (prop && obj[prop] instanceof Array && !obj[prop].length) {
+      delete obj[prop]
+    }
+  }
+  return obj;
+}
+
+const showCharacter =  (obj) => {
+  for (let prop in obj ) {
+      console.log(prop)
+      console.log(obj[prop])
+  }
+}
+
+var myHeaders = new Headers({
+  'mode': 'no-cors'
+});
+
+function logResult(result) {
+  console.log(result)
+}
+
+function logError(result) {
+  console.log("Looks like there was a problem: \n", error)
+}
+
+function validateResponse(response) {
+  if (!response.ok) {
+    throw Error(response.statusText)
+  }
+  return response
+}
+
+function readResponseAsJSON(response) {
+  return response.json()
+}
+
+function fetchJSON(resourceURL) {
+  fetch(resourceURL, {
+    headers: myHeaders
+  })
+      .then(validateResponse)
+      .then(readResponseAsJSON)
+      .then(logResult)
+      .catch(logError)
+}
+
 $(function(){ //update button value to selection and call
   $(".dropdown-menu a").click(function(){
     $(".btn:first-child").text($(this).text())
     $(".btn:first-child").val($(this).text())
     characterID = $("#charID").val()
     charFmt = $(this).text()
-/*
+
     if (!debug) {
       charURL = `https://www.dndbeyond.com/character/${characterID}/json`
     } else {
       charURL = `https://raw.githubusercontent.com/deltadave/DandD_Beyond-2-FantasyGrounds/master/data/xerseris.json`
     }
 
-    const myRequest = new Request( charURL, {
-      method: 'GET',
-      headers: myHeaders,
-      mode: 'no-cors',
-      cache: 'default',
-    });
-
-    async function fetchCharacter() {
-      const response = await fetch(charURL)
-      if (!response.ok) {
-        const message = `An error has occured: ${response.status}`
-        throw new Error(message)
-      }
-
-      const character = await response.json()
-      return character
-    }
-
-    const characterJSON = fetchCharacter()
-
+    characterJSON = fetchJSON(charURL)
     console.log(characterJSON)
-    //let y = document.createTextNode("characterJSON.valueOf()")
-    //outputElement.appendChild(y)
+    removeEmpty(characterJSON)
+    showCharacter(characterJSON)
+    /*
+
+        fetch(charURL)
+            .then(function(resp) {
+              return resp.json()
+            })
+            .then(function(data) {
+              console.log(data)
+              characterJSON = data
+              removeEmpty(characterJSON)
+              showCharacter()
+            })
+            .catch(function(error) {
+              console.log('Looks like there was a problem: \n', error);
+            })
 
 
-        /*
-        then(function (response) {
-          if (!response.ok) {
-            console.log('Error: ', response)
-          }
-          return response.json();
-        })
-            .then(function (json) {
-              document.write(json.value)
+        //let y = document.createTextNode("characterJSON.valueOf()")
+        //outputElement.appendChild(y)
+        const myRequest = new Request( charURL, {
+          method: 'GET',
+          headers: myHeaders,
+          mode: 'no-cors',
+          cache: 'default',
+        });
+
+
+            /*
+            then(function (response) {
+              if (!response.ok) {
+                console.log('Error: ', response)
+              }
+              return response.json();
             })
-            .catch(function (error) {
-              var p = document.createElement('p')
-              p.appendChild(
-                  document.createTextNode('Error: ' + error.message)
-              )
-              document.body.insertBefore(p, outputElement)
-            })
-         */
+                .then(function (json) {
+                  document.write(json.value)
+                })
+                .catch(function (error) {
+                  var p = document.createElement('p')
+                  p.appendChild(
+                      document.createTextNode('Error: ' + error.message)
+                  )
+                  document.body.insertBefore(p, outputElement)
+                })
+             */
 
   });
 });
