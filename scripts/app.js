@@ -1,4 +1,4 @@
-debug = true
+debug = false
 characterID = 0
 charFmt = ''
 charURL = ''
@@ -85,7 +85,9 @@ $(function(){ //update button value to selection and call
       charURL = `https://raw.githubusercontent.com/deltadave/DandD_Beyond-2-FantasyGrounds/master/data/xerseris.json`
     }
 
-    fetch(charURL)
+    fetch(charURL, {
+      headers: myHeaders
+    })
       .then(function(resp) {
          return resp.json()
       })
