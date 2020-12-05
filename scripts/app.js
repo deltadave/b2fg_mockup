@@ -80,15 +80,15 @@ $(function(){ //update button value to selection and call
     characterID = $("#charID").val()
     charFmt = $(this).text()
 
+    const proxyurl = "https://cors-anywhere.herokuapp.com/";
+
     if (!debug) {
       charURL = `https://www.dndbeyond.com/character/${characterID}/json`
     } else {
       charURL = `https://raw.githubusercontent.com/deltadave/DandD_Beyond-2-FantasyGrounds/master/data/xerseris.json`
     }
 
-    fetch(charURL, {
-      headers: myHeaders
-    })
+    fetch(proxyurl + charURL)
       .then(function(resp) {
          return resp.json()
       })
