@@ -40,6 +40,7 @@ const showCharacter =  (obj) => {
 }
 
 var myHeaders = new Headers({
+  'Access-Control-Allow-Origin': '*',
   'mode': 'no-cors'
 });
 
