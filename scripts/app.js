@@ -1,8 +1,9 @@
-debug = false
+debug = true
 characterID = 0
 charFmt = ''
 charURL = ''
 const outputElement = document.getElementById("characterXMLData")
+const proxyurl = "https://cors-anywhere.herokuapp.com/";
 
 function characterTypeButton() {
   document.getElementById("exportCharType").innerHTML = `
@@ -64,29 +65,34 @@ function readResponseAsJSON(response) {
 }
 
 function fetchJSON(resourceURL) {
-  fetch(resourceURL, {
-    headers: myHeaders
-  })
+  fetch(resourceURL)
       .then(validateResponse)
       .then(readResponseAsJSON)
       .then(logResult)
       .catch(logError)
 }
 
+function debugSettings(){
+  if (!debug) {
+    charURL = `https://www.dndbeyond.com/character/${characterID}/json`
+  } else {
+    charURL = `https://raw.githubusercontent.com/deltadave/DandD_Beyond-2-FantasyGrounds/master/data/xerseris.json`
+  }
+  console.log(`pulling from ${charURL}`)
+}
+
 $(function(){ //update button value to selection and call
-  $(".dropdown-menu a").click(function(){
-    $(".btn:first-child").text($(this).text())
-    $(".btn:first-child").val($(this).text())
+  $(".dropdown-menu a").click( async () => {
+    $("dropdown-menu a.btn:first-child").text($(this).text())
+    $("dropdown-menu a.btn:first-child").val($(this).text())
     characterID = $("#charID").val()
     charFmt = $(this).text()
 
-    const proxyurl = "https://cors-anywhere.herokuapp.com/";
-
-    if (!debug) {
-      charURL = `https://www.dndbeyond.com/character/${characterID}/json`
-    } else {
-      charURL = `https://raw.githubusercontent.com/deltadave/DandD_Beyond-2-FantasyGrounds/master/data/xerseris.json`
-    }
+    debugSettings()
+    characterJSON = await fetchJSON(proxyurl+charURL)
+    removeEmpty(characterJSON)
+    showCharacter(characterJSON)
+    /*
 
     fetch(proxyurl + charURL)
       .then(function(resp) {
@@ -102,7 +108,6 @@ $(function(){ //update button value to selection and call
          console.log('Looks like there was a problem: \n', error);
       })
 
-    /*
 
         //let y = document.createTextNode("characterJSON.valueOf()")
         //outputElement.appendChild(y)
