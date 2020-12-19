@@ -1,9 +1,10 @@
-debug = true
-characterID = 0
-charFmt = ''
-charURL = ''
+let debug = true
+let characterID = 0
+let exportFormat = ''
+let charURL = ''
+let characterJSON;
 const outputElement = document.getElementById("characterXMLData")
-const proxyurl = "https://cors-anywhere.herokuapp.com/";
+const proxyURL = "https://cors-anywhere.herokuapp.com/";
 
 function characterTypeButton() {
   document.getElementById("exportCharType").innerHTML = `
@@ -15,28 +16,24 @@ function characterTypeButton() {
   `
 }
 
-characterTypeButton()
-
-let characterJSON;
-
-const removeEmpty = (obj) => {
+function removeEmpty(obj) {
   Object.keys(obj).forEach(k =>
       (obj[k] && typeof obj[k] === 'object') && removeEmpty(obj[k]) ||
       //(obj[k] && obj[k] instanceof Array && !obj[k].length) && removeEmpty(obj[k]) ||
       (!obj[k] && obj[k] !== undefined) && delete obj[k]
   )
   for(let prop in obj) {
-    if (prop && obj[prop] instanceof Array && !obj[prop].length) {
+    if (obj.hasOwnProperty(prop) && obj[prop] instanceof Array && !obj[prop].length) {
       delete obj[prop]
     }
   }
   return obj;
 }
 
-const showCharacter =  (obj) => {
+function showCharacter(obj) {
   for (let prop in obj ) {
-      console.log(prop)
-      console.log(obj[prop])
+    console.log(prop + ": ")
+    console.log(obj[prop])
   }
 }
 
@@ -45,12 +42,12 @@ var myHeaders = new Headers({
   'mode': 'no-cors'
 });
 
-function logResult(result) {
-  console.log(result)
+function logResult(response) {
+  console.log(response)
 }
 
-function logError(result) {
-  console.log("Looks like there was a problem: \n", error)
+function logError(response) {
+  console.log("Looks like there was a problem: \n", response)
 }
 
 function validateResponse(response) {
@@ -81,22 +78,30 @@ function debugSettings(){
   console.log(`pulling from ${charURL}`)
 }
 
-$(function(){ //update button value to selection and call
-  $(".dropdown-menu a").click( async () => {
+characterTypeButton()
+
+const formatButton = document.querySelector(".dropdown-menu a")
+
+formatButton.addEventListener('click', e =>{
+  exportFormat = e.toElement.innerText
+  characterID = document.getElementById("charID").value
+  document.getElementById("dropdownMenuButton").innerText = exportFormat
+  console.log(e)
+  console.log(exportFormat)
+  console.log(characterID)
+})
+
+/*    .click( async () => {
     $("dropdown-menu a.btn:first-child").text($(this).text())
     $("dropdown-menu a.btn:first-child").val($(this).text())
     characterID = $("#charID").val()
     charFmt = $(this).text()
 
     debugSettings()
-    characterJSON = await fetchJSON(proxyurl+charURL)
-    removeEmpty(characterJSON)
-    showCharacter(characterJSON)
-    /*
 
     fetch(proxyurl + charURL)
-      .then(function(resp) {
-         return resp.json()
+      .then(function(response) {
+         return response.json()
       })
       .then(function(data) {
          console.log(data)
@@ -107,40 +112,5 @@ $(function(){ //update button value to selection and call
       .catch(function(error) {
          console.log('Looks like there was a problem: \n', error);
       })
+*/
 
-
-        //let y = document.createTextNode("characterJSON.valueOf()")
-        //outputElement.appendChild(y)
-        const myRequest = new Request( charURL, {
-          method: 'GET',
-          headers: myHeaders,
-          mode: 'no-cors',
-          cache: 'default',
-        });
-
-    characterJSON = fetchJSON(charURL)
-    console.log(characterJSON)
-    removeEmpty(characterJSON)
-    showCharacter(characterJSON)
-
-            /*
-            then(function (response) {
-              if (!response.ok) {
-                console.log('Error: ', response)
-              }
-              return response.json();
-            })
-                .then(function (json) {
-                  document.write(json.value)
-                })
-                .catch(function (error) {
-                  var p = document.createElement('p')
-                  p.appendChild(
-                      document.createTextNode('Error: ' + error.message)
-                  )
-                  document.body.insertBefore(p, outputElement)
-                })
-             */
-
-  });
-});
