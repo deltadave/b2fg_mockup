@@ -7,7 +7,7 @@ $(function(){
         $.ajax({
             type: "POST",
             crossDomain: "true",
-            url: `${URL}`,
+            url: `https://cors-anywhere.herokuapp.com/${URL}`,
             dataType: "json",
             contentType: "application/json",
             data: formdata,
