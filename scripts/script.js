@@ -7,7 +7,7 @@ $(function(){
         $.ajax({
             type: "POST",
             crossDomain: "true",
-            url: `https://cors-anywhere.herokuapp.com/${URL}`,
+            url: `${URL}`,
             dataType: "json",
             contentType: "application/json",
             data: formdata,
@@ -17,7 +17,7 @@ $(function(){
             },
             success: function(data) {
                 console.log(data);
-                $('#status').text(data).show();
+                //$('#status').text(data).show();
                 $('#submit').removeProp('disabled');
             },
             error: function(jqXHR, textStatus, errorThrown) {
