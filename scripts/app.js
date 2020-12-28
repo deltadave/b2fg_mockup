@@ -2,13 +2,13 @@ let debug = true
 let characterID = 0
 let exportFormat = ''
 let charURL = ''
-let characterJSON;
+let characterData;
 const outputElement = document.getElementById("characterXMLData")
 const proxyURL = "https://cors-anywhere.herokuapp.com/";
 
 function characterTypeButton() {
   document.getElementById("exportCharType").innerHTML = `
-    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Format</button>
+    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownCharTypeButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Format</button>
     <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
       <a class="dropdown-item" href="#">Classic</a>
       <a class="dropdown-item" href="#">Unity</a>
@@ -61,56 +61,45 @@ function readResponseAsJSON(response) {
   return response.json()
 }
 
-function fetchJSON(resourceURL) {
-  fetch(resourceURL)
-      .then(validateResponse)
-      .then(readResponseAsJSON)
-      .then(logResult)
-      .catch(logError)
+async function fetchJSON(resourceURL) {
+  return (await fetch(resourceURL)).json()
 }
 
 function debugSettings(){
   if (!debug) {
-    charURL = `https://www.dndbeyond.com/character/${characterID}/json`
+    charURL = `${proxyURL}https://www.dndbeyond.com/character/${characterID}/json`
   } else {
-    charURL = `https://raw.githubusercontent.com/deltadave/DandD_Beyond-2-FantasyGrounds/master/data/xerseris.json`
+    charURL=`data/xyrseris.json`
+    //charURL=`data/vinster.json`
+    //charURL = `${proxyURL}https://raw.githubusercontent.com/deltadave/DandD_Beyond-2-FantasyGrounds/master/data/xyrseris.json`
   }
   console.log(`pulling from ${charURL}`)
 }
 
 characterTypeButton()
 
-const formatButton = document.querySelector(".dropdown-menu a")
+const formatButton = document.querySelector(".dropdown-menu")
 
-formatButton.addEventListener('click', e =>{
+formatButton.addEventListener('click', async e =>{
   exportFormat = e.toElement.innerText
   characterID = document.getElementById("charID").value
-  document.getElementById("dropdownMenuButton").innerText = exportFormat
+  document.getElementById("dropdownCharTypeButton").innerText = exportFormat
   console.log(e)
   console.log(exportFormat)
   console.log(characterID)
+  debugSettings()
+  try {
+    characterData = await fetchJSON(charURL)
+  } catch (err) {
+    alertMsg =`error! Either that character ID doesn't exist or it's not public`
+    console.log(`${alertMsg}. ${err}`)
+  } 
+  console.log("Button Response:")
+  console.log(characterData)
+  console.log("Parsing Character")
+  parseCharacter(characterData)  
 })
 
-/*    .click( async () => {
-    $("dropdown-menu a.btn:first-child").text($(this).text())
-    $("dropdown-menu a.btn:first-child").val($(this).text())
-    characterID = $("#charID").val()
-    charFmt = $(this).text()
-
-    debugSettings()
-
-    fetch(proxyurl + charURL)
-      .then(function(response) {
-         return response.json()
-      })
-      .then(function(data) {
-         console.log(data)
-         characterJSON = data
-         removeEmpty(characterJSON)
-         showCharacter(characterJSON)
-      })
-      .catch(function(error) {
-         console.log('Looks like there was a problem: \n', error);
-      })
+/*
 */
 
