@@ -69,8 +69,9 @@ function debugSettings(){
   if (!debug) {
     charURL = `${proxyURL}https://www.dndbeyond.com/character/${characterID}/json`
   } else {
-    charURL=`data/xyrseris.json`
+    //charURL=`data/xyrseris.json`
     //charURL=`data/vinster.json`
+    charURL=`data/willem.json`
     //charURL = `${proxyURL}https://raw.githubusercontent.com/deltadave/DandD_Beyond-2-FantasyGrounds/master/data/xyrseris.json`
   }
   console.log(`pulling from ${charURL}`)
