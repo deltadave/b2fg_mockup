@@ -1,0 +1,544 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<!-- 
+  Please see the license.html file included with this distribution for 
+  attribution and copyright information.
+-->
+
+<root>
+	<windowclass name="charsheet_charwizard_stats">
+		<sheetdata>
+			<subwindow name="contents">
+				<anchored>
+					<top offset="0" />
+					<bottom offset="0" />
+					<left offset="0" />
+					<right offset="-535" />
+				</anchored>
+				<class>charwizard_stats_contents</class>
+				<activate />
+				<fastinit />
+			</subwindow>
+		</sheetdata>
+	</windowclass>
+
+	<windowclass name="charwizard_stats_contents">
+		<script file="charwizard/scripts/charwizard_abilities.lua" />
+		<sheetdata>
+			<anchor_column name="columnanchor" />			
+			<label_charframetop name="statslabel">
+				<anchored height="20">
+					<top parent="columnanchor" anchor="bottom" relation="relative" offset="15" />
+					<left offset="15" />
+					<right offset="-15" />
+				</anchored>
+				<icons>char_stats</icons>
+				<static textres="charwizard_label_stats" />
+			</label_charframetop>
+			
+			<genericcontrol name="genmethodframe">
+				<anchored height="20">
+					<top parent="statslabel" anchor="bottom" relation="relative" offset="15" />
+					<left offset="15" />
+					<right offset="-15" />					
+				</anchored>				
+				<!--
+				<anchored to="columnanchor" height="20" width="235">
+					<top />
+					<left anchor="right" relation="relative" offset="15" />
+				</anchored>
+				-->
+				<frame name="groupbox" offset="10,10,10,10" />
+			</genericcontrol>			
+			<button_roll name="reroll">
+				<anchored to="genmethodframe" position="insidetopleft" offset="2,0" />
+				<script>
+					function onButtonPress()
+						window.handleReroll();
+					end
+				</script>
+				<invisible />
+			</button_roll>
+			<label name="rerolllabel">
+				<anchored to="reroll" position="righthigh" offset="3,0" />
+				<static textres="charwizard_reroll" />
+				<invisible />
+			</label>
+			<comboboxc name="cb_genmethod">
+				<anchored to="genmethodframe" position="insidetopleft" offset="70,0" width="150" height="20" /> 
+				<listdirection >down</listdirection>
+				<buttonoffset>0,3</buttonoffset>
+				<default>STANDARD ARRAY</default>				
+				<script file="charwizard/scripts/charwizard_genmethod_combo.lua" />
+			</comboboxc>
+			<label name="genmethod_dice_label">
+				<anchored to="genmethodframe" position="insidetopright" relation="relative" offset="110" />
+				<static textres="charwizard_dice" />
+				<invisible />
+			</label>
+			<basicnumberc name="genmethod_dice">
+				<anchored to="genmethodframe" position="insidetopright" relation="relative" offset="80" width="20" height="20" />
+				<default>4</default>
+				<invisible />
+			</basicnumberc>
+			<label name="genmethod_drop_label">
+				<anchored to="genmethodframe" position="insidetopright" relation="relative" offset="40" />
+				<static textres="charwizard_drop" />
+				<invisible />
+			</label>
+			<basicnumberc name="genmethod_drop">
+				<anchored to="genmethodframe" position="insidetopright" relation="relative" offset="10" width="20" height="20" />
+				<default>1</default>
+				<invisible />
+			</basicnumberc>
+			<label name="point_total_label">
+				<anchored to="genmethodframe" position="insidetopright" relation="relative" offset="40" />
+				<static textres="charwizard_buytotal" />
+				<invisible />
+			</label>			
+			<basicnumberc name="point_total">
+				<anchored to="genmethodframe" position="insidetopright" relation="relative" offset="10" width="20" height="20" />
+				<target>total</target>
+				<invisible />
+			</basicnumberc>
+			<label_charframetop name="statstitle">
+				<anchored height="20" width="60">
+					<top offset="80" />
+					<left offset="15" />
+				</anchored>
+				<static textres="char_label_stats" />
+				<invisible />
+			</label_charframetop>			
+			
+			<number_charwizard_abilityscore name="genval1">
+				<modifiersize>mini</modifiersize>				
+			</number_charwizard_abilityscore>
+			<label_abilityscore>
+				<anchored to="genval1" />
+				<static textres="STR" />
+			</label_abilityscore>			
+			
+			<button_charwizard_ability_genvalup name="genvalup1">
+				<anchored to="genval1" />
+			</button_charwizard_ability_genvalup>
+			<button_charwizard_ability_genvaldown name="genvaldown1">
+				<anchored to="genval1" />
+			</button_charwizard_ability_genvaldown>
+			<string_abilitymodtext name="label_cost_genval1">
+				<anchored to="genval1" />
+				<invisible />
+			</string_abilitymodtext>
+			<numbercontrol name="cost_genval1">
+				<anchored to="genval1" position="below" offset="0,-6" />
+				<invisible />
+			</numbercontrol>
+			<button_charwizard_ability_moveup name="genval_moveup1">
+				<anchored to="genval1" />				
+			</button_charwizard_ability_moveup>
+			<button_charwizard_ability_movedown name="genval_movedown1">
+				<anchored to="genval1" />			
+			</button_charwizard_ability_movedown>			
+			
+			<number_charwizard_abilityscore2 name="genval2">
+				<target>genval2</target>			
+				<modifiersize>mini</modifiersize>				
+			</number_charwizard_abilityscore2>
+			<label_abilityscore>
+				<anchored to="genval2" />
+				<static textres="DEX" />
+			</label_abilityscore>			
+			
+			<button_charwizard_ability_genvalup name="genvalup2">
+				<anchored to="genval2" />
+			</button_charwizard_ability_genvalup>
+			<button_charwizard_ability_genvaldown name="genvaldown2">
+				<anchored to="genval2" />
+			</button_charwizard_ability_genvaldown>
+			<string_abilitymodtext name="label_cost_genval2">
+				<anchored to="genval2" />
+				<invisible />
+			</string_abilitymodtext>
+			<numbercontrol name="cost_genval2">
+				<anchored to="genval2" position="below" offset="0,-6" />
+				<invisible />
+			</numbercontrol>
+			<button_charwizard_ability_moveup name="genval_moveup2">
+				<anchored to="genval2" />				
+			</button_charwizard_ability_moveup>
+			<button_charwizard_ability_movedown name="genval_movedown2">
+				<anchored to="genval2" />			
+			</button_charwizard_ability_movedown>
+			
+			<number_charwizard_abilityscore2 name="genval3">
+				<target>genval3</target>			
+				<modifiersize>mini</modifiersize>				
+			</number_charwizard_abilityscore2>
+			<label_abilityscore>
+				<anchored to="genval3" />
+				<static textres="CON" />
+			</label_abilityscore>			
+			
+			<button_charwizard_ability_genvalup name="genvalup3">
+				<anchored to="genval3" />
+			</button_charwizard_ability_genvalup>
+			<button_charwizard_ability_genvaldown name="genvaldown3">
+				<anchored to="genval3" />
+			</button_charwizard_ability_genvaldown>
+			<string_abilitymodtext name="label_cost_genval3">
+				<anchored to="genval3" />
+				<invisible />
+			</string_abilitymodtext>
+			<numbercontrol name="cost_genval3">
+				<anchored to="genval3" position="below" offset="0,-6" />
+				<invisible />
+			</numbercontrol>
+			<button_charwizard_ability_moveup name="genval_moveup3">
+				<anchored to="genval3" />				
+			</button_charwizard_ability_moveup>
+			<button_charwizard_ability_movedown name="genval_movedown3">
+				<anchored to="genval3" />			
+			</button_charwizard_ability_movedown>			
+			
+			<number_charwizard_abilityscore2 name="genval4">
+				<target>genval4</target>			
+				<modifiersize>mini</modifiersize>				
+			</number_charwizard_abilityscore2>
+			<label_abilityscore>
+				<anchored to="genval4" />
+				<static textres="INT" />
+			</label_abilityscore>			
+			
+			<button_charwizard_ability_genvalup name="genvalup4">
+				<anchored to="genval4" />
+			</button_charwizard_ability_genvalup>
+			<button_charwizard_ability_genvaldown name="genvaldown4">
+				<anchored to="genval4" />
+			</button_charwizard_ability_genvaldown>
+			<string_abilitymodtext name="label_cost_genval4">
+				<anchored to="genval4" />
+				<invisible />
+			</string_abilitymodtext>
+			<numbercontrol name="cost_genval4">
+				<anchored to="genval4" position="below" offset="0,-6" />
+				<invisible />
+			</numbercontrol>
+			<button_charwizard_ability_moveup name="genval_moveup4">
+				<anchored to="genval4" />				
+			</button_charwizard_ability_moveup>
+			<button_charwizard_ability_movedown name="genval_movedown4">
+				<anchored to="genval4" />			
+			</button_charwizard_ability_movedown>			
+			
+			<number_charwizard_abilityscore2 name="genval5">
+				<target>genval5</target>			
+				<modifiersize>mini</modifiersize>				
+			</number_charwizard_abilityscore2>
+			<label_abilityscore>
+				<anchored to="genval5" />
+				<static textres="WIS" />
+			</label_abilityscore>			
+			
+			<button_charwizard_ability_genvalup name="genvalup5">
+				<anchored to="genval5" />
+			</button_charwizard_ability_genvalup>
+			<button_charwizard_ability_genvaldown name="genvaldown5">
+				<anchored to="genval5" />
+			</button_charwizard_ability_genvaldown>
+			<string_abilitymodtext name="label_cost_genval5">
+				<anchored to="genval5" />
+				<invisible />
+			</string_abilitymodtext>
+			<numbercontrol name="cost_genval5">
+				<anchored to="genval5" position="below" offset="0,-6" />
+				<invisible />
+			</numbercontrol>
+			<button_charwizard_ability_moveup name="genval_moveup5">
+				<anchored to="genval5" />				
+			</button_charwizard_ability_moveup>
+			<button_charwizard_ability_movedown name="genval_movedown5">
+				<anchored to="genval5" />			
+			</button_charwizard_ability_movedown>			
+
+			<number_charwizard_abilityscore2 name="genval6">
+				<target>genval6</target>			
+				<modifiersize>mini</modifiersize>				
+			</number_charwizard_abilityscore2>
+			<label_abilityscore>
+				<anchored to="genval6" />
+				<static textres="CHA" />
+			</label_abilityscore>			
+			
+			<button_charwizard_ability_genvalup name="genvalup6">
+				<anchored to="genval6" />
+			</button_charwizard_ability_genvalup>
+			<button_charwizard_ability_genvaldown name="genvaldown6">
+				<anchored to="genval6" />
+			</button_charwizard_ability_genvaldown>
+			<string_abilitymodtext name="label_cost_genval6">
+				<anchored to="genval6" />
+				<invisible />
+			</string_abilitymodtext>
+			<numbercontrol name="cost_genval6">
+				<anchored to="genval6" position="below" offset="0,-6" />
+				<invisible />
+			</numbercontrol>
+			<button_charwizard_ability_moveup name="genval_moveup6">
+				<anchored to="genval6" />				
+			</button_charwizard_ability_moveup>
+			<button_charwizard_ability_movedown name="genval_movedown6">
+				<anchored to="genval6" />			
+			</button_charwizard_ability_movedown>
+			<label_charframetop name="summarytitle">
+				<anchored height="20" >
+					<top offset="80" />
+					<left offset="100" />
+					<right offset="-270" />
+				</anchored>
+				<static textres="charwizard_label_benefits" />
+				<invisible/>				
+			</label_charframetop>
+			<genericcontrol name="summaryframe">
+				<anchored>
+					<top parent="summarytitle" anchor="bottom" relation="relative" offset="15" />
+					<left offset="100" />
+					<right offset="-15" />
+					<bottom offset="-20" />
+				</anchored>				
+				<frame name="groupbox" offset="10,10,10,10" />
+				<invisible/>				
+			</genericcontrol>
+			<label_charframetop name="race_statstitle">
+				<anchored height="20">
+					<top parent="columnanchor" anchor="bottom" relation="relative" offset="120" />
+					<left offset="15" />
+					<right offset="-15" />
+				</anchored>
+				<icons>char_race</icons>				
+				<static textres="charwizard_raceadj_label" />				
+			</label_charframetop>			
+			
+			<basicnumberc name="race_str">
+				<anchored to="genval1" width="40" height="40">
+					<top anchor="bottom" offset="55" />
+					<left anchor="center" offset="-20" />
+				</anchored>
+				<target>genval1</target>
+				<modifiersize>mini</modifiersize>
+				<readonly />				
+			</basicnumberc>
+			<label_abilityscore>
+				<anchored to="race_str" />
+				<static textres="STR" />
+			</label_abilityscore>			
+
+			<basicnumberc name="race_dex">
+				<anchored to="genval2" width="40" height="40">
+					<top anchor="bottom" offset="55" />
+					<left anchor="center" offset="-20" />
+				</anchored>		
+				<target>genval2</target>			
+				<modifiersize>mini</modifiersize>
+				<readonly />				
+			</basicnumberc>
+			<label_abilityscore>
+				<anchored to="race_dex" />
+				<static textres="DEX" />
+			</label_abilityscore>			
+			
+			<basicnumberc name="race_con">
+				<anchored to="genval3" width="40" height="40">
+					<top anchor="bottom" offset="55" />
+					<left anchor="center" offset="-20" />
+				</anchored>
+				<target>genval3</target>			
+				<modifiersize>mini</modifiersize>
+				<readonly />				
+			</basicnumberc>
+			<label_abilityscore>
+				<anchored to="race_con" />
+				<static textres="CON" />
+			</label_abilityscore>			
+			
+			<basicnumberc name="race_int">
+				<anchored to="genval4" width="40" height="40">
+					<top anchor="bottom" offset="55" />
+					<left anchor="center" offset="-20" />
+				</anchored>
+				<target>genval4</target>			
+				<modifiersize>mini</modifiersize>
+				<readonly />				
+			</basicnumberc>
+			<label_abilityscore>
+				<anchored to="race_int" />
+				<static textres="INT" />
+			</label_abilityscore>			
+			
+			<basicnumberc name="race_wis">
+				<anchored to="genval5" width="40" height="40">
+					<top anchor="bottom" offset="55" />
+					<left anchor="center" offset="-20" />
+				</anchored>			
+				<target>genval5</target>			
+				<modifiersize>mini</modifiersize>
+				<readonly />				
+			</basicnumberc>
+			<label_abilityscore>
+				<anchored to="race_wis" />
+				<static textres="WIS" />
+			</label_abilityscore>			
+
+			<basicnumberc name="race_cha">
+				<anchored to="genval6" width="40" height="40">
+					<top anchor="bottom" offset="55" />
+					<left anchor="center" offset="-20" />
+				</anchored>
+				<target>genval6</target>			
+				<modifiersize>mini</modifiersize>
+				<readonly />				
+			</basicnumberc>
+			<label_abilityscore>
+				<anchored to="race_cha" />
+				<static textres="CHA" />
+			</label_abilityscore>			
+
+			<label_charframetop name="abilityimp_statstitle">
+				<anchored height="20">
+					<top parent="columnanchor" anchor="bottom" relation="relative" offset="60" />
+					<left offset="15" />
+					<right offset="-15" />
+				</anchored>
+				<static textres="charwizard_abilityimp_label" />				
+			</label_charframetop>
+
+			<windowlist name="abilityscore_improvements">
+				<anchored>
+					<top parent="abilityimp_statstitle" anchor="bottom" relation="relative" offset="10" />
+					<left offset="15" />
+					<right offset="-15" />
+					<bottom offset="-42" />
+				</anchored>
+				<skipempty />
+				<child></child>
+				<child><backcolor>1A40301E</backcolor></child>
+				<frame name="fielddark" offset="10,9,10,9" />
+				<empty><textres>stats_improvement_notice</textres></empty>				
+				<class>abilityimp_item</class>
+				<sortby><control>class</control><control>abilityimp_lvl</control></sortby>
+				<script file="charwizard/scripts/charwizard_abilityimplist.lua" />
+			</windowlist>
+		</sheetdata>
+	</windowclass>
+	
+	<windowclass name="abilityimp_item">
+		<margins control="0,0,0,5" />
+		<sheetdata>
+			<genericcontrol name="rightanchor">
+				<anchored position="insidetopright" offset="0,2" height="0" width="0" />
+			</genericcontrol>
+			<basicnumberc name="abilityimp_str">
+				<anchored to="rightanchor" width="40" height="25">
+					<top anchor="top" offset="5" />
+					<left anchor="left" offset="-420" />
+				</anchored>
+				<modifiersize>mini</modifiersize>
+				<readonly />
+			</basicnumberc>
+			<label_abilityscore>
+				<anchored to="abilityimp_str" />
+				<static textres="STR" />
+			</label_abilityscore>
+			<basicnumberc name="abilityimp_dex">
+				<anchored to="abilityimp_str" position="right" offset="30" width="40" />
+				<modifiersize>mini</modifiersize>
+				<readonly />
+			</basicnumberc>
+			<label_abilityscore>
+				<anchored to="abilityimp_dex" />
+				<static textres="DEX" />
+			</label_abilityscore>
+			<basicnumberc name="abilityimp_con">
+				<anchored to="abilityimp_dex" position="right" offset="30" width="40" />
+				<modifiersize>mini</modifiersize>
+				<readonly />
+			</basicnumberc>
+			<label_abilityscore>
+				<anchored to="abilityimp_con" />
+				<static textres="CON" />
+			</label_abilityscore>
+			<basicnumberc name="abilityimp_int">
+				<anchored to="abilityimp_con" position="right" offset="30" width="40" />
+				<modifiersize>mini</modifiersize>
+				<readonly />			
+			</basicnumberc>
+			<label_abilityscore>
+				<anchored to="abilityimp_int" />
+				<static textres="INT" />
+			</label_abilityscore>
+			<basicnumberc name="abilityimp_wis">
+				<anchored to="abilityimp_int" position="right" offset="30" width="40" />
+				<modifiersize>mini</modifiersize>
+				<readonly />
+			</basicnumberc>
+			<label_abilityscore>
+				<anchored to="abilityimp_wis" />
+				<static textres="WIS" />
+			</label_abilityscore>
+			<basicnumberc name="abilityimp_cha">
+				<anchored to="abilityimp_wis" position="right" offset="30" width="40" />
+				<modifiersize>mini</modifiersize>
+				<readonly />
+			</basicnumberc>
+			<label_abilityscore>
+				<anchored to="abilityimp_cha" />
+				<static textres="CHA" />
+			</label_abilityscore>
+			<label name="class">
+				<anchored position="insidetopright" offset="0,2" height="0" width="0" />
+				<readonly />
+				<invisible />
+			</label>			
+			<simplenumber name="abilityimp_lvl">
+				<anchored to="abilityimp_cha" position="right" offset="12" width="10" />
+				<default>0</default>
+				<readonly />
+				<script>
+					function onInit()
+						if getValue() == 0 then
+							setVisible(false);
+						end
+					end
+					function onValueChanged()
+						if getValue() &gt; 0 then
+							setVisible(true);
+						end
+					end					
+				</script>
+			</simplenumber>			
+		</sheetdata>
+	</windowclass>
+
+	<windowclass name="asi_label">
+		<margins control="0,0,0,5" />
+		<sheetdata>
+			<genericcontrol name="rightanchor">
+				<anchored position="insidetopright" offset="0,2" height="0" width="0" />
+			</genericcontrol>
+			<label name="asi_classname" >
+				<anchored to="rightanchor" width="400" height="25">
+					<top anchor="top" offset="5" />
+					<left anchor="left" offset="-420" />
+				</anchored>
+			</label>
+			<basicnumberc name="abilityimp_lvl">
+				<anchored position="insidetopright" offset="0,2" height="0" width="0" />
+				<readonly />
+				<invisible />
+			</basicnumberc>
+			<label name="class">
+				<anchored position="insidetopright" offset="0,2" height="0" width="0" />
+				<readonly />
+				<invisible />
+			</label>			
+		</sheetdata>
+	</windowclass>			
+</root>

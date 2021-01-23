@@ -1,0 +1,224 @@
+<root>
+	<windowclass name="charsheet_charwizard_featalt">
+		<sheetdata>
+			<subwindow name="contents">
+				<anchored>
+					<top offset="0" />
+					<bottom offset="0" />
+					<left offset="0" />
+					<right offset="-535" />
+				</anchored>
+				<class>charwizard_featwindow_contents</class>
+				<activate />
+				<fastinit />
+			</subwindow>
+		</sheetdata>
+	</windowclass>
+
+	<windowclass name="charwizard_featwindow_contents">
+		<sheetdata>
+			<anchor_column name="columnanchor" />			
+
+			<label_charframetop name="feat_label">
+				<anchored height="20">
+					<top parent="columnanchor" anchor="bottom" relation="relative" offset="15" />
+					<left offset="15" />
+					<right offset="-15" />
+				</anchored>
+				<icons>char_abilities_green</icons>
+				<static textres="charwizard_label_feats" />
+			</label_charframetop>
+
+			<windowlist name="feat_window">
+				<anchored to="feat_label" position="insidetopleft" offset="2,32" width="437" height="407" />
+				<skipempty />
+				<frame name="fielddark" offset="10,9,10,9" />
+				<empty><textres>no_feats_notice</textres></empty>
+				<class>feat_window_item</class>
+				<sortby><control>group_number</control></sortby>
+				<script file="charwizard/scripts/charwizard_featwindow.lua" />				
+			</windowlist>
+		</sheetdata>
+	</windowclass>		
+
+	<windowclass name="feat_window_item">
+		<margins control="0,0,10,10" />
+		<frame>groupbox</frame>
+		<sheetdata>
+			<button_charwizard_feat_expand_window name="button_expand_feats">
+				<anchored position="insidetopleft" offset="10,10" />
+				<target>selection_window</target>
+			</button_charwizard_feat_expand_window>
+			<label name="group_name">
+				<anchored position="insidetopleft" offset="40,10" />
+				<readonly />
+				<!-- <invisible /> -->								
+			</label>
+			<label name="group_number">
+				<anchored position="insidetopleft" offset="40,10" />
+				<readonly />
+				<invisible />
+			</label>			
+			<windowlist name="selection_window">
+				<anchored position="insidetopleft" offset="5,35" width="410" />			
+				<columns width="135" fillwidth="true" />
+				<skipempty />
+				<noscroll />
+				<sortby><control>selection_name</control></sortby>				
+				<class>feat_subwindow_item</class>
+			</windowlist>
+			<label name="selection_type">
+				<anchored position="insidetopright" relation="relative" offset="40,10" />
+				<readonly />
+				<invisible />
+			</label>			
+			<label name="selection_name">
+				<anchored position="insidetopright" relation="relative" offset="40,10" />
+				<readonly />
+				<invisible />
+			</label>
+			<linkcontrol name="selection_shortcut">
+				<anchored position="insidetopright" relation="relative" offset="10,10" width="20" height="20" />
+				<class>reference_race</class>
+				<readonly />
+				<invisible />
+			</linkcontrol>
+			<string_textlistitem name="value">
+				<anchored position="insidetopright" relation="relative" offset="10,10" width="20" height="20" />
+				<invisible />
+				<multilinespacing>20</multilinespacing>
+			</string_textlistitem>
+			<basicnumberc name="selection_count">
+				<anchored position="insidetopright" relation="relative" offset="10,10" width="20" height="20" />
+				<default>2</default>
+				<invisible />
+				<multilinespacing>20</multilinespacing>
+			</basicnumberc>				
+			<button_charwizard_feat name="asi_button">
+				<anchored position="insidetopright" relation="relative" offset="10,10" width="180" height="18" />
+				<script>
+					function onInit()
+						setText("ABILITY SCORE IMPROVEMENT");
+						window.value.setValue("1");
+					end
+					function onButtonPress()
+						if window.value.getValue() == "1" then
+							window.windowlist.createASIList(window.group_number.getValue(), window);
+							setText("FEAT LIST");
+							window.value.setValue("0");
+							for _,vFeatWindow in pairs(window.windowlist.getWindows()) do
+								if tonumber(vFeatWindow.group_number.getValue()) == (tonumber(window.group_number.getValue()) + .1) then
+									vFeatWindow.close();
+									window.windowlist.clearFeat(window.group_name.getValue());
+								end
+							end
+						else
+							window.windowlist.clearASI(window.group_name.getValue())
+							window.windowlist.createFeatList(window.group_number.getValue(), window);
+							setText("ABILITY SCORE IMPROVEMENT");
+							window.selection_count.setValue(2);
+							window.value.setValue("1");							
+						end
+					end
+				</script>
+			</button_charwizard_feat>			
+		</sheetdata>
+	</windowclass>
+
+	<windowclass name="feat_subwindow_item">
+		<margins control="0,0,0,10" />
+		<sheetdata>
+			<genericcontrol name="rightanchor">
+				<anchored position="insidetopright" offset="0,2" height="0" width="0" />
+			</genericcontrol>
+			<button_charwizard_feat name="bname">
+				<anchored to="rightanchor" width="130" height="20">
+					<top />
+					<right anchor="left" relation="relative" offset="5" />
+				</anchored>
+				<script>
+					function onButtonPress()
+						if window.windowlist.window.value.getValue() == "1" then
+							for k,v in pairs(window.windowlist.getWindows()) do
+								v.bname.setFrame("buttonup", 5, 5, 5, 5)
+							end
+							setFrame("buttondown", 5, 5, 5, 5);
+							local sSelectionType = "";
+							local sSelectionParent = "";							
+							if window.windowlist.window.selection_type then
+								sSelectionType = window.windowlist.window.selection_type.getValue();
+							end
+							if window.parent then
+								sSelectionParent = window.parent.getValue();
+							end
+							window.windowlist.window.windowlist.window.feat_window.parseSelection(window.windowlist.window, window.windowlist.window.group_name.getValue(), window.group_number.getValue(), sSelectionParent, sSelectionType, window.name.getValue():upper(), window.shortcut.getValue());							
+						else
+							local nChoicesRemaining = window.windowlist.window.selection_count.getValue();
+							if window.value.getValue() == "1" then
+								setFrame("buttonup", 5, 5, 5, 5);
+								window.value.setValue("0");
+								window.windowlist.window.selection_count.setValue(nChoicesRemaining + 1);
+								window.windowlist.window.windowlist.window.feat_window.setASI(window.windowlist, window.windowlist.window.group_name.getValue(), window.name.getValue():upper());								
+							else
+								if nChoicesRemaining == 0 then
+									return;
+								end							
+								setFrame("buttondown", 5, 5, 5, 5);
+								window.value.setValue("1");
+								window.windowlist.window.selection_count.setValue(nChoicesRemaining - 1);
+								window.windowlist.window.windowlist.window.feat_window.setASI(window.windowlist, window.windowlist.window.group_name.getValue(), window.name.getValue():upper());
+							end
+						end
+					end
+				</script>
+			</button_charwizard_feat>
+			<linkcontrol name="shortcut">
+				<anchored to="rightanchor" width="20" height="20">
+					<top />
+					<right anchor="left" relation="relative" offset="-2" />
+				</anchored>
+				<class>reference_feat</class>
+				<readonly />
+				<invisible />				
+			</linkcontrol>
+			<string_textlistitem name="value">
+				<anchored to="rightanchor">
+					<top />
+					<left parent="" offset="0" />
+					<right anchor="left" relation="relative" offset="-7" />
+				</anchored>
+				<invisible />
+				<multilinespacing>20</multilinespacing>
+			</string_textlistitem>
+			<string_textlistitem name="group_number">
+				<anchored to="rightanchor">
+					<top />
+					<left parent="" offset="0" />
+					<right anchor="left" relation="relative" offset="-7" />
+				</anchored>
+				<invisible />
+				<multilinespacing>20</multilinespacing>
+			</string_textlistitem>
+
+			<string_textlistitem name="parent">
+				<anchored to="rightanchor">
+					<top />
+					<left parent="" offset="0" />
+					<right anchor="left" relation="relative" offset="-7" />
+				</anchored>
+				<invisible />
+				<multilinespacing>20</multilinespacing>
+			</string_textlistitem>			
+
+			<string_textlistitem name="name">
+				<anchored to="rightanchor">
+					<top />
+					<left parent="" offset="20" />
+					<right anchor="left" relation="relative" offset="-7" />
+				</anchored>
+				<multilinespacing>20</multilinespacing>
+				<invisible />				
+			</string_textlistitem>
+		</sheetdata>
+	</windowclass>	
+</root>

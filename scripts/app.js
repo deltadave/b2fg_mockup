@@ -18,11 +18,10 @@ function characterTypeButton() {
 
 function removeEmpty(obj) {
   Object.keys(obj).forEach(k =>
-      (obj[k] && typeof obj[k] === 'object') && removeEmpty(obj[k]) ||
-      //(obj[k] && obj[k] instanceof Array && !obj[k].length) && removeEmpty(obj[k]) ||
+      (obj[k] && typeof obj[k] === 'object') && removeEmpty(obj[k]) ||  //traverse to bottom level of object.
       (!obj[k] && obj[k] !== undefined) && delete obj[k]
   )
-  for(let prop in obj) {
+  for(let prop in obj) {  //get rid of empty or undefined properties.
     if (obj.hasOwnProperty(prop) && obj[prop] instanceof Array && !obj[prop].length) {
       delete obj[prop]
     }
@@ -96,6 +95,9 @@ formatButton.addEventListener('click', async e =>{
     console.log(`${alertMsg}. ${err}`)
   } 
   console.log("Button Response:")
+  console.log(characterData)
+  removeEmpty(characterData)
+  console.log("cleaned out empty fields")
   console.log(characterData)
   console.log("Parsing Character")
   parseCharacter(characterData)  

@@ -1,0 +1,906 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<!-- 
+  Please see the license.html file included with this distribution for 
+  attribution and copyright information.
+-->
+
+<root>
+	<windowclass name="charsheet_charwizard_spells">
+		<sheetdata>
+			<subwindow name="contents">
+				<anchored>
+					<top offset="0" />
+					<bottom offset="0" />
+					<left offset="0" />
+					<right offset="-535" />
+				</anchored>
+				<class>charwizard_spells_contents</class>
+				<activate />
+				<fastinit />
+			</subwindow>
+		</sheetdata>
+	</windowclass>
+
+	<windowclass name="charwizard_spells_contents">
+		<sheetdata>
+			<anchor_column name="columnanchor" />			
+			<anchor_column name="subanchor" />
+			
+			<label_charframetop name="spell_label">
+				<anchored height="20">
+					<top parent="columnanchor" anchor="bottom" relation="relative" offset="15" />
+					<left offset="15" />
+					<right offset="-15" />
+				</anchored>
+				<icons>char_powers</icons>
+				<static textres="charwizard_label_spells" />
+			</label_charframetop>
+			
+			<genericcontrol name="genspellframe">
+				<anchored height="20">
+					<top parent="spell_label" anchor="bottom" relation="relative" offset="15" />
+					<left offset="15" />
+					<right offset="-15" />					
+				</anchored>				
+				<frame name="groupbox" offset="10,10,10,10" />
+			</genericcontrol>
+			<label name="spelllist_label">
+				<anchored to="genspellframe" position="insidetopleft" offset="2,0" />
+				<static textres="charwizard_spelllist_title" />
+				<center />
+			</label>
+			<label name="slots_available_label">
+				<anchored to="genspellframe" position="insidetopright" offset="280" />
+				<static textres="charwizard_slots_available" />
+			</label>
+			<label name="label_slots_available_1">
+				<anchored to="genspellframe" position="insidetopright" offset="255" />
+				<static textres="charwizard_l1_slots_available" />
+				<invisible/>
+			</label>
+			<numberc name="slots_available_1">
+				<anchored to="genspellframe" position="insidetopright" offset="245" width="10" height="20" />
+				<font>sheetlabel</font>
+				<readonly />				
+				<invisible/>
+			</numberc>
+			<label name="label_slots_available_2">
+				<anchored to="genspellframe" position="insidetopright" offset="225" />
+				<static textres="charwizard_l2_slots_available" />
+				<invisible/>
+			</label>
+			<numberc name="slots_available_2">
+				<anchored to="genspellframe" position="insidetopright" offset="215" width="10" height="20" />
+				<font>sheetlabel</font>
+				<readonly />				
+				<invisible/>
+			</numberc>
+			<label name="label_slots_available_3">
+				<anchored to="genspellframe" position="insidetopright" offset="195" />
+				<static textres="charwizard_l3_slots_available" />
+				<invisible/>
+			</label>
+			<numberc name="slots_available_3">
+				<anchored to="genspellframe" position="insidetopright" offset="185" width="10" height="20" />
+				<font>sheetlabel</font>
+				<readonly />				
+				<invisible/>
+			</numberc>			
+			<label name="label_slots_available_4">
+				<anchored to="genspellframe" position="insidetopright" offset="165" />
+				<static textres="charwizard_l4_slots_available" />
+				<invisible/>
+			</label>
+			<numberc name="slots_available_4">
+				<anchored to="genspellframe" position="insidetopright" offset="155" width="10" height="20" />
+				<font>sheetlabel</font>
+				<readonly />				
+				<invisible/>
+			</numberc>
+			<label name="label_slots_available_5">
+				<anchored to="genspellframe" position="insidetopright" offset="135" />
+				<static textres="charwizard_l5_slots_available" />
+				<invisible/>
+			</label>
+			<numberc name="slots_available_5">
+				<anchored to="genspellframe" position="insidetopright" offset="125" width="10" height="20" />
+				<font>sheetlabel</font>
+				<readonly />				
+				<invisible/>
+			</numberc>
+			<label name="label_slots_available_6">
+				<anchored to="genspellframe" position="insidetopright" offset="105" />
+				<static textres="charwizard_l6_slots_available" />
+				<invisible/>
+			</label>
+			<numberc name="slots_available_6">
+				<anchored to="genspellframe" position="insidetopright" offset="95" width="10" height="20" />
+				<font>sheetlabel</font>
+				<readonly />				
+				<invisible/>
+			</numberc>
+			<label name="label_slots_available_7">
+				<anchored to="genspellframe" position="insidetopright" offset="75" />
+				<static textres="charwizard_l7_slots_available" />
+				<invisible/>
+			</label>
+			<numberc name="slots_available_7">
+				<anchored to="genspellframe" position="insidetopright" offset="65" width="10" height="20" />
+				<font>sheetlabel</font>
+				<readonly />
+				<invisible/>			
+			</numberc>
+			<label name="label_slots_available_8">
+				<anchored to="genspellframe" position="insidetopright" offset="45" />
+				<static textres="charwizard_l8_slots_available" />
+				<invisible/>			
+			</label>
+			<numberc name="slots_available_8">
+				<anchored to="genspellframe" position="insidetopright" offset="35" width="10" height="20" />
+				<font>sheetlabel</font>
+				<readonly />
+				<invisible/>			
+			</numberc>
+			<label name="label_slots_available_9">
+				<anchored to="genspellframe" position="insidetopright" offset="15" />
+				<static textres="charwizard_l9_slots_available" />
+				<invisible/>			
+			</label>
+			<numberc name="slots_available_9">
+				<anchored to="genspellframe" position="insidetopright" offset="5" width="10" height="20" />
+				<font>sheetlabel</font>
+				<readonly />
+				<invisible/>			
+			</numberc>			
+			
+			<button_charwizard_race name="cantrip_button">
+				<anchored>
+					<top parent="columnanchor" anchor="bottom" relation="relative" offset="49" />
+					<left offset="15" />
+					<right offset="-385" />
+					<bottom offset="-390" />
+				</anchored>
+				<state textres="button_cantrip_text" />
+				<script>
+					function onButtonPress()
+						local wndSelectedClass = window.spellclass.getWindows();
+						local sClassName = ""
+						local nMaxSpellLevel = 9;
+						for _,v in pairs(wndSelectedClass) do
+							if v.toggle.getValue() == "1" then
+								sClassName = v.name.getValue();
+							end
+						end
+						window.spells.createSpellList(0, sClassName);
+
+						if CampaignRegistry.charwizard.classes then
+							for _,vClass in pairs (CampaignRegistry.charwizard.classes) do
+								if vClass.name == string.lower(sClassName) then
+									if vClass.maxspelllevel then
+										nMaxSpellLevel = vClass.maxspelllevel;
+									end
+								end
+							end
+						end
+
+						if sClassName ~= "WARLOCK" then
+							for i=1,nMaxSpellLevel do
+								window["button_spelllevel_" .. i].setFrame("buttonup", 5, 5, 5, 5);
+							end
+						else
+							for i=1,9 do
+								if window["slots_available_" .. i].getValue() >0 then
+									window["button_spelllevel_" .. i].setFrame("buttonup", 5, 5, 5, 5);
+								end
+							end						
+						end
+						setFrame("buttondown", 5, 5, 5, 5);						
+					end
+				</script>
+			</button_charwizard_race>
+			<button_charwizard_race name="button_spelllevel_1">
+				<anchored to="cantrip_button" position="right" offset="11,0" width="30" />
+				<disabled/>				
+				<state textres="npc_label_spellslot1" />
+				<script>
+					function onButtonPress()
+						local wndSelectedClass = window.spellclass.getWindows();
+						local sClassName = ""
+						for _,v in pairs(wndSelectedClass) do
+							if v.toggle.getValue() == "1" then
+								sClassName = v.name.getValue();
+							end
+						end
+						window.spells.createSpellList(1, sClassName);
+						
+						if CampaignRegistry.charwizard.classes then
+							for _,vClass in pairs (CampaignRegistry.charwizard.classes) do
+								if vClass.name == string.lower(sClassName) or vClass.spec == string.lower(sClassName) then
+									if vClass.maxspelllevel then
+										nMaxSpellLevel = vClass.maxspelllevel;
+									end
+								end
+							end
+						end
+
+						if sClassName ~= "WARLOCK" then
+							for i=1,nMaxSpellLevel do
+								window["button_spelllevel_" .. i].setFrame("buttonup", 5, 5, 5, 5);
+							end
+						else
+							for i=1,9 do
+								if window["slots_available_" .. i].getValue() >0 then
+									window["button_spelllevel_" .. i].setFrame("buttonup", 5, 5, 5, 5);
+								end
+							end						
+						end
+						if sClassName == "PALADIN" or  sClassName == "RANGER" then
+							window.cantrip_button.setEnabled(false);
+							window.cantrip_button.setFrame("buttondisabled", 5,5,5,5);
+						else
+							window.cantrip_button.setEnabled(true);
+							window.cantrip_button.setFrame("buttonup", 5, 5, 5, 5);
+						end
+						setFrame("buttondown", 5, 5, 5, 5);						
+					end
+				</script>
+			</button_charwizard_race>
+			<button_charwizard_race name="button_spelllevel_2">
+				<anchored to="button_spelllevel_1" position="right" offset="11,0" width="30" />
+				<disabled/>				
+				<state textres="npc_label_spellslot2" />
+				<script>
+					function onButtonPress()
+						local wndSelectedClass = window.spellclass.getWindows();
+						local sClassName = ""
+						for _,v in pairs(wndSelectedClass) do
+							if v.toggle.getValue() == "1" then
+								sClassName = v.name.getValue();
+							end
+						end
+						window.spells.createSpellList(2, sClassName);
+						
+						if CampaignRegistry.charwizard.classes then
+							for _,vClass in pairs (CampaignRegistry.charwizard.classes) do
+								if vClass.name == string.lower(sClassName) then
+									if vClass.maxspelllevel then
+										nMaxSpellLevel = vClass.maxspelllevel;
+									end
+								end
+							end
+						end
+
+						if sClassName ~= "WARLOCK" then
+							for i=1,nMaxSpellLevel do
+								window["button_spelllevel_" .. i].setFrame("buttonup", 5, 5, 5, 5);
+							end
+						else
+							for i=1,9 do
+								if window["slots_available_" .. i].getValue() >0 then
+									window["button_spelllevel_" .. i].setFrame("buttonup", 5, 5, 5, 5);
+								end
+							end						
+						end
+						if sClassName == "PALADIN" or  sClassName == "RANGER" then
+							window.cantrip_button.setEnabled(false);
+							window.cantrip_button.setFrame("buttondisabled", 5,5,5,5);
+						else
+							window.cantrip_button.setEnabled(true);
+							window.cantrip_button.setFrame("buttonup", 5, 5, 5, 5);
+						end
+						setFrame("buttondown", 5, 5, 5, 5);						
+					end
+				</script>
+			</button_charwizard_race>
+			<button_charwizard_race name="button_spelllevel_3">
+				<anchored to="button_spelllevel_2" position="right" offset="11,0" width="30" />
+				<disabled/>				
+				<state textres="npc_label_spellslot3" />
+				<script>
+					function onButtonPress()
+						local wndSelectedClass = window.spellclass.getWindows();
+						local sClassName = ""
+						for _,v in pairs(wndSelectedClass) do
+							if v.toggle.getValue() == "1" then
+								sClassName = v.name.getValue();
+							end
+						end
+						window.spells.createSpellList(3, sClassName);
+
+						if CampaignRegistry.charwizard.classes then
+							for _,vClass in pairs (CampaignRegistry.charwizard.classes) do
+								if vClass.name == string.lower(sClassName) then
+									if vClass.maxspelllevel then
+										nMaxSpellLevel = vClass.maxspelllevel;
+									end
+								end
+							end
+						end
+
+						if sClassName ~= "WARLOCK" then
+							for i=1,nMaxSpellLevel do
+								window["button_spelllevel_" .. i].setFrame("buttonup", 5, 5, 5, 5);
+							end
+						else
+							for i=1,9 do
+								if window["slots_available_" .. i].getValue() >0 then
+									window["button_spelllevel_" .. i].setFrame("buttonup", 5, 5, 5, 5);
+								end
+							end						
+						end
+						if sClassName == "PALADIN" or  sClassName == "RANGER" then
+							window.cantrip_button.setEnabled(false);
+							window.cantrip_button.setFrame("buttondisabled", 5,5,5,5);
+						else
+							window.cantrip_button.setEnabled(true);
+							window.cantrip_button.setFrame("buttonup", 5, 5, 5, 5);
+						end
+						setFrame("buttondown", 5, 5, 5, 5);						
+					end
+				</script>
+			</button_charwizard_race>
+			<button_charwizard_race name="button_spelllevel_4">
+				<anchored to="button_spelllevel_3" position="right" offset="11,0" width="30" />
+				<disabled/>				
+				<state textres="npc_label_spellslot4" />
+				<script>
+					function onButtonPress()
+						local wndSelectedClass = window.spellclass.getWindows();
+						local sClassName = ""
+						for _,v in pairs(wndSelectedClass) do
+							if v.toggle.getValue() == "1" then
+								sClassName = v.name.getValue();
+							end
+						end
+						window.spells.createSpellList(4, sClassName);
+						
+						if CampaignRegistry.charwizard.classes then
+							for _,vClass in pairs (CampaignRegistry.charwizard.classes) do
+								if vClass.name == string.lower(sClassName) then
+									if vClass.maxspelllevel then
+										nMaxSpellLevel = vClass.maxspelllevel;
+									end
+								end
+							end
+						end
+
+						if sClassName ~= "WARLOCK" then
+							for i=1,nMaxSpellLevel do
+								window["button_spelllevel_" .. i].setFrame("buttonup", 5, 5, 5, 5);
+							end
+						else
+							for i=1,9 do
+								if window["slots_available_" .. i].getValue() >0 then
+									window["button_spelllevel_" .. i].setFrame("buttonup", 5, 5, 5, 5);
+								end
+							end						
+						end
+						if sClassName == "PALADIN" or  sClassName == "RANGER" then
+							window.cantrip_button.setEnabled(false);
+							window.cantrip_button.setFrame("buttondisabled", 5,5,5,5);
+						else
+							window.cantrip_button.setEnabled(true);
+							window.cantrip_button.setFrame("buttonup", 5, 5, 5, 5);
+						end
+						setFrame("buttondown", 5, 5, 5, 5);						
+					end
+				</script>
+			</button_charwizard_race>
+			<button_charwizard_race name="button_spelllevel_5">
+				<anchored to="button_spelllevel_4" position="right" offset="11,0" width="30" />
+				<disabled/>				
+				<state textres="npc_label_spellslot5" />
+				<script>
+					function onButtonPress()
+						local wndSelectedClass = window.spellclass.getWindows();
+						local sClassName = ""
+						for _,v in pairs(wndSelectedClass) do
+							if v.toggle.getValue() == "1" then
+								sClassName = v.name.getValue();
+							end
+						end
+						window.spells.createSpellList(5, sClassName);
+						
+						if CampaignRegistry.charwizard.classes then
+							for _,vClass in pairs (CampaignRegistry.charwizard.classes) do
+								if vClass.name == string.lower(sClassName) then
+									if vClass.maxspelllevel then
+										nMaxSpellLevel = vClass.maxspelllevel;
+									end
+								end
+							end
+						end
+
+						if sClassName ~= "WARLOCK" then
+							for i=1,nMaxSpellLevel do
+								window["button_spelllevel_" .. i].setFrame("buttonup", 5, 5, 5, 5);
+							end
+						else
+							for i=1,9 do
+								if window["slots_available_" .. i].getValue() >0 then
+									window["button_spelllevel_" .. i].setFrame("buttonup", 5, 5, 5, 5);
+								end
+							end						
+						end
+						if sClassName == "PALADIN" or  sClassName == "RANGER" then
+							window.cantrip_button.setEnabled(false);
+							window.cantrip_button.setFrame("buttondisabled", 5,5,5,5);
+						else
+							window.cantrip_button.setEnabled(true);
+							window.cantrip_button.setFrame("buttonup", 5, 5, 5, 5);
+						end
+						setFrame("buttondown", 5, 5, 5, 5);						
+					end
+				</script>
+			</button_charwizard_race>
+			<button_charwizard_race name="button_spelllevel_6">
+				<anchored to="button_spelllevel_5" position="right" offset="11,0" width="30" />
+				<disabled/>				
+				<state textres="npc_label_spellslot6" />
+				<script>
+					function onButtonPress()
+						local wndSelectedClass = window.spellclass.getWindows();
+						local sClassName = ""
+						for _,v in pairs(wndSelectedClass) do
+							if v.toggle.getValue() == "1" then
+								sClassName = v.name.getValue();
+							end
+						end
+						window.spells.createSpellList(6, sClassName);					
+
+						if CampaignRegistry.charwizard.classes then
+							for _,vClass in pairs (CampaignRegistry.charwizard.classes) do
+								if vClass.name == string.lower(sClassName) then
+									if vClass.maxspelllevel then
+										nMaxSpellLevel = vClass.maxspelllevel;
+									end
+								end
+							end
+						end
+
+						if sClassName ~= "WARLOCK" then
+							for i=1,nMaxSpellLevel do
+								window["button_spelllevel_" .. i].setFrame("buttonup", 5, 5, 5, 5);
+							end
+						else
+							for i=1,9 do
+								if window["slots_available_" .. i].getValue() >0 then
+									window["button_spelllevel_" .. i].setFrame("buttonup", 5, 5, 5, 5);
+								end
+							end						
+						end
+						if sClassName == "PALADIN" or  sClassName == "RANGER" then
+							window.cantrip_button.setEnabled(false);
+							window.cantrip_button.setFrame("buttondisabled", 5,5,5,5);
+						else
+							window.cantrip_button.setEnabled(true);
+							window.cantrip_button.setFrame("buttonup", 5, 5, 5, 5);
+						end
+						setFrame("buttondown", 5, 5, 5, 5);						
+					end
+				</script>
+			</button_charwizard_race>
+			<button_charwizard_race name="button_spelllevel_7">
+				<anchored to="button_spelllevel_6" position="right" offset="11,0" width="30" />
+				<disabled/>				
+				<state textres="npc_label_spellslot7" />
+				<script>
+					function onButtonPress()
+						local wndSelectedClass = window.spellclass.getWindows();
+						local sClassName = ""
+						for _,v in pairs(wndSelectedClass) do
+							if v.toggle.getValue() == "1" then
+								sClassName = v.name.getValue();
+							end
+						end
+						window.spells.createSpellList(7, sClassName);
+
+						if CampaignRegistry.charwizard.classes then
+							for _,vClass in pairs (CampaignRegistry.charwizard.classes) do
+								if vClass.name == string.lower(sClassName) then
+									if vClass.maxspelllevel then
+										nMaxSpellLevel = vClass.maxspelllevel;
+									end
+								end
+							end
+						end
+
+						if sClassName ~= "WARLOCK" then
+							for i=1,nMaxSpellLevel do
+								window["button_spelllevel_" .. i].setFrame("buttonup", 5, 5, 5, 5);
+							end
+						else
+							for i=1,9 do
+								if window["slots_available_" .. i].getValue() >0 then
+									window["button_spelllevel_" .. i].setFrame("buttonup", 5, 5, 5, 5);
+								end
+							end						
+						end
+						if sClassName == "PALADIN" or  sClassName == "RANGER" then
+							window.cantrip_button.setEnabled(false);
+							window.cantrip_button.setFrame("buttondisabled", 5,5,5,5);
+						else
+							window.cantrip_button.setEnabled(true);
+							window.cantrip_button.setFrame("buttonup", 5, 5, 5, 5);
+						end
+						setFrame("buttondown", 5, 5, 5, 5);						
+					end
+				</script>
+			</button_charwizard_race>
+			<button_charwizard_race name="button_spelllevel_8">
+				<anchored to="button_spelllevel_7" position="right" offset="11,0" width="30" />
+				<disabled/>				
+				<state textres="npc_label_spellslot8" />
+				<script>
+					function onButtonPress()
+						local wndSelectedClass = window.spellclass.getWindows();
+						local sClassName = ""
+						for _,v in pairs(wndSelectedClass) do
+							if v.toggle.getValue() == "1" then
+								sClassName = v.name.getValue();
+							end
+						end
+						window.spells.createSpellList(8, sClassName);
+
+						if CampaignRegistry.charwizard.classes then
+							for _,vClass in pairs (CampaignRegistry.charwizard.classes) do
+								if vClass.name == string.lower(sClassName) then
+									if vClass.maxspelllevel then
+										nMaxSpellLevel = vClass.maxspelllevel;
+									end
+								end
+							end
+						end
+
+						if sClassName ~= "WARLOCK" then
+							for i=1,nMaxSpellLevel do
+								window["button_spelllevel_" .. i].setFrame("buttonup", 5, 5, 5, 5);
+							end
+						else
+							for i=1,9 do
+								if window["slots_available_" .. i].getValue() >0 then
+									window["button_spelllevel_" .. i].setFrame("buttonup", 5, 5, 5, 5);
+								end
+							end						
+						end
+						if sClassName == "PALADIN" or  sClassName == "RANGER" then
+							window.cantrip_button.setEnabled(false);
+							window.cantrip_button.setFrame("buttondisabled", 5,5,5,5);
+						else
+							window.cantrip_button.setEnabled(true);
+							window.cantrip_button.setFrame("buttonup", 5, 5, 5, 5);
+						end
+						setFrame("buttondown", 5, 5, 5, 5);						
+					end
+				</script>
+			</button_charwizard_race>
+			<button_charwizard_race name="button_spelllevel_9">
+				<anchored to="button_spelllevel_8" position="right" offset="11,0" width="30" />
+				<disabled/>				
+				<state textres="npc_label_spellslot9" />
+				<script>
+					function onButtonPress()
+						local wndSelectedClass = window.spellclass.getWindows();
+						local sClassName = ""
+						for _,v in pairs(wndSelectedClass) do
+							if v.toggle.getValue() == "1" then
+								sClassName = v.name.getValue();
+							end
+						end
+						window.spells.createSpellList(9, sClassName);
+						
+						if CampaignRegistry.charwizard.classes then
+							for _,vClass in pairs (CampaignRegistry.charwizard.classes) do
+								if vClass.name == string.lower(sClassName) then
+									if vClass.maxspelllevel then
+										nMaxSpellLevel = vClass.maxspelllevel;
+									end
+								end
+							end
+						end
+
+						if sClassName ~= "WARLOCK" then
+							for i=1,nMaxSpellLevel do
+								window["button_spelllevel_" .. i].setFrame("buttonup", 5, 5, 5, 5);
+							end
+						else
+							for i=1,9 do
+								if window["slots_available_" .. i].getValue() >0 then
+									window["button_spelllevel_" .. i].setFrame("buttonup", 5, 5, 5, 5);
+								end
+							end						
+						end
+						if sClassName == "PALADIN" or  sClassName == "RANGER" then
+							window.cantrip_button.setEnabled(false);
+							window.cantrip_button.setFrame("buttondisabled", 5,5,5,5);
+						else
+							window.cantrip_button.setEnabled(true);
+							window.cantrip_button.setFrame("buttonup", 5, 5, 5, 5);
+						end
+						setFrame("buttondown", 5, 5, 5, 5);						
+					end
+				</script>
+			</button_charwizard_race>			
+
+			<windowlist name="spells">
+				<anchored>
+					<top parent="cantrip_button" anchor="bottom" relation="relative" offset="12" />
+					<left offset="15" />
+					<right offset="-15" />
+					<bottom offset="-250" />
+				</anchored>
+				<skipempty />
+				<readonly />
+				<child></child>
+				<child><backcolor>1A40301E</backcolor></child>
+				<frame name="fielddark" offset="10,9,10,9" />
+				<empty><textres>no_spells_notice</textres></empty>				
+				<class>spell_item</class>
+				<sortby><control>subtype</control><control>name</control></sortby>				
+				<script file="charwizard/scripts/charwizard_spelllist.lua" />
+			</windowlist>
+			<scrollbar name="spells_scrollbar">
+				<anchored to="spells" />
+				<target>spells</target>
+			</scrollbar>
+
+			<windowlist name="spellclass">
+				<anchored height="20">
+					<top parent="spells" anchor="bottom" relation="relative" offset="15" />
+					<left offset="15" />
+					<right offset="-15" />					
+				</anchored>
+				<columns width="75" fillwidth="true" />				
+				<skipempty />				
+				<noscroll />
+				<child><backcolor>1A40301E</backcolor></child>
+				<frame name="fielddark" offset="10,9,10,9" />
+				<empty><textres>no_class_notice</textres></empty>				
+				<class>spell_class_item</class>
+			</windowlist>
+
+			<genericcontrol name="genselectedframe">
+				<anchored height="20">
+					<top parent="spells" anchor="bottom" relation="relative" offset="18" />
+					<left offset="15" />
+					<right offset="-15" />					
+				</anchored>				
+				<frame name="groupbox" offset="10,10,10,10" />
+			</genericcontrol>
+			<label name="selectedspelllist_label">
+				<anchored to="genselectedframe" position="insidetopleft" offset="2,0" />
+				<static textres="charwizard_selectedspelllist_title" />
+				<center />
+			</label>			
+			<label name="cantrips_available_label">
+				<anchored to="genselectedframe" position="insidetopright" offset="205" />
+				<static textres="charwizard_cantrips_available" />
+				<center />
+			</label>
+			<stringcontrol name="cantrips_available">
+				<anchored to="genselectedframe" position="insidetopright" offset="160" width="40" height="20" />
+				<frame name="fieldlight" offset="5,5,5,5" />
+				<font>sheetlabel</font>
+				<readonly />				
+				<center />				
+			</stringcontrol>			
+			<label name="spells_available_label">
+				<anchored to="genselectedframe" position="insidetopright" offset="50" />
+				<static textres="charwizard_spells_available" />
+				<center />
+			</label>
+			<stringcontrol name="spells_available">
+				<anchored to="genselectedframe" position="insidetopright" offset="5" width="40" height="20" />
+				<frame name="fieldlight" offset="5,5,5,5" />
+				<font>sheetlabel</font>
+				<readonly />				
+				<center />				
+			</stringcontrol>
+
+			<windowlist name="selectedspells">
+				<anchored>
+					<top parent="genselectedframe" anchor="bottom" relation="relative" offset="16" />
+					<left offset="15" />
+					<right offset="-15" />
+					<bottom offset="-42" />
+				</anchored>
+				<skipempty />
+				<child></child>
+				<child><backcolor>1A40301E</backcolor></child>
+				<frame name="fielddark" offset="10,9,10,9" />
+				<empty><textres>spell_drag_notice</textres></empty>
+				<class>selectedspell_item</class>
+				<sortby><control>group</control><control>level</control><control>name</control></sortby>
+				<allowdelete/>
+				<script file="charwizard/scripts/charwizard_selectedspells.lua" />
+			</windowlist>
+			<scrollbar name="selectedspells_scrollbar">
+				<anchored to="selectedspells" />
+				<target>selectedspells</target>
+			</scrollbar>
+		</sheetdata>			
+	</windowclass>
+
+	<windowclass name="spell_item">
+		<margins control="0,0,0,2" />
+		<sheetdata>
+			<linkfield_list name="link" />
+			<string_list_link name="name">
+				<bounds>30,2,210,20</bounds>
+			</string_list_link>
+			<stringcontrol name="displaylevel">
+				<bounds>210,2,40,20</bounds>
+				<center />
+				<readonly />				
+			</stringcontrol>
+			<stringcontrol name="group">
+				<bounds>250,2,160,20</bounds>
+				<center />
+				<readonly />				
+			</stringcontrol>
+			<numberc name="level">
+				<bounds>0,0,0,0</bounds>
+				<invisible/>
+				<readonly />				
+			</numberc>
+			<stringcontrol name="source">
+				<bounds>0,0,0,0</bounds>
+				<invisible/>
+				<readonly />
+			</stringcontrol>
+			<stringcontrol name="subtype">
+				<bounds>0,0,0,0</bounds>
+				<invisible/>
+				<readonly />				
+			</stringcontrol>			
+		</sheetdata>
+	</windowclass>
+
+	<windowclass name="selectedspell_item">
+		<margins control="0,0,0,2" />
+		<script>
+			function onClose()
+				local w = Interface.findWindow("charwizard", "");
+				if w then
+					if level.getValue() == "0" then
+						local sCantrips = windowlist.window.cantrips_available.getValue();
+						local sTotalCantrips = string.match(sCantrips, "/(%d+)");
+						local sCantripsAvailable = string.match(sCantrips, "%d+");
+						local nCantripsAvailable = tonumber(sCantripsAvailable) + 1;
+						windowlist.window.cantrips_available.setValue(nCantripsAvailable .. "/" .. sTotalCantrips);
+					else
+						local sSpells = windowlist.window.spells_available.getValue();
+						local sTotalSpells = string.match(sSpells, "/(%d+)");
+						local sSpellsAvailable = string.match(sSpells, "%d+");
+						local nSpellsAvailable = tonumber(sSpellsAvailable) + 1;
+						windowlist.window.spells_available.setValue(nSpellsAvailable .. "/" .. sTotalSpells);				
+					end
+				end
+			end
+		</script>
+		<sheetdata>
+			<linkfield_list name="link" />
+			<string_list_link name="name">
+				<bounds>30,2,210,20</bounds>
+			</string_list_link>
+			<stringcontrol name="displaylevel">
+				<bounds>210,2,40,20</bounds>
+				<center />
+				<readonly />				
+			</stringcontrol>
+			<stringcontrol name="level">
+				<bounds>400,0,0,0</bounds>
+				<invisible/>				
+			</stringcontrol>			
+			<stringcontrol name="group">
+				<bounds>250,2,160,20</bounds>			
+				<center />
+				<readonly />
+			</stringcontrol>
+			<stringcontrol name="source">
+				<bounds>400,0,0,0</bounds>
+				<invisible/>				
+				<readonly />
+			</stringcontrol>
+			<stringcontrol name="subtype">
+				<bounds>400,0,0,0</bounds>
+				<invisible/>				
+				<readonly />
+			</stringcontrol>			
+		</sheetdata>
+	</windowclass>
+
+	<windowclass name="spell_class_item">
+		<margins control="0,0,0,10" />
+		<script file="charwizard/scripts/charwizard_race.lua" />
+		<sheetdata>
+			<genericcontrol name="rightanchor">
+				<anchored position="insidetopright" offset="0,2" height="0" width="0" />
+			</genericcontrol>
+			<button_charwizard_class name="bname">
+				<anchored to="rightanchor" width="65" height="16">
+					<top />
+					<right anchor="left" relation="relative" offset="-2" />
+				</anchored>
+				<script>
+					function onButtonPress()
+						window.windowlist.window.spells.closeAll();
+						window.windowlist.window.spells.createSpellList(0, window.name.getValue());
+						window.windowlist.window.spells.getSpellsAvailable(window.name.getValue());
+
+						for k,v in pairs(window.windowlist.getWindows()) do
+							v.bname.setFrame("buttonup", 4, 4, 4, 4)
+							v.toggle.setValue(0);
+						end
+
+						setFrame("buttondown", 4, 4, 4, 4);
+						window.toggle.setValue(1);
+						
+						if window.name.getValue() == "PALADIN" or window.name.getValue() == "RANGER" then
+							window.windowlist.window.spells.createSpellList(1, window.name.getValue());
+							window.windowlist.window.button_spelllevel_1.setFrame("buttondown", 5, 5, 5, 5);
+							window.windowlist.window.cantrip_button.setEnabled(false);
+							window.windowlist.window.cantrip_button.setFrame("buttondisabled", 5,5,5,5);							
+						else
+							window.windowlist.window.spells.createSpellList(0, window.name.getValue());						
+							window.windowlist.window.cantrip_button.setFrame("buttondown", 5, 5, 5, 5);
+							window.windowlist.window.cantrip_button.setEnabled(true);							
+						end
+					end
+				</script>
+			</button_charwizard_class>
+			<linkcontrol name="shortcut">
+				<anchored to="rightanchor" width="20" height="20">
+					<top />
+					<right anchor="left" relation="relative" offset="-2" />
+				</anchored>
+				<class>reference_class</class>
+				<readonly />
+				<invisible />				
+			</linkcontrol>
+			<stringcontrol name="toggle">
+				<anchored to="rightanchor" width="20" height="20">
+					<top />
+					<right anchor="left" relation="relative" offset="-2" />
+				</anchored>
+				<invisible/>				
+			</stringcontrol>			
+			<stringcontrol name="level">
+				<anchored to="rightanchor" width="20" height="20">
+					<top />
+					<right anchor="left" relation="relative" offset="-2" />
+				</anchored>
+				<readonly />				
+				<invisible/>				
+			</stringcontrol>
+			<string_textlistitem name="module">
+				<anchored to="rightanchor">
+					<top />
+					<left parent="" offset="0" />
+					<right anchor="left" relation="relative" offset="-7" />
+				</anchored>
+				<invisible />
+				<multilinespacing>20</multilinespacing>
+			</string_textlistitem>			
+			<string_textlistitem name="class">
+				<anchored to="rightanchor">
+					<top />
+					<left parent="" offset="200" />
+					<right anchor="left" relation="relative" offset="-7" />
+				</anchored>
+				<multilinespacing>20</multilinespacing>
+				<invisible />				
+			</string_textlistitem>
+			<string_textlistitem name="name">
+				<anchored to="rightanchor">
+					<top />
+					<left parent="" offset="20" />
+					<right anchor="left" relation="relative" offset="-7" />
+				</anchored>
+				<multilinespacing>20</multilinespacing>
+				<invisible />				
+			</string_textlistitem>
+		</sheetdata>
+	</windowclass>
+</root>

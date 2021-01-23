@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<!-- 
+  Please see the license.html file included with this distribution for 
+  attribution and copyright information.
+-->
+
+<root>
+	<template name="number_charwizard_genabilityscore">
+		<basicnumberc>
+			<default>10</default>
+			<droptypes>
+				<type>attribute</type>
+			</droptypes>
+			<script file="charwizard/scripts/number_charwizard_genabilityscore.lua" />
+		</basicnumberc>
+	</template>
+	<template name="number_charwizard_abilityscore">
+		<number_charwizard_genabilityscore>
+			<anchored to="statstitle" width="40" height="40">
+				<top anchor="bottom" offset="6" />
+				<left anchor="center" relation="relative" offset="20" />
+			</anchored>
+		</number_charwizard_genabilityscore>
+	</template>
+	<template name="number_charwizard_abilityscore2">
+		<number_charwizard_genabilityscore>
+			<anchored to="genval1" width="40" height="40">
+				<top anchor="top" offset="0" />
+				<left anchor="right" relation="relative" offset="30" />
+			</anchored>
+		</number_charwizard_genabilityscore>
+	</template>	
+
+	<template name="button_charwizard_ability_moveup">
+		<buttoncontrol>
+			<anchored position="belowleft" offset="-2,0" width="20" height="20" />
+			<icon normal="button_page_prev" />
+			<invisible />
+			<script>
+				function onButtonPress()
+					window.handleMoveAbilityUp(getName());
+				end
+			</script>			
+		</buttoncontrol>
+	</template>	
+	<template name="button_charwizard_ability_movedown">
+		<buttoncontrol>
+			<anchored position="belowright" offset="-2,0" width="20" height="20" />
+			<icon normal="button_page_next" />
+			<invisible />
+			<script>
+				function onButtonPress()
+					window.handleMoveAbilityDown(getName());
+				end
+			</script>			
+		</buttoncontrol>
+	</template>	
+	<template name="button_charwizard_ability_genvalup">
+		<buttoncontrol>
+			<anchored position="aboveright" offset="-25,-20" width="20" height="20" />
+			<icon normal="arrow_sm_up" />
+			<invisible />
+			<script>
+				function onButtonPress()
+					local sName = getName();
+					local sNumber = sName:match("%d+");
+					window.handleAbilityPointBuyUp(sNumber);
+				end
+			</script>
+		</buttoncontrol>
+	</template>
+	<template name="button_charwizard_ability_genvaldown">
+		<buttoncontrol>
+			<anchored position="belowright" offset="-25,-20" width="20" height="20" />
+			<icon normal="arrow_sm_down" />
+			<invisible />
+			<script>
+				function onButtonPress()
+					local sName = getName();
+					local sNumber = sName:match("%d+");
+					window.handleAbilityPointBuyDown(sNumber);
+				end
+			</script>
+		</buttoncontrol>		
+	</template>
+	<template name="button_charwizard">	
+		<buttoncontrol>
+			<anchored width="20" height="20" />
+			<icon normal="button_star" pressed="button_star_down" />
+			<tooltip textres="charwizard_tooltip_wizard" />
+			<script>
+				function onButtonPress()
+					Interface.openWindow("charwizard", "");
+				end	
+			</script>
+		</buttoncontrol>	
+	</template>
+	<template name="button_charwizard_commit">	
+		<buttoncontrol>
+			<anchored height="20" />
+			<frame name="buttondisabled" offset="5,5,5,5" />
+			<stateframe>
+				<pressed name="buttondown" offset="5,5,5,5" nobaseframe="true" />
+			</stateframe>
+			<font>button-white-large</font>
+			<pressed offset="1,1" />
+			<tooltip textres="charwizard_tooltip_commit" />
+			<state textres="charwizard_tooltip_save" />			
+			<disabled />
+			<script>
+				function onButtonPress()
+					if CampaignRegistry.charwizard.import then
+						window.commitCharacter(window.summary.subwindow.summary_identity.getValue());
+					else
+						if User.isHost() or User.isLocal() then
+							window.commitCharacter(window.summary.subwindow.summary_identity.getValue());
+						else
+							window.requestCommit();					
+						end
+					end
+				end	
+			</script>
+		</buttoncontrol>	
+	</template>
+	<template name="button_charwizard_next">	
+		<buttoncontrol>
+			<anchored height="20" />
+			<frame name="buttonup" offset="5,5,5,5" />
+			<stateframe>
+				<pressed name="buttondown" offset="5,5,5,5" nobaseframe="true" />
+			</stateframe>
+			<font>button-white-large</font>
+			<pressed offset="1,1" />
+			<tooltip textres="charwizard_tooltip_next" />
+			<state textres="charwizard_nextpage" />			
+		</buttoncontrol>	
+	</template>
+	<template name="button_charwizard_back">	
+		<buttoncontrol>
+			<anchored height="20" />
+			<frame name="buttonup" offset="5,5,5,5" />
+			<stateframe>
+				<pressed name="buttondown" offset="5,5,5,5" nobaseframe="true" />
+			</stateframe>
+			<font>button-white-large</font>
+			<pressed offset="1,1" />
+			<tooltip textres="charwizard_tooltip_back" />
+			<state textres="charwizard_prevpage" />
+		</buttoncontrol>	
+	</template>	
+	<template name="button_charwizard_tab">	
+		<buttoncontrol>
+			<anchored height="20" />
+			<frame name="buttonup" offset="5,5,5,5" />
+			<stateframe>
+				<pressed name="buttondown" offset="5,5,5,5" nobaseframe="true" />
+			</stateframe>
+			<font>button-white-large</font>
+			<pressed offset="1,1" />
+			<tooltip textres="" />
+			<state textres="" />
+		</buttoncontrol>	
+	</template>
+
+	<template name="button_charwizard_feat_collapse_list">
+		<buttoncontrol>
+			<anchored width="20" height="20" />
+			<state icon="button_collapse" />
+			<script>
+				function onButtonPress()
+					if not window["genfeatframe_collapsed_" .. self.target[1]].isVisible() then
+						window["genfeatframe_expanded_" .. self.target[1]].setVisible(false);
+						window["button_collapse_feats_" .. self.target[1]].setVisible(false);						
+						window["genfeatframe_collapsed_" .. self.target[1]].setVisible(true);
+						window["button_expand_feats_" .. self.target[1]].setVisible(true);
+						window["feat_choose_" .. self.target[1]].setVisible(false);
+						window["feat_choosing_" .. self.target[1]].setVisible(false);
+						window["feats_" .. self.target[1]].setVisible(false);
+						if window["feat_name_" .. self.target[1]].getValue() ~= "" then
+							window["feat_name_" .. self.target[1]].setVisible(true);
+							window["feat_shortcut_" .. self.target[1]].setVisible(true);
+							window["feat_chosen_" .. self.target[1]].setVisible(true);							
+						else
+							window["feat_choose_" .. self.target[1]].setVisible(true);						
+						end
+						for i=1,8 do
+							if window["feat_choose_" .. i].getValue() ~= "" then
+								window["genfeatframe_collapsed_" .. i].setVisible(true);
+								window["button_expand_feats_" .. i].setVisible(true);
+								window["feat_choose_" .. i].setVisible(true);
+							end
+							if window["feat_name_" .. i].isVisible() then
+								window["feat_choose_" .. i].setVisible(false);
+								window["feat_chosen_" .. i].setVisible(true);
+							end
+						end
+					end
+				end
+			</script>
+		</buttoncontrol>
+	</template>	
+	<template name="button_charwizard_feat_expand_list">
+		<buttoncontrol>
+			<anchored width="20" height="20" />
+			<state icon="button_expand" />
+			<script>
+				function onButtonPress()
+					if window["genfeatframe_collapsed_" .. self.target[1]].isVisible() then
+						window["genfeatframe_expanded_" .. self.target[1]].setVisible(true);
+						window["button_collapse_feats_" .. self.target[1]].setVisible(true);						
+						window["genfeatframe_collapsed_" .. self.target[1]].setVisible(false);
+						window["feat_choose_" .. self.target[1]].setVisible(false);
+						window["feat_choosing_" .. self.target[1]].setVisible(true);						
+						window["button_expand_feats_" .. self.target[1]].setVisible(false);
+						window["feats_" .. self.target[1]].setVisible(true);
+						window["feat_name_" .. self.target[1]].setVisible(false);
+						window["feat_shortcut_" .. self.target[1]].setVisible(false);
+						for i=1,8 do
+							window["genfeatframe_collapsed_" .. i].setVisible(false);
+							window["button_expand_feats_" .. i].setVisible(false);
+							window["feat_choose_" .. i].setVisible(false);
+						end
+					end
+				end
+			</script>
+		</buttoncontrol>
+	</template>
+
+	<template name="button_charwizard_expand_window">
+		<buttoncontrol>
+			<anchored width="20" height="20" />
+			<state icon="button_expand" />
+			<script>
+				function onButtonPress()
+					if window[self.target[1]].isVisible() then
+						window[self.target[1]].setVisible(false);
+					else
+						window[self.target[1]].setVisible(true);
+					end
+				end
+			</script>
+		</buttoncontrol>
+	</template>
+	<template name="button_charwizard_feat_expand_window">
+		<buttoncontrol>
+			<anchored width="20" height="20" />
+			<state icon="button_expand" />
+			<script>
+				function onButtonPress()
+					if window[self.target[1]].isVisible() then
+						window[self.target[1]].setVisible(false);
+						window.asi_button.setVisible(false);
+						if window.selection_type.getValue() ~= "selection" then 
+							window.selection_name.setVisible(true);
+						end
+						if window.group_name.getValue() == "SELECT RACIAL FEAT" then
+							if window.selection_name.getValue() ~= "" then
+								window.selection_shortcut.setVisible(true);
+							end
+						end						
+					else
+						window[self.target[1]].setVisible(true);
+						window.selection_name.setVisible(false);
+						if window.group_name.getValue() ~= "SELECT RACIAL FEAT" and window.selection_type.getValue() ~= "selection" then
+							window.asi_button.setVisible(true);
+						end
+					end
+				end
+			</script>
+		</buttoncontrol>
+	</template>
+	
+	<template name="button_charwizard_feat">
+		<buttoncontrol>
+			<frame name="buttonup" offset="5,5,5,5" />
+			<stateframe>
+				<normal name="buttonup" offset="5,5,5,5" nobaseframe="true" />			
+				<pressed name="buttondown" offset="5,5,5,5" nobaseframe="true" />
+			</stateframe>
+			<font>button-white</font>
+			<pressed offset="1,1" />			
+		</buttoncontrol>
+	</template>		
+	<template name="button_charwizard_race">
+		<buttoncontrol>
+			<frame name="buttonup" offset="5,5,5,5" />
+			<stateframe>
+				<normal name="buttonup" offset="5,5,5,5" nobaseframe="true" />			
+				<pressed name="buttondown" offset="5,5,5,5" nobaseframe="true" />
+			</stateframe>
+			<font>button-white-large</font>
+			<pressed offset="1,1" />			
+		</buttoncontrol>
+	</template>	
+	<template name="button_charwizard_class">
+		<buttoncontrol>
+			<frame name="buttonup" offset="4,4,4,4" />
+			<stateframe>
+				<normal name="buttonup" offset="4,4,4,4" nobaseframe="true" />			
+				<pressed name="buttondown" offset="4,4,4,4" nobaseframe="true" />
+			</stateframe>
+			<font>sheettext</font>
+			<pressed offset="1,1" />			
+		</buttoncontrol>
+	</template>	
+	<template name="button_charwizard_choice">
+		<buttoncontrol>
+			<frame name="buttonup" offset="5,5,5,5" />
+			<stateframe>
+				<normal name="buttonup" offset="5,5,5,5" nobaseframe="true" />			
+				<pressed name="buttondown" offset="5,5,5,5" nobaseframe="true" />
+			</stateframe>		
+			<font>button-white-large</font>
+			<pressed offset="1,1" />			
+		</buttoncontrol>
+	</template>
+</root>	

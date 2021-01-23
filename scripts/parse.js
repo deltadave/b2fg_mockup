@@ -1,4 +1,141 @@
-function parseCharacter(inputCharacter) {
+/*
+* TODO:
+      refactor to create character as intermediate object then will be able to add translator from character object to various flavors of xml in a modular manner. This will allow future inclusion of other xml formats. 
+*
+*/
+
+function parseCharacter() {
+
+}
+var templateMaker = function (object) {
+  return function (context) {
+    let replacer = function (key, val) {
+      if (typeof val === 'function') {
+        return context[val()]
+      }
+      return val;
+    }
+    return JSON.parse(JSON.stringify(obj, replacer))
+  }
+}
+
+let character = {  //character template to build on one at a time.
+  //based on the character requirements of Fantasy grounds.
+  //may need to modify for other xml format requirements
+  main: function () {return 'main'},
+  skills: function () {return 'skills'},
+  abilities: function () {return 'abilities'},
+  inventory: function () {return 'inventory'},
+  notes: function () {return 'notes'},
+  log: function () {return 'log'},
+  actions: function () {return 'actions'},
+  powers: function () {return 'powers'}
+} 
+
+let template = templateMaker(character)
+
+let data = {
+  main: {buildMain(characterData)},
+  skills: {},
+  abilities: {},
+  inventory: {},
+  notes: {},
+  log: {},
+  actions: {},  //likely to be blank - for later consideration
+  powers: {}    //likely to be blank - for later consideration
+}
+
+let renderedCharacter = template(data)  //render the final json for use in building xml
+
+function buildMain(characterData) {
+  let main = {
+    name: characterData.name,
+    classnLevel: getClassNLevel(characterData),
+    profcy: Math.floor((getTotalLevels(characterData) +7)/4),
+    background: characterData.background.definition.name,
+    race: characterData.race.baseName,
+    abilityScores: compileStats(characterData)
+  }
+
+  return main
+  /*
+  name:
+    classnLevel: {class1: level, class2: level ...}
+    proficiency: number
+    background: string
+    race: string
+    abilities: [] length 6
+    senses:
+    perception:
+    saves: {proficiency: [] length 6, value: [] length 6)
+    ac:
+    init:
+    speed:
+    special move:
+    special defenses:
+    wounds:
+    max:
+    temp:
+    hitDice:
+  */
+}
+
+function compileStats(characterData) {
+  statArray = []
+  index = 0
+  for ( let stat in characterData.stats ) {
+    base = stat.value == null ? 10 : stat.value
+    bonus = characterData.bonusStats[index].value == null ? 0 : characterData.bonusStats[index].value
+    statArray[index] = base + bonus
+    override = characterData.overrideStats[index].value == null ? 0 : characterData.overrideStats[index].value
+    
+    modifiers = getObjects(characterData, '', _ABILITY[stat] + "-score");
+    for (let modifier of modifiers ) {
+      if (modifier.type === "bonus") {
+       statArray[index] += modifier.value
+      }else {
+        statArray[index] -= modifier.value
+      }
+    }
+    if(override > 0) statArray[index] = override
+    if (statArray[index] > 20 ) statArray[index] = 20
+
+    index++
+  }
+  return statArray
+}
+
+function getClassNLevel (characterData) {
+  const classNLevels = {}
+  for (const clas in characterData.classes) {
+    classNLevels = classNLevels[clas.definition.name] = clas.level
+  }
+
+  return classNLevels
+}
+function getTotalLevels(characterData) {
+  let totalLevels = 0
+  for (const clas in characterData.classes) {
+    totalLevels += clas.level
+  }
+  return totalLevels;
+}
+
+function buildFGC_XML(renderedCharacter) {
+  //header
+  charXML = `<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n<root version=\"3.3\" release=\"8|CoreRPG:4\">\n\t<character>\n`
+  //common xml
+  charXML += buildCommonXML(renderedCharacter)
+}
+
+function buildFGU_XML(renderedCharacter) {
+  //header 
+  charXML = `<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<root version=\"4\" dataversion=\"20191121\" release=\"8|CoreRPG:4\">\n\t<character>\n`
+  //common xml
+  charXML += buildCommonXML(renderedCharacter)
+}
+
+function buildFGC_XML(inputCharacter) {
 //preamble
   switch(exportFormat) {
     case ("Classic") :

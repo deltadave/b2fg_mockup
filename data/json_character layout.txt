@@ -1,0 +1,79 @@
+{
+  main: {
+    name:
+    classnLevel: {class1: level, class2: level ...}
+    proficiency: number
+    background: string
+    race: string
+    abilities: [] length 6
+    senses:
+    perception:
+    saves: {proficiency: [] length 6, value: [] length 6)
+    ac:
+    init:
+    speed:
+    special move:
+    special defenses:
+    wounds:
+    max:
+    temp:
+    hitDice:
+  },
+  skills: {
+    proficiency: []
+    name: []
+    stat: []
+    misc: []
+    total: []
+  },
+  abilities: {
+    feats: []
+    features:[]
+    traits: []
+    proficienes: []
+    languages: []
+  },
+  inventory: {
+    equipment:[{
+      number:
+      name:
+      location:
+      weight:
+      equipped:
+      },{},...]
+
+    treasure:[pp,gp,sp,cp,misc]
+    encumbrance: [max, lift, current]
+  },
+  notes: {
+    gender:
+    age:
+    height:
+    weight:
+    size:
+    alignment:
+    deity:
+    personality traits:
+    ideals
+    bonds:
+    flaws:
+    appearance:
+    notes:
+  },
+  log: {
+    inspiration:
+    faction:
+    dci:
+    adventures:
+  },
+  actions: {
+    weapons: [{
+      name:
+      wielded: melee, ranged
+      hands:
+      atkBonus:
+      damage:
+    }, {},...]
+  powers:  
+  }
+}
