@@ -289,32 +289,36 @@ $(function() {
                 //const proxyurl = "";
                 const proxyurl = "https://uakari-indigo.fly.dev/";
                 const charID = $('#getcharID').val().trim();
-                const jsonPart = "/json"
-                const url = "https://www.dndbeyond.com/character/";
-                const fetchurl = proxyurl + url + charID + jsonPart;
+                const url = "https://character-service.dndbeyond.com/character/v5/character/";
+                const fetchurl = proxyurl + url + charID;
                 console.log(fetchurl);
                 let headers = new Headers()
-                //headers.append('Content-Type', 'application/json');
-                headers.append('Content-Type', 'text/plain');
-                //headers.append('Accept', 'application/json');
+                headers.append('Accept', 'application/json');
+                headers.append('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
                 //headers.append('Origin','http://www.beyond2fgconvert.com/');
                 //headers.append('Access-Control-Allow-Origin', '*');
             
                 
-                fetch(fetchurl)
-/*                , {
-                    mode: 'no-cors',
+                fetch(fetchurl, {
+                    method: 'GET',
                     headers: headers
-                })*/
-                    .then(response => response.text())
-                    .then(contents => parseCharacter($.parseJSON(contents)))
-                    .catch(() => console.log("Can’t access " + url + " response. Blocked by browser?"))
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => parseCharacter(data))
+                    .catch((error) => {
+                        console.error("API Error:", error);
+                        alert("Error fetching character data: " + error.message + "\nURL: " + fetchurl);
+                    })
             } else {
                 // get debug data
                 const testdata = "https://github.com/deltadave/DandD_Beyond-2-FantasyGrounds/blob/master/data/68380905_formatted.txt" //can change to test different characters.
                 const charID = $('#getcharID').val().trim();
-                const jsonPart = "/json"
-                const url = "https://www.dndbeyond.com/character/";
+                const url = "https://character-service.dndbeyond.com/character/v5/character/";
                 let headers = new Headers()
                 headers.append('Content-Type', 'application/json');
                 headers.append('Accept', 'application/json');
@@ -370,7 +374,26 @@ $(function() {
 
 
 function parseCharacter(inputChar) {
-    var character = jQuery.extend(true, {}, inputChar);
+    // Handle v5 API response structure - extract actual character data
+    var rawResponse = jQuery.extend(true, {}, inputChar);
+    var character;
+    
+    // Debug: Log the structure of the received data
+    console.log("Received raw response:", rawResponse);
+    console.log("Raw response keys:", Object.keys(rawResponse));
+    
+    // Check if this is v5 format with nested data
+    if (rawResponse.data && rawResponse.success) {
+        console.log("V5 format detected - using nested data");
+        character = rawResponse.data;
+    } else {
+        console.log("Legacy format detected - using direct data");
+        character = rawResponse;
+    }
+    
+    console.log("Using character data:", character);
+    console.log("Character data keys:", Object.keys(character));
+    
     if(character.hasOwnProperty("errorCode")) {
         var alertString = " could not be found.\n";
         alertString += "Either the character doesn't actually exist,\n";
@@ -390,8 +413,12 @@ function parseCharacter(inputChar) {
     allXML = startXML;
     var buildXML = "\t\t<!--" + $("#getcharID").val().trim() + "-->\n";
 
-    pcFilename = character.name.replace(/\W/g, '');
-    buildXML += "\t\t<name type=\"string\">" + character.name + "</name>\n";
+    // Handle character name with safety check
+    var characterName = character.name || "Unknown Character";
+    console.log("Character name found:", characterName);
+    
+    pcFilename = characterName.replace(/\W/g, '');
+    buildXML += "\t\t<name type=\"string\">" + characterName + "</name>\n";
 
     // Alignment
     // 1. Lawful Good
@@ -1213,7 +1240,9 @@ function parseCharacter(inputChar) {
 
             buildXML += "\t\t\t\t<damage type=\"string\">" + thisDamage + " " + thisDamType + "</damage>\n";
             thisProperties = "";
-            item.definition.properties.some(function(weapProp, i) {
+            // Safety check for v5 format where properties might be null
+            if (item.definition.properties && Array.isArray(item.definition.properties)) {
+                item.definition.properties.some(function(weapProp, i) {
                 if(weapProp.name == "Ammunition" ) {
                     thisProperties += "Ammunition (" + item.definition.range + "/" + item.definition.longRange + "), ";
                 } else if(weapProp.name == "Thrown" ) {
@@ -1222,11 +1251,13 @@ function parseCharacter(inputChar) {
                     thisProperties += weapProp.name + ", ";
                 }
             });
+            }
             thisProperties = thisProperties.trim().slice(0, -1);
             buildXML += "\t\t\t\t<properties type=\"string\">" + thisProperties + "</properties>\n";
 
             // Get bonus for weapon, but this is only for Inventory, need to fix attacks
-            for(d = 0; d <= item.definition.grantedModifiers.length - 1; d++) {
+            if (item.definition.grantedModifiers && Array.isArray(item.definition.grantedModifiers)) {
+                for(d = 0; d <= item.definition.grantedModifiers.length - 1; d++) {
                 if (item.definition.grantedModifiers[d].type == "bonus" && item.equipped == true) {
                     if (item.isAttuned == true && item.definition.canAttune == true) {
                         buildXML += "\t\t\t\t<bonus type=\"number\">" + item.definition.grantedModifiers[0].value + "</bonus>\n";
@@ -1234,6 +1265,7 @@ function parseCharacter(inputChar) {
                         buildXML += "\t\t\t\t<bonus type=\"number\">" + item.definition.grantedModifiers[0].value + "</bonus>\n";
                     }
                 }
+            }
             }
 
             weaponID.push(i + 1);
