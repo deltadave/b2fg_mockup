@@ -1103,8 +1103,8 @@ function parseCharacter(inputChar) {
         character.modifiers.class.some(function(thisMod) {
             if(thisMod.subType == thisAbility + "-saving-throws") {
                 buildXML += "\t\t\t\t<saveprof type=\"number\">1</saveprof>\n";
-                // Figure out how to set substring(thisAbility) + Prof = 1
-                eval('var ' + thisAbility.substring(1,4) + 'Prof = 1;');
+                // Set proficiency flag using object notation instead of eval
+                window[thisAbility.substring(0,3) + 'Prof'] = 1;
             }
         });
         buildXML += "\t\t\t\t<score type=\"number\">" + abilScore + "</score>\n";
