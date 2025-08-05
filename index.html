@@ -43,7 +43,6 @@
         <div id="header">
           D&amp;D Beyond to Fantasy Grounds Character Converter
         </div>
-        Select FG Version: <div id="verButtonC">Classic</div><div id="verButtonU">Unity</div>
         <pre>
 Log in to your <a href="https://www.dndbeyond.com/my-characters" target="_blank">D&amp;D Beyond Account</a>.
 Mouse over 'Collections' on the navigation bar and select 'My Characters'.
@@ -60,7 +59,10 @@ please watch <a href="https://www.youtube.com/watch?v=Rzd6zPxClFY">
         <b>Character ID:&nbsp;&nbsp;<input type="text" id="getcharID">&nbsp;&nbsp;<button id="grabChar">Get Character Data</button></b><br />
         <br />
         <textarea id="textHere"></textarea><br />
-        <button id="dlChar">Download XML</button>&nbsp;&nbsp;<button id="resetChar">Reset ALL</button><br /><br />
+        <div style="display: flex; justify-content: space-between; margin-top: 10px; width: 750px;">
+          <button id="resetChar">Reset ALL</button>
+          <button id="dlChar">Download XML</button>
+        </div><br />
 
       <div id="displayLinks">
         <div style="width: 100%; height: 650px; margin-top: 50px;" id="dispLinkContainer">

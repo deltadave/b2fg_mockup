@@ -241,7 +241,7 @@ var hpStartArtificer = 8;
 
 var sumHP = 0;
 
-var fgVersion = 0;
+var fgVersion = 1; // Default to Unity (1)
 
 var mamFeat = 0;
 var alertFeat = 0;
@@ -264,13 +264,11 @@ $(function() {
     $("#Linkwindow").jqxWindow("close");
     $("#CLwindow").jqxWindow("close");
     $("#DONwindow").jqxWindow("close");
-    $("#grabChar").jqxButton({ width: "150px", height: "35px", theme: "darkblue" });
+    $("#grabChar").jqxButton({ width: "200px", height: "35px", theme: "darkblue" });
     $("#textHere").jqxTextArea({ theme: "darkblue", width: 750, height: 150, placeHolder: "XML will appear here." });
     $("#getcharID").jqxInput({ placeHolder: "Enter Character ID", height: "35px", width: 200, minLength: 4, theme: "darkblue"});
-    $("#dlChar").jqxButton({ width: "120px", height: "35px", theme: "darkblue" });
+    $("#dlChar").jqxButton({ width: "150px", height: "35px", theme: "darkblue" });
     $("#resetChar").jqxButton({ width: "120px", height: "35px", theme: "darkblue" });
-    $("#verButtonC").jqxRadioButton({width: 250, height: 25, checked: true, theme: "darkblue"});
-    $("#verButtonU").jqxRadioButton({width: 250, height: 25, theme: "darkblue"});
 /*   $("#jqxMenu").jqxMenu({ width: 95, height: "145px", mode: "vertical", theme: "darkblue"});*/
     $("#jqxMenu").css("visibility", "visible");
 
@@ -296,19 +294,6 @@ $(function() {
     });
 
     $('#grabChar').on("click", function() {
-        if (fgVersion == 0) {
-            if (confirm("You've selected to create a character for FG Classic. Is this correct?")){
-                //
-            } else {
-                return(false);
-            }
-        } else {
-            if (confirm("You've selected to create a character for FG Unity. Is this correct?")){
-                //
-            } else {
-                return(false);
-            }
-        }
         if(!$('#getcharID').val().trim().match(/\d+/)) {
             alert("Um, please enter your Character ID");
         } else if ($('#textHere').val() != "")  {
@@ -398,14 +383,7 @@ $(function() {
     });
 
     // fgVersion = 0: Classic; = 1: Unity
-    $("#verButtonC").on('change', function (event) {
-        var checked = event.args.checked;
-        if (checked) {
-            fgVersion = 0;
-        } else {
-            fgVersion = 1;
-        }
-    });
+    // Removed version selector - defaulting to Unity (fgVersion = 1)
 });
 
 
