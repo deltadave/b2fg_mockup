@@ -1,95 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <title>About</title>
-        <!-- Bootstrap core CSS -->
-        <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-        <link href="css/app.css" rel="stylesheet">
-        <link href="images/favicon.ico" rel="icon">
-        <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
-    </head>
-    <body>
-        <!-- Navigation -->
-    <nav class="navbar navbar-expand-xl navbar-dark bg-dark">
-      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExample06" aria-controls="navbarsExample06" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-
-      <div class="collapse navbar-collapse" id="navbarsExample06">
-        <ul class="navbar-nav mr-auto justify-content-end">
-          <li class="nav-item ">
-            <a class="nav-link" href="index.html">Home <span class="sr-only">(current)</span></a>
-          </li>
-          <li class="nav-item active">
-            <a class="nav-link" href="about.html">About</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="contact.html">Contact</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="donate.html">Donate</a>
-          </li>
-        </ul>
-        <a class="navbar-brand" href="#">Character Transfer Tool</a>
-      </div>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>About - D&D Beyond to Fantasy Grounds Character Converter</title>
+    
+    <!-- Modern UI Styles -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Updated Modern CSS -->
+    <link href="css/app.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Modern Navigation -->
+    <nav class="navigation">
+        <div class="nav-container">
+            <div class="nav-left">
+                <a class="nav-link" href="index.html"><i class="fas fa-home"></i> Home</a>
+                <a class="nav-link" href="about.html" style="color: #D4AF37 !important;"><i class="fas fa-info-circle"></i> About</a>
+                <a class="nav-link" href="contact.html"><i class="fas fa-envelope"></i> Contact</a>
+                <a class="nav-link" href="donate.html"><i class="fas fa-heart"></i> Donate</a>
+            </div>
+            <div class="nav-right">
+                <a class="navbar-brand" href="index.html">Character Transfer Tool</a>
+            </div>
+        </div>
     </nav>
 
-      <section id="about">
-        <div class="section-content container">
-          <div class="row mb-3">
-            <div class="col-8 col.md-4">
-              <h1 class="section-header col-md-8">About This Tool</h1>
-              <p>Learn more about the D&D Beyond to Fantasy Grounds Character Converter.</p>
-            </div>
-          </div>
-        </div>
-        <div class="about-section">
+    <!-- Hero Section -->
+    <section class="hero-section">
         <div class="container">
-          <div class="col-md-8">
-            <h2>What is this tool?</h2>
-            <p>The D&D Beyond to Fantasy Grounds Character Converter is a web-based tool that allows you to export your D&D Beyond characters and import them directly into Fantasy Grounds Unity. This saves you time and ensures accuracy when transferring your characters between platforms.</p>
-            
-            <h2>How does it work?</h2>
-            <p>Simply enter your D&D Beyond character ID, and the tool will fetch your character data using D&D Beyond's API and convert it to the XML format that Fantasy Grounds can import. Your character must be set to <strong>Public</strong> visibility for the tool to access it.</p>
-            
-            <h2>What gets converted?</h2>
-            <ul>
-              <li>Basic character information (name, race, class, background)</li>
-              <li>Ability scores and modifiers</li>
-              <li>Skills and proficiencies</li>
-              <li>Equipment and inventory</li>
-              <li>Spells and spell slots</li>
-              <li>Features and traits</li>
-              <li>Hit points and armor class</li>
-            </ul>
-            
-            <h2>Requirements</h2>
-            <ul>
-              <li>Your D&D Beyond character must be set to <strong>Public</strong></li>
-              <li>Fantasy Grounds Unity (recommended) or Classic</li>
-              <li>A modern web browser</li>
-            </ul>
-            <h2>Getting Help</h2>
-            <p>If you have questions or comments, you can contact me via the <a href="contact.html">contact</a> page or at the <a href="https://discord.gg/grimpress">Grim Press discord</a> server in the Help Desk channel for <a href="https://discord.com/channels/418642246431408128/1067596596864352266">beyond2fantasygrounds</a>.</p>
-            <h2>Credits</h2>
-            <p>This tool was originally created by Robin Kuiper and has been enhanced by multiple contributors including Matt DeKok, David Berkompas, and Dave Lockwood. Special thanks to Fantasy Grounds College and <a href="https://grimpress.net/">Grim Press</a> for their support.</p>
-            
-            <h2>Disclaimer</h2>
-            <p>This is an unofficial tool and is not affiliated with D&D Beyond or Fantasy Grounds. Use at your own discretion. Always verify your imported character data before using in your games.</p>
-          </div>
-          
-          <div id="donations">
-            <p></p>
-            <p>Please consider <a href="donate.html">donating</a> if you use this tool. It will help keep the page up and up to date.</p>
-            <p></p>
-          </div>
+            <h1>About This Tool</h1>
+            <p class="subtitle">Learn more about the D&D Beyond to Fantasy Grounds Character Converter</p>
         </div>
-      </section>
-      
-      <!-- Bootstrap core JavaScript -->
-      <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
-      <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
-    </body>
+    </section>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="workflow-container">
+            <div class="converter-form">
+                <h2 style="color: #D4AF37; margin-bottom: 2rem; font-family: 'Cinzel', serif;">
+                    <i class="fas fa-magic"></i> What is this tool?
+                </h2>
+                <p>The D&D Beyond to Fantasy Grounds Character Converter is a web-based tool that allows you to export your D&D Beyond characters and import them directly into Fantasy Grounds Unity. This saves you time and ensures accuracy when transferring your characters between platforms.</p>
+                
+                <h2 style="color: #D4AF37; margin-bottom: 2rem; margin-top: 2rem; font-family: 'Cinzel', serif;">
+                    <i class="fas fa-cogs"></i> How does it work?
+                </h2>
+                <p>Simply enter your D&D Beyond character ID, and the tool will fetch your character data using D&D Beyond's API and convert it to the XML format that Fantasy Grounds can import. Your character must be set to <strong>Public</strong> visibility for the tool to access it.</p>
+                
+                <h2 style="color: #D4AF37; margin-bottom: 2rem; margin-top: 2rem; font-family: 'Cinzel', serif;">
+                    <i class="fas fa-list-check"></i> Requirements
+                </h2>
+                <ul style="color: #e2e8f0;">
+                  <li>Your D&D Beyond character must be set to <strong>Public</strong></li>
+                  <li>Fantasy Grounds Unity</li>
+                  <li>A modern web browser</li>
+                </ul>
+                
+                <h2 style="color: #D4AF37; margin-bottom: 2rem; margin-top: 2rem; font-family: 'Cinzel', serif;">
+                    <i class="fas fa-question-circle"></i> Getting Help
+                </h2>
+                <p>If you have questions or comments, you can contact me via the <a href="contact.html">contact</a> page or at the <a href="https://discord.gg/grimpress">Grim Press discord</a> server in the Help Desk channel for <a href="https://discord.com/channels/418642246431408128/1067596596864352266">beyond2fantasygrounds</a>.</p>
+                
+                <h2 style="color: #D4AF37; margin-bottom: 2rem; margin-top: 2rem; font-family: 'Cinzel', serif;">
+                    <i class="fas fa-users"></i> Credits
+                </h2>
+                <p>This tool was originally created by Robin Kuiper and has been enhanced by multiple contributors including Matt DeKok, David Berkompas, and Dave Lockwood. Special thanks to Fantasy Grounds Academy and <a href="https://grimpress.net/">Grim Press</a> for their support.</p>
+                
+                <h2 style="color: #D4AF37; margin-bottom: 2rem; margin-top: 2rem; font-family: 'Cinzel', serif;">
+                    <i class="fas fa-exclamation-triangle"></i> Disclaimer
+                </h2>
+                <p>This is an unofficial tool and is not affiliated with D&D Beyond or Fantasy Grounds. Use at your own discretion. Always verify your imported character data before using in your games.</p>
+            </div>
+
+            <!-- Donation Call-to-Action -->
+            <div style="background: rgba(139, 21, 56, 0.1); border: 1px solid rgba(139, 21, 56, 0.3); border-radius: 10px; padding: 1.5rem; margin-top: 2rem;">
+                <h4 style="color: #D4AF37; margin-bottom: 1rem;">
+                    <i class="fas fa-heart"></i> Support This Project
+                </h4>
+                <p>Please consider <a href="donate.html">donating</a> if you use this tool. It helps keep the service running and up to date!</p>
+            </div>
+        </div>
+    </div>
+</body>
 </html>
