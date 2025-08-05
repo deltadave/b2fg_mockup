@@ -257,13 +257,7 @@ var charWalk = 0;
 var glCharID = "";
 
 $(function() {
-    dispLinks.init();
-    clLinks.init();
-    donateFGC.init();
 
-    $("#Linkwindow").jqxWindow("close");
-    $("#CLwindow").jqxWindow("close");
-    $("#DONwindow").jqxWindow("close");
     $("#grabChar").jqxButton({ width: "200px", height: "35px", theme: "darkblue" });
     $("#textHere").jqxTextArea({ theme: "darkblue", width: 750, height: 150, placeHolder: "XML will appear here." });
     $("#getcharID").jqxInput({ placeHolder: "Enter Character ID", height: "35px", width: 200, minLength: 4, theme: "darkblue"});
@@ -272,10 +266,6 @@ $(function() {
 /*   $("#jqxMenu").jqxMenu({ width: 95, height: "145px", mode: "vertical", theme: "darkblue"});*/
     $("#jqxMenu").css("visibility", "visible");
 
-    $('#extLinks').click(function(e) {
-        e.preventDefault();
-        $('#Linkwindow').jqxWindow('open');
-    });
     $('#goHome').click(function(e) {
         e.preventDefault();
         window.location.reload(false);
@@ -283,14 +273,6 @@ $(function() {
     $('#contactUs').click(function(e) {
         e.preventDefault();
         window.open("https://docs.google.com/forms/d/1OTSE0zUqEcq14Epyp73YVHM9AavhI0uvtH1NeoRoKiA/edit", "_blank");
-    });
-    $('#showChangelog').click(function(e) {
-        e.preventDefault();
-        $('#CLwindow').jqxWindow('open');
-    });
-    $('#showDonations').click(function(e) {
-        e.preventDefault();
-        $('#DONwindow').jqxWindow('open');
     });
 
     $('#grabChar').on("click", function() {
@@ -9104,79 +9086,4 @@ End of Artificer effects
 
 * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-var dispLinks = (function () {
-    function _createLinks() {
-        var userLinks = $('#displayLinks');
-        var offset = userLinks.offset();
-        $('#Linkwindow').jqxWindow({
-            position: { x: 150, y: 150} ,
-            theme: 'darkblue',
-            isModal: true,
-            showCollapseButton: true, maxHeight: 400, maxWidth: 700, minHeight: 200, minWidth: 200, height: 300, width: 500,
-            initContent: function () {
-                $('#Linkwindow').jqxWindow('focus');
-            }
-        });
-    }
-    return {
-        config: {
-            dragArea: null
-        },
-        init: function () {
-            _createLinks();
-        }
-    };
-} ());
 
-var clLinks = (function () {
-    function _createCL() {
-        var userCL = $('#displayCL');
-        var offset = userCL.offset();
-        $('#CLwindow').jqxWindow({
-            position: { x: 150, y: 50},
-            theme: 'darkblue',
-            showCollapseButton: true,
-            maxWidth: 700, 
-            minWidth: 200, 
-            height: 450, 
-            width: 500, 
-            resizable: true,
-            isModal: true,
-            initContent: function () {
-                $('#CLwindow').jqxWindow('focus');
-            }
-        });
-    }
-    return {
-        config: {
-            dragArea: null
-        },
-        init: function () {
-            _createCL();
-        }
-    };
-} ());
-
-var donateFGC = (function () {
-    function _createDon() {
-        var userDon = $('#displayDon');
-        var offset = userDon.offset();
-        $('#DONwindow').jqxWindow({
-            position: { x: 150, y: 150} ,
-            theme: 'darkblue',
-            isModal: true,
-            showCollapseButton: true, maxHeight: 400, maxWidth: 700, minHeight: 200, minWidth: 200, height: 300, width: 500, 
-            initContent: function () {
-                $('#DONwindow').jqxWindow('focus');
-            }
-        });
-    }
-    return {
-        config: {
-            dragArea: null
-        },
-        init: function () {
-            _createDon();
-        }
-    };
-} ());
