@@ -1238,7 +1238,8 @@ function parseCharacter(inputChar) {
             buildXML += "\t\t\t\t<carried type=\"number\">1</carried>\n";
         }
 
-        if(item.definition.hasOwnProperty("damage")) {
+        // Only treat items as weapons if they have a non-null attackType (actual weapons)
+        if(item.definition.hasOwnProperty("damage") && item.definition.attackType != null) {
             thisDamage = "";
             thisDamType = "";
             if(item.definition.damage != null) {
@@ -1334,7 +1335,8 @@ function parseCharacter(inputChar) {
             }
         }
 
-        if (item.definition.hasOwnProperty("weaponBehaviors")) {
+        // Only treat items with weaponBehaviors as weapons if they have a non-null attackType (actual weapons)
+        if (item.definition.hasOwnProperty("weaponBehaviors") && item.definition.attackType != null) {
             if (item.definition.weaponBehaviors.length > 0) {
                 thisDamage = "";
                 thisDamType = "";
