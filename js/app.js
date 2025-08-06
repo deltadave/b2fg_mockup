@@ -374,6 +374,17 @@ $(function() {
 
 
 function parseCharacter(inputChar) {
+    // Helper function to safely access properties and prevent null reference errors
+    function safeAccess(obj, path, defaultValue = null) {
+        try {
+            const result = path.split('.').reduce((current, key) => current && current[key], obj);
+            return result !== undefined && result !== null ? result : defaultValue;
+        } catch (e) {
+            console.warn(`Safe access failed for path: ${path}`, e);
+            return defaultValue;
+        }
+    }
+    
     // Handle v5 API response structure - extract actual character data
     var rawResponse = jQuery.extend(true, {}, inputChar);
     var character;
@@ -1212,7 +1223,7 @@ function parseCharacter(inputChar) {
             if(item.definition.filterType == "Armor") {
                 if(item.definition.type == "Shield") {
                     usingShield = 1;
-                } else if (item.definition.type.match("Armor")) {
+                } else if (item.definition.type && item.definition.type.match("Armor")) {
                     wearingArmor = 1;
                     if (item.definition.type.match("Heavy")) {
                         usingHeavyArmor = 1;
@@ -1273,13 +1284,13 @@ function parseCharacter(inputChar) {
             weaponProperties.push(thisProperties);
             //console.log(item.definition.name);
             //console.log(thisProperties);
-            if(thisProperties.includes("Finesse")) {
+            if(thisProperties && thisProperties.includes("Finesse")) {
                 if(strScore >= dexScore) {
                     weaponBase.push("strength");
                 } else {
                     weaponBase.push("dexterity");
                 }
-            } else if (thisProperties.includes("Range")) {
+            } else if (thisProperties && thisProperties.includes("Range")) {
                 //console.log(item.definition.name);
                 weaponBase.push("dexterity");
             } else {
@@ -1443,29 +1454,29 @@ function parseCharacter(inputChar) {
         buildXML += "\t\t\t\t\t\t<type type=\"string\">" + weaponType[x] + "</type>\n";
         buildXML += "\t\t\t\t\t</id-00001>\n";
         buildXML += "\t\t\t\t</damagelist>\n";
-        if (weaponName[x].includes("Crossbow")) {
+        if (weaponName[x] && weaponName[x].includes("Crossbow")) {
             buildXML += "\t\t\t\t<maxammo type=\"number\">" + numBolts + "</maxammo>\n";
-        } else if (weaponName[x].includes("Sling")) {
+        } else if (weaponName[x] && weaponName[x].includes("Sling")) {
             buildXML += "\t\t\t\t<maxammo type=\"number\">" + numBullets + "</maxammo>\n";
-        } else if (weaponName[x].includes("Blowgun")) {
+        } else if (weaponName[x] && weaponName[x].includes("Blowgun")) {
             buildXML += "\t\t\t\t<maxammo type=\"number\">" + numNeedles + "</maxammo>\n";
-        }   else if ((weaponName[x].includes("Shortbow")) || (weaponName[x].includes("Longbow"))) {
+        } else if (weaponName[x] && (weaponName[x].includes("Shortbow") || weaponName[x].includes("Longbow"))) {
             buildXML += "\t\t\t\t<maxammo type=\"number\">" + numArrows + "</maxammo>\n";
         } 
         buildXML += "\t\t\t\t<attackbonus type=\"number\">" + weaponBonus[x] + "</attackbonus>\n";
         buildXML += "\t\t\t\t<attackstat type=\"string\">" + weaponBase[x] + "</attackstat>\n";
         buildXML += "\t\t\t\t<isidentified type=\"number\">1</isidentified>\n";
         // 0: Melee, 1: Ranged, 2: Thrown
-        if(weaponProperties[x].match(/Thrown/)) {
+        if(weaponProperties[x] && weaponProperties[x].match(/Thrown/)) {
             buildXML += "\t\t\t\t<type type=\"number\">2</type>\n";
-        } else if(weaponProperties[x].match(/Range/)) {
+        } else if(weaponProperties[x] && weaponProperties[x].match(/Range/)) {
             buildXML += "\t\t\t\t<type type=\"number\">1</type>\n";
         } else {
             buildXML += "\t\t\t\t<type type=\"number\">0</type>\n";
         }
 
         buildXML += "\t\t\t</id-" + thisIteration + ">\n";
-        if(weaponProperties[x].includes("Thrown")) {
+        if(weaponProperties[x] && weaponProperties[x].includes("Thrown")) {
             thrownCount += 1;
             weaponCount += 1;
             thisIteration = pad(weaponID.length + thrownCount, 5);
@@ -1646,7 +1657,7 @@ function parseCharacter(inputChar) {
             //  console.log("We got here");
             //}
         } else {
-            if ((prof.friendlySubtypeName).match(/Saving\sThrows/) || holdProf.includes(prof.friendlySubtypeName)) {
+            if (prof.friendlySubtypeName && (prof.friendlySubtypeName).match(/Saving\sThrows/) || holdProf.includes(prof.friendlySubtypeName)) {
                 // Skip Saving Throws in proficiencies
             } else {
                 switch (prof.friendlySubtypeName) {
