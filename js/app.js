@@ -3927,8 +3927,71 @@ function fixDesc(badString) {
         .replace(/&nbsp;/g, " ")
         .replace(/&amp;/g, "&"); // Keep this last to avoid double-decoding
     
-    // Step 5: Final cleanup and validation
-    return tempString3
+    // Step 5: Fix mismatched HTML tags to prevent XML parsing errors
+    function balanceHtmlTags(html) {
+        const tagStack = [];
+        const selfClosingTags = ['br', 'hr', 'img', 'input', 'area', 'base', 'col', 'embed', 'link', 'meta', 'param', 'source', 'track', 'wbr'];
+        
+        // Find all HTML tags
+        const tagRegex = /<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/gi;
+        let match;
+        let result = html;
+        let lastIndex = 0;
+        let balancedResult = '';
+        
+        while ((match = tagRegex.exec(html)) !== null) {
+            const fullTag = match[0];
+            const tagName = match[1].toLowerCase();
+            const isClosing = fullTag.startsWith('</');
+            const isSelfClosing = selfClosingTags.includes(tagName);
+            
+            // Add content before this tag
+            balancedResult += html.slice(lastIndex, match.index);
+            
+            if (isSelfClosing) {
+                // Self-closing tags don't need balancing
+                balancedResult += fullTag;
+            } else if (isClosing) {
+                // Closing tag - check if we have a matching opening tag
+                const stackIndex = tagStack.lastIndexOf(tagName);
+                if (stackIndex !== -1) {
+                    // Close all tags down to the matching one
+                    for (let i = tagStack.length - 1; i >= stackIndex; i--) {
+                        if (i === stackIndex) {
+                            balancedResult += fullTag; // Use the actual closing tag
+                        } else {
+                            balancedResult += `</${tagStack[i]}>`;
+                        }
+                    }
+                    tagStack.splice(stackIndex);
+                }
+                // If no matching opening tag, ignore the closing tag
+            } else {
+                // Opening tag
+                balancedResult += fullTag;
+                tagStack.push(tagName);
+            }
+            
+            lastIndex = tagRegex.lastIndex;
+        }
+        
+        // Add remaining content
+        balancedResult += html.slice(lastIndex);
+        
+        // Close any remaining open tags
+        while (tagStack.length > 0) {
+            const tag = tagStack.pop();
+            balancedResult += `</${tag}>`;
+        }
+        
+        return balancedResult;
+    }
+    
+    // Apply tag balancing to prevent XML parsing errors
+    const balanced = balanceHtmlTags(tempString3);
+    
+    // Step 6: Final cleanup and validation
+    return balanced
         .replace(/\s+/g, " ") // Normalize whitespace
         .trim()
         .substring(0, 10000); // Final length limit
