@@ -307,6 +307,9 @@ $(function() {
                 //headers.append('Access-Control-Allow-Origin', '*');
             
                 
+                // Performance baseline: start timing
+                const performanceStart = performance.now();
+                
                 fetch(fetchurl, {
                     method: 'GET',
                     headers: headers
@@ -337,7 +340,30 @@ $(function() {
                         }
                         return response.json();
                     })
-                    .then(data => parseCharacter(data))
+                    .then(data => {
+                        // Performance baseline: API fetch complete
+                        const apiFetchTime = performance.now();
+                        console.log(`API fetch time: ${(apiFetchTime - performanceStart).toFixed(2)}ms`);
+                        
+                        // Start character processing timing
+                        const processingStart = performance.now();
+                        parseCharacter(data);
+                        
+                        // Performance baseline: character processing complete
+                        const processingEnd = performance.now();
+                        const totalTime = processingEnd - performanceStart;
+                        const processTime = processingEnd - processingStart;
+                        
+                        console.log(`Character processing time: ${processTime.toFixed(2)}ms`);
+                        console.log(`Total conversion time: ${totalTime.toFixed(2)}ms`);
+                        
+                        // Show performance summary to user
+                        showSecureNotification(
+                            `Character converted successfully! (Processing: ${processTime.toFixed(0)}ms, Total: ${totalTime.toFixed(0)}ms)`, 
+                            'success', 
+                            5000
+                        );
+                    })
                     .catch((error) => {
                         console.error("API Error:", error);
                         
@@ -417,6 +443,10 @@ $(function() {
 
 
 function parseCharacter(inputChar) {
+    // Performance baseline: detailed timing for parseCharacter phases
+    const parseStartTime = performance.now();
+    console.log('=== Character Processing Performance Baseline ===');
+    
     // Helper function to safely access properties and prevent null reference errors
     function safeAccess(obj, path, defaultValue = null) {
         try {
@@ -476,6 +506,10 @@ function parseCharacter(inputChar) {
     
     pcFilename = characterName.replace(/\W/g, '');
     buildXML += "\t\t<name type=\"string\">" + characterName + "</name>\n";
+    
+    // Performance timing: basic setup complete
+    const setupTime = performance.now();
+    console.log(`Basic setup time: ${(setupTime - parseStartTime).toFixed(2)}ms`);
 
     // Alignment
     // 1. Lawful Good
@@ -1207,6 +1241,10 @@ function parseCharacter(inputChar) {
     var weaponBonus = [];
     var weaponBase = [];
 
+    // Performance timing: start inventory processing
+    const inventoryStartTime = performance.now();
+    console.log(`Pre-inventory processing time: ${(inventoryStartTime - parseStartTime).toFixed(2)}ms`);
+    
     buildXML += "\t\t<inventorylist>\n";
     const inventory = character.inventory;
     if(inventory != null) inventory.some(function(item, i) {
@@ -1479,6 +1517,10 @@ function parseCharacter(inputChar) {
 
     });
     buildXML += "\t\t</inventorylist>\n";
+    
+    // Performance timing: inventory processing complete
+    const inventoryEndTime = performance.now();
+    console.log(`Inventory processing time: ${(inventoryEndTime - inventoryStartTime).toFixed(2)}ms`);
 
     buildXML += "\t\t<weaponlist>\n";
     var weaponCount = 0;
@@ -3618,6 +3660,22 @@ function parseCharacter(inputChar) {
 
     allXML += buildXML + endXML;
     $('#textHere').val(allXML);
+    
+    // Performance timing: parseCharacter function complete
+    const parseEndTime = performance.now();
+    const totalParseTime = parseEndTime - parseStartTime;
+    console.log(`Final XML assembly time: ${(parseEndTime - inventoryEndTime).toFixed(2)}ms`);
+    console.log(`Total parseCharacter time: ${totalParseTime.toFixed(2)}ms`);
+    console.log('=== Character Processing Complete ===');
+    
+    // Performance summary table
+    console.table({
+        'Basic Setup': `${(setupTime - parseStartTime).toFixed(2)}ms`,
+        'Pre-Inventory Processing': `${(inventoryStartTime - setupTime).toFixed(2)}ms`, 
+        'Inventory Processing': `${(inventoryEndTime - inventoryStartTime).toFixed(2)}ms`,
+        'Final Assembly': `${(parseEndTime - inventoryEndTime).toFixed(2)}ms`,
+        'Total Parse Time': `${totalParseTime.toFixed(2)}ms`
+    });
 
     // 3163468 (Expertise: Double proficiency in Arcana)
     //var exp = getObjects(character, 'type', 'expertise');
