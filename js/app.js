@@ -29,40 +29,40 @@
         Github: https://github.com/deltadave/
 */
 
-var startXML = "";
+let startXML = "";
 
-var endXML = "\t</character>\n</root>\n";
-var allXML = "";
+const endXML = "\t</character>\n</root>\n";
+let allXML = "";
 
-var payFlag = 1;
+let payFlag = 1;
 
-var pcFilename = "";
-var addHP = 0;
+let pcFilename = "";
+let addHP = 0;
 
-var charSpellSlots1 = 0;
-var charSpellSlots2 = 0;
-var charSpellSlots3 = 0;
-var charSpellSlots4 = 0;
-var charSpellSlots5 = 0;
-var charSpellSlots6 = 0;
-var charSpellSlots7 = 0;
-var charSpellSlots8 = 0;
-var charSpellSlots9 = 0;
+let charSpellSlots1 = 0;
+let charSpellSlots2 = 0;
+let charSpellSlots3 = 0;
+let charSpellSlots4 = 0;
+let charSpellSlots5 = 0;
+let charSpellSlots6 = 0;
+let charSpellSlots7 = 0;
+let charSpellSlots8 = 0;
+let charSpellSlots9 = 0;
 
-var holdFeatures = [];
-var holdProf = [];
+let holdFeatures = [];
+let holdProf = [];
 
-var hasAppear = 0;
+let hasAppear = 0;
 
-var source = [
+const source = [
     "Barakas(1387127)",
     "Baradun(1215852)",
 ];
 
-var casterLevels = 0;
-var casterClasses = 0;
+let casterLevels = 0;
+let casterClasses = 0;
 
-var totalClasses = 0;
+let totalClasses = 0;
 
 /* * * * * * * * */
 const DEBUG = false;
@@ -78,7 +78,7 @@ const martialMeleeWeapon = ["battleaxe","flail","glaive","greataxe","greatsword"
 const martialRangedWeapon = ["blowgun","crossbow_hand","crossbow_heavy","longbow","net"];
 const tieflingRacialTraits = ["darkvision","hellish_resistance"];
 
-var object;
+let object;
 
 const fullDexArmor = ["padded","leather","studded_leather"];
 const max3DexArmor = [];
@@ -86,35 +86,35 @@ const max2DexArmor = ["hide","chain_shirt","scale_mail","breastplate","half_plat
 const noDexArmor = ["ring_mail","chain_mail","splint","plate"];
 //const disStealth = ["padded","scale_mail","half_plate","ring_mail","chain_mail","splint","plate"];
 
-var totalLevels = 0;
-var totalHP = 0;
-var isArtificer = 0;
-var isBarbarian = 0;
-var isBard = 0;
-var isCleric = 0;
-var isDruid = 0;
-var isFighter = 0;
-var isMonk = 0;
-var isPaladin = 0;
-var isRanger = 0;
-var isRogue = 0;
-var isSorcerer = 0;
-var isWarlock = 0;
-var isWizard = 0;
-var isBloodHunter = 0;
-var isDragonborn = 0;
-var isDwarf = 0;
-var isElf = 0;
-var isHalfling = 0;
-var isHalfOrc = 0;
-var isHalfElf = 0;
-var isHuman = 0;
-var isTiefling = 0;
-var isGnome = 0;
-var isAarakocra = 0;
-var isGenasi = 0;
-var isGoliath = 0;
-var isAasimar = 0;
+let totalLevels = 0;
+let totalHP = 0;
+let isArtificer = 0;
+let isBarbarian = 0;
+let isBard = 0;
+let isCleric = 0;
+let isDruid = 0;
+let isFighter = 0;
+let isMonk = 0;
+let isPaladin = 0;
+let isRanger = 0;
+let isRogue = 0;
+let isSorcerer = 0;
+let isWarlock = 0;
+let isWizard = 0;
+let isBloodHunter = 0;
+let isDragonborn = 0;
+let isDwarf = 0;
+let isElf = 0;
+let isHalfling = 0;
+let isHalfOrc = 0;
+let isHalfElf = 0;
+let isHuman = 0;
+let isTiefling = 0;
+let isGnome = 0;
+let isAarakocra = 0;
+let isGenasi = 0;
+let isGoliath = 0;
+let isAasimar = 0;
 var isBugbear = 0;
 var isFirbolg = 0;
 var isGoblin = 0;
@@ -131,26 +131,26 @@ var isTortle = 0;
 var isGith = 0;
 var isChangling = 0;
 var isKalashtar = 0;
-var isShifter = 0;
-var isWarforged = 0;
-var isCentaur = 0;
-var isLoxodon = 0;
-var isMinotaur = 0;
-var isSimicHybrid = 0;
-var isVedalken = 0;
-var levelBarbarian = 0;
-var levelBard = 0;
-var levelCleric = 0;
-var levelDruid = 0;
-var levelFighter = 0;
-var levelMonk = 0;
-var levelPaladin = 0;
-var levelRanger = 0;
-var levelRogue = 0;
-var levelSorcerer = 0;
-var levelWarlock = 0;
-var levelWizard = 0;
-var levelBloodHunter = 0;
+let isShifter = 0;
+let isWarforged = 0;
+let isCentaur = 0;
+let isLoxodon = 0;
+let isMinotaur = 0;
+let isSimicHybrid = 0;
+let isVedalken = 0;
+let levelBarbarian = 0;
+let levelBard = 0;
+let levelCleric = 0;
+let levelDruid = 0;
+let levelFighter = 0;
+let levelMonk = 0;
+let levelPaladin = 0;
+let levelRanger = 0;
+let levelRogue = 0;
+let levelSorcerer = 0;
+let levelWarlock = 0;
+let levelWizard = 0;
+let levelBloodHunter = 0;
 var levelArtificer = 0;
 
 var fighterSubclassEldritchKnight = 0;
@@ -190,71 +190,71 @@ var addSavingThrows = 0;
 
 var addSpeed = 0;
 
-var strScore = 0;
-var strMod = 0;
-var strProf = 0;
-var chaScore = 0;
-var chaMod = 0;
-var chaProf = 0;
-var conScore = 0;
-var conMod = 0;
-var conProf = 0;
-var intScore = 0;
-var intMod = 0;
-var intProf = 0;
-var dexScore = 0;
-var dexMod = 0;
-var dexProf = 0;
-var wisScore = 0;
-var wisMod = 0;
-var wisProf = 0;
+let strScore = 0;
+let strMod = 0;
+let strProf = 0;
+let chaScore = 0;
+let chaMod = 0;
+let chaProf = 0;
+let conScore = 0;
+let conMod = 0;
+let conProf = 0;
+let intScore = 0;
+let intMod = 0;
+let intProf = 0;
+let dexScore = 0;
+let dexMod = 0;
+let dexProf = 0;
+let wisScore = 0;
+let wisMod = 0;
+let wisProf = 0;
 
-var hpBarbarian = 7;
-var hpBard = 5;
-var hpCleric = 5;
-var hpDruid = 5;
-var hpFighter = 6;
-var hpMonk = 5;
-var hpPaladin = 6;
-var hpRanger = 6;
-var hpRogue = 5;
-var hpSorcerer = 4;
-var hpWarlock = 5;
-var hpWizard = 4;
-var hpBloodHunter = 6;
-var hpArtificer = 5;
+const hpBarbarian = 7;
+const hpBard = 5;
+const hpCleric = 5;
+const hpDruid = 5;
+const hpFighter = 6;
+const hpMonk = 5;
+const hpPaladin = 6;
+const hpRanger = 6;
+const hpRogue = 5;
+const hpSorcerer = 4;
+const hpWarlock = 5;
+const hpWizard = 4;
+const hpBloodHunter = 6;
+const hpArtificer = 5;
 
-var hpStartBarbarian = 12;
-var hpStartBard = 8;
-var hpStartCleric = 8;
-var hpStartDruid = 8;
-var hpStartFighter = 10;
-var hpStartMonk = 8;
-var hpStartPaladin = 10;
-var hpStartRanger = 10;
-var hpStartRogue = 8;
-var hpStartSorcerer = 6;
-var hpStartWarlock = 8;
-var hpStartWizard = 6;
-var hpStartBloodhunter = 10;
-var hpStartArtificer = 8;
+const hpStartBarbarian = 12;
+const hpStartBard = 8;
+const hpStartCleric = 8;
+const hpStartDruid = 8;
+const hpStartFighter = 10;
+const hpStartMonk = 8;
+const hpStartPaladin = 10;
+const hpStartRanger = 10;
+const hpStartRogue = 8;
+const hpStartSorcerer = 6;
+const hpStartWarlock = 8;
+const hpStartWizard = 6;
+const hpStartBloodhunter = 10;
+const hpStartArtificer = 8;
 
-var sumHP = 0;
+let sumHP = 0;
 
-var fgVersion = 1; // Default to Unity (1)
+let fgVersion = 1; // Default to Unity (1)
 
-var mamFeat = 0;
-var alertFeat = 0;
-var mobileFeat = 0;
-var obsFeat = 0;
-var profBonus = 0;
-var passWisBonus = 0;
+let mamFeat = 0;
+let alertFeat = 0;
+let mobileFeat = 0;
+let obsFeat = 0;
+let profBonus = 0;
+let passWisBonus = 0;
 
-var charWalk = 0;
+let charWalk = 0;
 
 /* * * * * * * * * * */
 
-var glCharID = "";
+let glCharID = "";
 
 $(function() {
 
@@ -266,16 +266,16 @@ $(function() {
 /*   $("#jqxMenu").jqxMenu({ width: 95, height: "145px", mode: "vertical", theme: "darkblue"});*/
     $("#jqxMenu").css("visibility", "visible");
 
-    $('#goHome').click(function(e) {
+    $('#goHome').click((e) => {
         e.preventDefault();
         window.location.reload(false);
     });
-    $('#contactUs').click(function(e) {
+    $('#contactUs').click((e) => {
         e.preventDefault();
         window.open("https://docs.google.com/forms/d/1OTSE0zUqEcq14Epyp73YVHM9AavhI0uvtH1NeoRoKiA/edit", "_blank");
     });
 
-    $('#grabChar').on("click", function() {
+    $('#grabChar').on("click", () => {
         // Enhanced secure character ID validation
         const charIdValidation = validateCharacterID($('#getcharID').val());
         if (!charIdValidation.valid) {
@@ -501,7 +501,7 @@ function parseCharacter(inputChar) {
         // Secure error notification - validate character ID before displaying
         const charIdValidation = validateCharacterID($("#getcharID").val());
         const displayId = charIdValidation.valid ? charIdValidation.sanitized : "[Invalid ID]";
-        showSecureNotification("Character " + displayId + ": " + alertString.replace(/\n/g, ' '), 'error', 8000);
+        showSecureNotification(`Character ${displayId}: ${alertString.replace(/\n/g, ' ')}`, 'error', 8000);
     } else {
         if (fgVersion == 0) {
             startXML = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
@@ -516,11 +516,11 @@ function parseCharacter(inputChar) {
     var buildXML = "\t\t<!--" + $("#getcharID").val().trim() + "-->\n";
 
     // Handle character name with safety check
-    var characterName = character.name || "Unknown Character";
+    const characterName = character.name || "Unknown Character";
     console.log("Character name found:", characterName);
     
     pcFilename = characterName.replace(/\W/g, '');
-    buildXML += "\t\t<name type=\"string\">" + characterName + "</name>\n";
+    buildXML += `\t\t<name type="string">${characterName}</name>\n`;
     
     // Performance timing: basic setup complete
     const setupTime = performance.now();
@@ -536,57 +536,40 @@ function parseCharacter(inputChar) {
     // 7. Lawful Evil
     // 8. Neutral Evil
     // 9. Chaotic Evil
-    var charAlign = "";
-    switch(character.alignmentId) {
-        case 1:
-            charAlign = "Lawful Good";
-            break;
-        case 2:
-            charAlign = "Neutral Good";
-            break;
-        case 3:
-            charAlign = "Chaotic Good";
-            break;
-        case 4:
-            charAlign = "Lawful Neutral";
-            break;
-        case 5:
-            charAlign = "Neutral";
-            break;
-        case 6:
-            charAlign = "Chaotic Neutral";
-            break;
-        case 7:
-            charAlign = "Lawful Evil";
-            break;
-        case 8:
-            charAlign = "Neutral Evil";
-            break;
-        case 9:
-            charAlign = "Chaotic Evil";
-            break;
-        default:
-            charAlign = "None Selected";
-    }
+    const alignmentMap = {
+        1: "Lawful Good",
+        2: "Neutral Good", 
+        3: "Chaotic Good",
+        4: "Lawful Neutral",
+        5: "Neutral",
+        6: "Chaotic Neutral",
+        7: "Lawful Evil",
+        8: "Neutral Evil",
+        9: "Chaotic Evil"
+    };
+    const charAlign = alignmentMap[character.alignmentId] || "None Selected";
 
-    buildXML += "\t\t<alignment type=\"string\">" + charAlign + "</alignment>\n";
-    character.race.racialTraits.some(function(fleet_trait, i) {
+    buildXML += `\t\t<alignment type="string">${charAlign}</alignment>\n`;
+    character.race.racialTraits.some((fleet_trait, i) => {
         if(fleet_trait.definition.name == "Fleet of Foot" || fleet_trait.definition.name == "Swift") {
             addSpeed += 5;
         }
     });
 
-    if(character.traits.personalityTraits != null) {
-        buildXML += "\t\t<personalitytraits type=\"string\">" + fixQuote(character.traits.personalityTraits) + "</personalitytraits>\n";
+    // Destructure character traits for cleaner access
+    const { personalityTraits, ideals, bonds, flaws } = character.traits;
+    
+    if(personalityTraits != null) {
+        buildXML += `\t\t<personalitytraits type="string">${fixQuote(personalityTraits)}</personalitytraits>\n`;
     }
-    if(character.traits.ideals != null) {
-        buildXML += "\t\t<ideals type=\"string\">" + fixQuote(character.traits.ideals) + "</ideals>\n";
+    if(ideals != null) {
+        buildXML += `\t\t<ideals type="string">${fixQuote(ideals)}</ideals>\n`;
     }
-    if(character.traits.bonds != null) {
-        buildXML += "\t\t<bonds type=\"string\">" + fixQuote(character.traits.bonds) + "</bonds>\n";
+    if(bonds != null) {
+        buildXML += `\t\t<bonds type="string">${fixQuote(bonds)}</bonds>\n`;
     }
-    if(character.traits.flaws != null) {
-        buildXML += "\t\t<flaws type=\"string\">" + fixQuote(character.traits.flaws) + "</flaws>\n";
+    if(flaws != null) {
+        buildXML += `\t\t<flaws type="string">${fixQuote(flaws)}</flaws>\n`;
     }
 
     var background = '';
@@ -598,7 +581,7 @@ function parseCharacter(inputChar) {
         background = character.background.customBackground.name;
     }
 
-    buildXML += "\t\t<background type=\"string\">" + background + "</background>\n";
+    buildXML += `\t\t<background type="string">${background}</background>\n`;
     buildXML += "\t\t<backgroundlink type=\"windowreference\">\n";
     buildXML += "\t\t\t<class>reference_background</class>\n";
     if(background.match(/Artisan\s\/\sGuild/)) {
@@ -608,13 +591,13 @@ function parseCharacter(inputChar) {
     } else if (background.match(/Criminal\s\/\sSpy/)) {
         background = "spy";
     }
-    buildXML += "\t\t\t<recordname>reference.backgrounddata." + background.toLowerCase().replace(/\s/g, "") + "@*</recordname>\n";
+    buildXML += `\t\t\t<recordname>reference.backgrounddata.${background.toLowerCase().replace(/\s/g, "")}@*</recordname>\n`;
     buildXML += "\t\t</backgroundlink>\n";
 
-    buildXML += "\t\t<race type=\"string\">" + character.race.fullName + "</race>\n";
+    buildXML += `\t\t<race type="string">${character.race.fullName}</race>\n`;
     buildXML += "\t\t<racelink type=\"windowreference\">\n";
     buildXML += "\t\t\t<class>reference_race</class>\n";
-    buildXML += "\t\t\t<recordname>reference.racedata." + replaceDash(character.race.baseName.toLowerCase()) + "@*</recordname>\n";
+    buildXML += `\t\t\t<recordname>reference.racedata.${replaceDash(character.race.baseName.toLowerCase())}@*</recordname>\n`;
     buildXML += "\t\t</racelink>\n";
 
     switch (character.race.baseName.toLowerCase()) {
@@ -668,7 +651,7 @@ function parseCharacter(inputChar) {
     skills.some(function(element) {
         profValue = 0;
         thisIteration = pad(idCount, 5);
-        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+        buildXML += `\t\t\t<id-${thisIteration}>\n`;
         buildXML += "\t\t\t\t<misc type=\"number\">0</misc>\n";
         if(element.match(/^sleight/)) {
             buildXML += "\t\t\t\t<name type=\"string\">Sleight of Hand</name>\n";
@@ -710,7 +693,7 @@ function parseCharacter(inputChar) {
             buildXML += "\t\t\t\t<prof type=\"number\">2</prof>\n";
         }
 
-        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+        buildXML += `\t\t\t</id-${thisIteration}>\n`;
         idCount += 1;
     });
     buildXML += "\t\t</skilllist>\n";
@@ -952,7 +935,7 @@ function parseCharacter(inputChar) {
         totalClasses += 1;
         totalLevels += current_class.level;
         thisIteration = pad(i + 1, 5);
-        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+        buildXML += `\t\t\t<id-${thisIteration}>\n`;
         buildXML += "\t\t\t\t<hddie type=\"dice\">";
         buildXML += "d" + current_class.definition.hitDice;
         buildXML += "</hddie>\n";
@@ -978,7 +961,7 @@ function parseCharacter(inputChar) {
         buildXML += "\t\t\t\t\t<class>reference_class</class>\n";
         buildXML += "\t\t\t\t\t<recordname>reference.classdata." + thisClass.replace(/\s/g, "") + "@*</recordname>\n";
         buildXML += "\t\t\t\t</shortcut>\n";
-        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+        buildXML += `\t\t\t</id-${thisIteration}>\n`;
 
     });
     buildXML += "\t\t</classes>\n";
@@ -1030,16 +1013,16 @@ function parseCharacter(inputChar) {
     } else {
         buildXML += "\t\t\t<deathsavesuccess type=\"number\">0</deathsavesuccess>\n";
     }
-    buildXML += "\t\t\t<total type=\"number\">" + totalHP + "</total>\n";
+    buildXML += `\t\t\t<total type="number">${totalHP}</total>\n`;
     buildXML += "\t\t</hp>\n";
 
     var languages = getCachedObjects(character, 'type', 'language');
     buildXML += "\t\t<languagelist>\n";
     languages.some(function(current_lang, i) {
         thisIteration = pad(i + 1, 5);
-        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+        buildXML += `\t\t\t<id-${thisIteration}>\n`;
         buildXML += "\t\t\t\t<name type=\"string\">" + capitalizeFirstLetter(current_lang.subType) + "</name>\n";
-        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+        buildXML += `\t\t\t</id-${thisIteration}>\n`;
     });
     buildXML += "\t\t</languagelist>\n";
 
@@ -1062,7 +1045,7 @@ function parseCharacter(inputChar) {
                 break;
         }
         thisIteration = pad(i + 1, 5);
-        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+        buildXML += `\t\t\t<id-${thisIteration}>\n`;
 
         // Drag/drop only lists name, not any snippet, so we've removed it.
         buildXML += "\t\t\t\t<name type=\"string\">" + fixQuote(current_trait.definition.name).trim() + "</name>\n";
@@ -1072,7 +1055,7 @@ function parseCharacter(inputChar) {
         buildXML += "\t\t\t\t\t" + fixDesc(current_trait.definition.description) + "\n";
         buildXML += "\t\t\t\t</text>\n";
         buildXML += "\t\t\t\t<type type=\"string\">racial</type>\n";
-        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+        buildXML += `\t\t\t</id-${thisIteration}>\n`;
     });
 
     buildXML += "\t\t</traitlist>\n";
@@ -1108,14 +1091,14 @@ function parseCharacter(inputChar) {
                     holdFeatures.push(current_feature.name);
                     totalFeatures += 1;
                     thisIteration = pad(totalFeatures, 5);
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += "\t\t\t\t<locked type=\"number\">1</locked>\n";
                     buildXML += "\t\t\t\t<name type=\"string\">" + fixQuote(current_feature.name) + "</name>\n";
                     buildXML += "\t\t\t\t<source type=\"string\">" + convert_case(replaceDash(current_class.definition.name.toLowerCase())) + "</source>\n";
                     buildXML += "\t\t\t\t<text type=\"formattedtext\">\n";
                     buildXML += "\t\t\t\t\t" + fixDesc(current_feature.description) + "\n";
                     buildXML += "\t\t\t\t</text>\n";
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
         });
@@ -1128,13 +1111,13 @@ function parseCharacter(inputChar) {
                     holdFeatures.push(current_class.subclassDefinition.name);
                     totalFeatures += 1;
                     thisIteration = pad(totalFeatures, 5);
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += "\t\t\t\t<locked type=\"number\">1</locked>\n";
                     buildXML += "\t\t\t\t<name type=\"string\">" + fixQuote(current_class.subclassDefinition.name) + "</name>\n";
                     buildXML += "\t\t\t\t<text type=\"formattedtext\">\n";
                     buildXML += "\t\t\t\t\t" + fixDesc(current_class.subclassDefinition.description) + "\n";
                     buildXML += "\t\t\t\t</text>\n";
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
                 current_class.subclassDefinition.classFeatures.some(function(charSubClass) {
                     switch (charSubClass.name) {
@@ -1157,13 +1140,13 @@ function parseCharacter(inputChar) {
                             holdFeatures.push(charSubClass.name);
                             totalFeatures += 1;
                             thisIteration = pad(totalFeatures, 5);
-                            buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                            buildXML += `\t\t\t<id-${thisIteration}>\n`;
                             buildXML += "\t\t\t\t<locked type=\"number\">1</locked>\n";
                             buildXML += "\t\t\t\t<name type=\"string\">" + fixQuote(charSubClass.name) + "</name>\n";
                             buildXML += "\t\t\t\t<text type=\"formattedtext\">\n";
                             buildXML += "\t\t\t\t\t" + fixDesc(charSubClass.description) + "\n";
                             buildXML += "\t\t\t\t</text>\n";
-                            buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                            buildXML += `\t\t\t</id-${thisIteration}>\n`;
                         }
                     }
                 });
@@ -1188,27 +1171,27 @@ function parseCharacter(inputChar) {
         }
         totalFeatures += 1;
         thisIteration = pad(totalFeatures, 5);
-        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+        buildXML += `\t\t\t<id-${thisIteration}>\n`;
         buildXML += "\t\t\t\t<locked type=\"number\">1</locked>\n";
         buildXML += "\t\t\t\t<name type=\"string\">" + fixQuote(thisOption.definition.name) + "</name>\n";
         buildXML += "\t\t\t\t<text type=\"formattedtext\">\n";
         buildXML += "\t\t\t\t\t" + fixDesc(thisOption.definition.description) + "\n";
         buildXML += "\t\t\t\t</text>\n";
-        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+        buildXML += `\t\t\t</id-${thisIteration}>\n`;
     });
 
     if (character.background.definition != null) {
         if (character.background.definition.featureName != null || (character.background.definition.featureName != "")) {
             totalFeatures += 1;
             thisIteration = pad(totalFeatures + 1, 5);
-            buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t<id-${thisIteration}>\n`;
             buildXML += "\t\t\t\t<name type=\"string\">" + fixQuote(character.background.definition.featureName).trim() + "</name>\n";
             buildXML += "\t\t\t\t<source type=\"string\">" + convert_case(replaceDash(character.background.definition.name.toLowerCase())) + "</source>\n";
             buildXML += "\t\t\t\t<text type=\"formattedtext\">\n";
             buildXML += "\t\t\t\t\t" + fixDesc(character.background.definition.featureDescription) + "\n";
             buildXML += "\t\t\t\t</text>\n";
             buildXML += "\t\t\t\t<type type=\"string\">background</type>\n";
-            buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t</id-${thisIteration}>\n`;
         }
     }
 
@@ -1292,7 +1275,7 @@ function parseCharacter(inputChar) {
 
         thisIteration = pad(i + 1, 5);
 
-        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+        buildXML += `\t\t\t<id-${thisIteration}>\n`;
         buildXML += "\t\t\t\t<count type=\"number\">" + parseInt(item.quantity) + "</count>\n";
         buildXML += "\t\t\t\t<name type=\"string\">" + fixQuote(item.definition.name) + "</name>\n";
         buildXML += "\t\t\t\t<weight type=\"number\">" + parseInt(item.definition.weight) / parseInt(item.definition.bundleSize) + "</weight>\n";
@@ -1544,7 +1527,7 @@ function parseCharacter(inputChar) {
         }  else if(martialMeleeWeapon.indexOf(thisWeaponName) != -1) {
             buildXML += "\t\t\t\t<subtype type=\"string\">Martial Melee Weapon</subtype>\n";
         }
-        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+        buildXML += `\t\t\t</id-${thisIteration}>\n`;
 
     });
     buildXML += "\t\t</inventorylist>\n";
@@ -1560,7 +1543,7 @@ function parseCharacter(inputChar) {
         weaponCount += 1;
         thisIteration = pad(x + 1, 5);
         inventNum = pad(parseInt(weaponID[x]), 5);
-        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+        buildXML += `\t\t\t<id-${thisIteration}>\n`;
         buildXML += "\t\t\t\t<shortcut type=\"windowreference\">\n";
         buildXML += "\t\t\t\t\t<class>item</class>\n";
         buildXML += "\t\t\t\t\t<recordname>....inventorylist.id-" + inventNum + "</recordname>\n";
@@ -1596,14 +1579,14 @@ function parseCharacter(inputChar) {
             buildXML += "\t\t\t\t<type type=\"number\">0</type>\n";
         }
 
-        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+        buildXML += `\t\t\t</id-${thisIteration}>\n`;
         if(weaponProperties[x] && weaponProperties[x].includes("Thrown")) {
             thrownCount += 1;
             weaponCount += 1;
             thisIteration = pad(weaponID.length + thrownCount, 5);
             // We need to add these to the end, providing a higher weaponID.length
             inventNum = pad(parseInt(weaponID[x]), 5);
-            buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t<id-${thisIteration}>\n`;
             buildXML += "\t\t\t\t<shortcut type=\"windowreference\">\n";
             buildXML += "\t\t\t\t\t<class>item</class>\n";
             buildXML += "\t\t\t\t\t<recordname>....inventorylist.id-" + inventNum + "</recordname>\n";
@@ -1622,15 +1605,15 @@ function parseCharacter(inputChar) {
             buildXML += "\t\t\t\t<attackstat type=\"string\">" + weaponBase[x] + "</attackstat>\n";
             buildXML += "\t\t\t\t<isidentified type=\"number\">1</isidentified>\n";
             buildXML += "\t\t\t\t<type type=\"number\">0</type>\n";
-            buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t</id-${thisIteration}>\n`;
         }
     }
     if (isMonk == 1) {
         weaponCount += 1;
         thisIteration = pad(weaponCount + 1, 5);
-        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+        buildXML += `\t\t\t<id-${thisIteration}>\n`;
         buildXML += addMonkUnarmedStrike;
-        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+        buildXML += `\t\t\t</id-${thisIteration}>\n`;
     }
     buildXML += "\t\t</weaponlist>\n";
 
@@ -1638,7 +1621,7 @@ function parseCharacter(inputChar) {
     const charFeats = character.feats;
     if (charFeats != null) charFeats.some(function(thisFeat, i) {
         thisIteration = pad(i + 1, 5);
-        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+        buildXML += `\t\t\t<id-${thisIteration}>\n`;
         buildXML += "\t\t\t\t<locked type=\"number\">1</locked>\n";
         //console.log(thisFeat.definition.name);
         if (thisFeat.definition.name == "Medium Armor Master" && dexScore >= 16 && usingMediumArmor == 1) {
@@ -1654,7 +1637,7 @@ function parseCharacter(inputChar) {
         buildXML += "\t\t\t\t<text type=\"formattedtext\">\n";
         buildXML += "\t\t\t\t\t" + fixDesc(thisFeat.definition.description) + "\n";
         buildXML += "\t\t\t\t</text>\n";
-        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+        buildXML += `\t\t\t</id-${thisIteration}>\n`;
     });
     buildXML += "\t\t</featlist>\n";
 
@@ -1788,9 +1771,9 @@ function parseCharacter(inputChar) {
                         holdProf.push(prof.friendlySubtypeName);
                         thisIteration = pad(i + 1, 5);
                         totalProfs += 1;
-                        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t<id-${thisIteration}>\n`;
                         buildXML += "\t\t\t\t<name type=\"string\">" + fixQuote(prof.friendlySubtypeName) + "</name>\n";
-                        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
         }
@@ -2039,7 +2022,7 @@ function parseCharacter(inputChar) {
             spellList.push(eachSpell.definition.name);
             totalSpells += 1;
             thisIteration = pad(totalSpells, 5);
-            buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t<id-${thisIteration}>\n`;
             castingTime = "";
             if(eachSpell.definition.activation.activationTime == null) {
                 castingTime = "";
@@ -2107,7 +2090,7 @@ function parseCharacter(inputChar) {
             if (payFlag == 1) {
                 buildXML += "\t\t\t\t<parse type=\"number\">1</parse>\n";
             }
-            buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t</id-${thisIteration}>\n`;
         }
     });
     character.spells.class.some(function(eachSpell, i) {
@@ -2116,7 +2099,7 @@ function parseCharacter(inputChar) {
             spellList.push(eachSpell.definition.name);
             totalSpells += 1;
             thisIteration = pad(totalSpells, 5);
-            buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t<id-${thisIteration}>\n`;
 
             castingTime = "";
             if(eachSpell.definition.activation.activationTime == null) {
@@ -2184,7 +2167,7 @@ function parseCharacter(inputChar) {
             if (payFlag == 1) {
                 buildXML += "\t\t\t\t<parse type=\"number\">1</parse>\n";
             }
-            buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t</id-${thisIteration}>\n`;
         }
     });
 
@@ -2200,7 +2183,7 @@ function parseCharacter(inputChar) {
                             spellList.push(spell.definition.name);
                             totalSpells += 1;
                             thisIteration = pad(totalSpells, 5);
-                            buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                            buildXML += `\t\t\t<id-${thisIteration}>\n`;
 
                             castingTime = "";
                             if(spell.definition.activation.activationTime == null) {
@@ -2269,7 +2252,7 @@ function parseCharacter(inputChar) {
                             if (payFlag == 1) {
                                 buildXML += "\t\t\t\t<parse type=\"number\">1</parse>\n";
                             }
-                            buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                            buildXML += `\t\t\t</id-${thisIteration}>\n`;
                         }
                     }
                 });
@@ -2282,49 +2265,49 @@ function parseCharacter(inputChar) {
         if (isTiefling == 1) {
             thisIteration = pad(totalSpells + 1, 5);
             totalSpells += 1;
-            buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t<id-${thisIteration}>\n`;
             buildXML += addTiefHellResist;
-            buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t</id-${thisIteration}>\n`;
         }
         if (isBarbarian == 1) {
             thisIteration = pad(totalSpells + 1, 5);
             totalSpells += 1;
-            buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t<id-${thisIteration}>\n`;
             buildXML += addBarbarianRage;
             buildXML += "\t\t\t\t<prepared type=\"number\">" + barbRages + "</prepared>\n";
-            buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t</id-${thisIteration}>\n`;
             if (levelBarbarian >= 2) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addBarbarianDangerSense;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addBarbarianRecklessAttack;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
             if (levelBarbarian >= 7) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addBarbarianFeralInstinct;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
             if (levelBarbarian >= 9) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addBarbarianBrutalCritical;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
             if (levelBarbarian >= 11) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addBarbarianRelentlessRage;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
 
             if (levelBarbarian >= 3) {
@@ -2332,48 +2315,48 @@ function parseCharacter(inputChar) {
                     if (barbTotemSpirit == "Wolf") {
                         thisIteration = pad(totalSpells + 1, 5);
                         totalSpells += 1;
-                        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t<id-${thisIteration}>\n`;
                         buildXML += addBarbarianWolfTotemSpirit;
-                        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     } else if (barbTotemSpirit == "Eagle") {
                         thisIteration = pad(totalSpells + 1, 5);
                         totalSpells += 1;
-                        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t<id-${thisIteration}>\n`;
                         buildXML += addBarbarianEagleTotemSpirit;
-                        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     } else if (barbTotemSpirit == "Bear") {
                         thisIteration = pad(totalSpells + 1, 5);
                         totalSpells += 1;
-                        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t<id-${thisIteration}>\n`;
                         buildXML += addBarbarianBearTotemSpirit;
-                        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     }
                     if (barbBeastAspect == "Wolf") {
                         thisIteration = pad(totalSpells + 1, 5);
                         totalSpells += 1;
-                        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t<id-${thisIteration}>\n`;
                         buildXML += addBarbarianWolfBeastAspect;
-                        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     } else if (barbBeastAspect == "Eagle") {
                         thisIteration = pad(totalSpells + 1, 5);
                         totalSpells += 1;
-                        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t<id-${thisIteration}>\n`;
                         buildXML += addBarbarianEagleBeastAspect;
-                        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     } else if (barbBeastAspect == "Bear") {
                         thisIteration = pad(totalSpells + 1, 5);
                         totalSpells += 1;
-                        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t<id-${thisIteration}>\n`;
                         buildXML += addBarbarianBearBeastAspect;
-                        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     }
                     if (levelBarbarian >= 14) {
                         if (barbTotemAttune == "Bear") {
                             thisIteration = pad(totalSpells + 1, 5);
                                 totalSpells += 1;
-                                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                                 buildXML += addBarbarianTotemicAttunement;
-                                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                                buildXML += `\t\t\t</id-${thisIteration}>\n`;
                         }
                     }
 
@@ -2381,24 +2364,24 @@ function parseCharacter(inputChar) {
                     if (levelBarbarian >= 6) {
                         thisIteration = pad(totalSpells + 1, 5);
                         totalSpells += 1;
-                        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t<id-${thisIteration}>\n`;
                         buildXML += addBarbarianMindlessRage;
                         buildXML += "\t\t\t\t<prepared type=\"number\">" + barbRages + "</prepared>\n";
-                        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     }
                     if (levelBarbarian >= 10) {
                         thisIteration = pad(totalSpells + 1, 5);
                         totalSpells += 1;
-                        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t<id-${thisIteration}>\n`;
                         buildXML += addBarbarianIntimidatingPresence;
-                        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     }
                 }
             }
         } else if (isBard == 1) {
             thisIteration = pad(totalSpells + 1, 5);
             totalSpells += 1;
-            buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t<id-${thisIteration}>\n`;
             buildXML += addBardicInspiration;
             if (chaMod < 1) {
                 useMod = 1;
@@ -2407,759 +2390,759 @@ function parseCharacter(inputChar) {
             }
             buildXML += "<prepared type=\"number\">" + useMod + "</prepared>\n";
             buildXML += "<source type=\"string\">Bard</source>\n";
-            buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t</id-${thisIteration}>\n`;
 
             if (levelBard >= 2) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addBardJackOfAllTrades;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addBardSongOfRest;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
             if (levelBard >= 6) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addBardCountercharm;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
         } else if (isCleric == 1) {
             if (levelCleric >= 1) {
                 if (clericDomain.match(/Life/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addClericCureWoundsLife;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (clericDomain.match(/Light/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addClericWardingFlare;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (clericDomain.match(/Tempest/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addClericWrathOfTheStorm;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (clericDomain.match(/Trickery/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addClericBlessingOfTheTrickster;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (clericDomain.match(/War/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addClericWarPriest;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelCleric >= 2) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addClericTurnUndead;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 if (clericDomain.match(/Arcana/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addClericArcaneAbjuration;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (clericDomain.match(/Life/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addClericPreserveLife;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (clericDomain.match(/Light/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addClericRadianceOfDawn;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (clericDomain.match(/Nature/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addClericCharmAnimals;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelCleric >= 6) {
                 if (clericDomain.match(/Life/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addClericBlessedHealer;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (clericDomain.match(/Nature/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addClericDampenElements;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (clericDomain.match(/Trickery/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addClericCloakOfShadows;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelCleric >= 8) {
                 if (clericDomain.match(/Death/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addClericDivineStrike;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (clericDomain.match(/Forge/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addClericDivineStrike;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (clericDomain.match(/Life/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addClericDivineStrike;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (clericDomain.match(/Nature/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addClericDivineStrike;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (clericDomain.match(/Order/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addClericDivineStrike;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (clericDomain.match(/Tempest/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addClericDivineStrike;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (clericDomain.match(/Trickery/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addClericDivineStrike;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (clericDomain.match(/War/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addClericDivineStrike;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelCleric >= 17) {
                 if (clericDomain.match(/Life/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addClericCureWoundsSupreme;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (clericDomain.match(/Light/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addClericCoronaOfLight;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (clericDomain.match(/War/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addClericAvatarOfBattle;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
         } else if (isDruid == 1) {
             if (levelDruid >= 2) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addDruidWildShape;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 if (druidCircle.match(/Land/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addDruidNaturalRecovery;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (druidCircle.match(/Moon/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addDruidCombatWildShape;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelDruid >= 6) {
                 if (druidCircle.match(/Land/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addDruidLandStride;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (druidCircle.match(/Moon/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addDruidPrimalStrike;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelDruid >= 10) {
                 if (druidCircle.match(/Land/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addDruidNaturesWard;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelDruid >= 14) {
                 if (druidCircle.match(/Land/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addDruidNaturesSanctuary;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
         } else if (isFighter == 1) {
             thisIteration = pad(totalSpells + 1, 5);
             totalSpells += 1;
-            buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t<id-${thisIteration}>\n`;
             buildXML += addFighterSecondWind;
-            buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t</id-${thisIteration}>\n`;
             if (fighterArchetype.match(/Battle/)) {
                 character.options.class.some(function(battlemaster, p) {
                     bmmName = battlemaster.definition.name;
                     if (bmmName == "Feinting Attack") {
                         thisIteration = pad(totalSpells + 1, 5);
                         totalSpells += 1;
-                        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t<id-${thisIteration}>\n`;
                         buildXML += addFighterFeintingAttack;
-                        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     } else if (bmmName == "Riposte") {
                         thisIteration = pad(totalSpells + 1, 5);
                         totalSpells += 1;
-                        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t<id-${thisIteration}>\n`;
                         buildXML += addFighterRiposte;
-                        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     } else if (bmmName == "Commander's Strike") {
                         thisIteration = pad(totalSpells + 1, 5);
                         totalSpells += 1;
-                        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t<id-${thisIteration}>\n`;
                         buildXML += addFighterCommandersStrike;
-                        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     } else if (bmmName == "Disarming Attack") {
                         thisIteration = pad(totalSpells + 1, 5);
                         totalSpells += 1;
-                        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t<id-${thisIteration}>\n`;
                         buildXML += addFighterDisarmingAttack;
-                        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     } else if (bmmName == "Distracting Attack") {
                         thisIteration = pad(totalSpells + 1, 5);
                         totalSpells += 1;
-                        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t<id-${thisIteration}>\n`;
                         buildXML += addFighterDistractingStrike;
-                        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     } else if (bmmName == "Goading Attack") {
                         thisIteration = pad(totalSpells + 1, 5);
                         totalSpells += 1;
-                        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t<id-${thisIteration}>\n`;
                         buildXML += addFighterGoadingAttack;
-                        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     } else if (bmmName == "Lunging Attack") {
                         thisIteration = pad(totalSpells + 1, 5);
                         totalSpells += 1;
-                        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t<id-${thisIteration}>\n`;
                         buildXML += addFighterLungingAttack;
-                        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     } else if (bmmName == "Maneuvering Attack") {
                         thisIteration = pad(totalSpells + 1, 5);
                         totalSpells += 1;
-                        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t<id-${thisIteration}>\n`;
                         buildXML += addFighterManeuveringAttack;
-                        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     } else if (bmmName == "Menacing Attack") {
                         thisIteration = pad(totalSpells + 1, 5);
                         totalSpells += 1;
-                        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t<id-${thisIteration}>\n`;
                         buildXML += addFighterMenacingAttack;
-                        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     } else if (bmmName == "Precision Attack") {
                         thisIteration = pad(totalSpells + 1, 5);
                         totalSpells += 1;
-                        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t<id-${thisIteration}>\n`;
                         buildXML += addFighterPrecisionAttack;
-                        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     } else if (bmmName == "Pushing Attack") {
                         thisIteration = pad(totalSpells + 1, 5);
                         totalSpells += 1;
-                        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t<id-${thisIteration}>\n`;
                         buildXML += addFighterPushingAttack;
-                        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     } else if (bmmName == "Rally") {
                         thisIteration = pad(totalSpells + 1, 5);
                         totalSpells += 1;
-                        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t<id-${thisIteration}>\n`;
                         buildXML += addFighterRally;
-                        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     } else if (bmmName == "Sweeping Attack") {
                         thisIteration = pad(totalSpells + 1, 5);
                         totalSpells += 1;
-                        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t<id-${thisIteration}>\n`;
                         buildXML += addFighterSweepingAttack;
-                        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     } else if (bmmName == "Trip Attack") {
                         thisIteration = pad(totalSpells + 1, 5);
                         totalSpells += 1;
-                        buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t<id-${thisIteration}>\n`;
                         buildXML += addFighterTripAttack;
-                        buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                        buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     }
                 });
             }
             if (levelFighter >= 2) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addFighterActionSurge;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
             if (levelFighter >= 3) {
                 if (fighterArchetype.match(/Battle/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addFighterCombatSuperiority;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelFighter >= 7) {
                 if (fighterArchetype.match(/Purple/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addFighterRoyalEnvoy;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (fighterArchetype.match(/Champion/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addFighterRemarkableAthlete;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelFighter >= 9) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addFighterIndomitable;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 if (fighterArchetype.match(/Purple/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addFighterRallyingCry;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelFighter >= 10) {
                 if (fighterArchetype.match(/Eldritch/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addFighterEldritchStrike;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelFighter >= 18) {
                 if (fighterArchetype.match(/Purple/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addFighterSurvivor;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
         } else if (isMonk == 1) {
             if (monkWay.match(/Elements/)) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addMonkFangsOfTheFireSnake;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addMonkFistOfUnbrokenAir;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addMonkWaterWhip;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             } else if (monkWay.match(/Death/)) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addMonkTouchOfDeath;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             } else if (monkWay.match(/Soul/)) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addMonkRadiantSunBolt;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
             if (levelMonk >= 2) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addMonkKi;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addMonkFlurryOfBlows;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addMonkPatientDefense;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addMonkStepOfTheWind;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
             if (levelMonk >= 4) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addMonkSlowFall;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
             if (levelMonk >= 5) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addMonkStunningStrike;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
             if (levelMonk >= 6) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addMonkWholenessOfBody;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 if (monkWay.match(/Shadow/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addMonkShadowStep;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (monkWay.match(/Death/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addMonkHourOfReaping;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelMonk >= 7) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addMonkEvasion;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
             if (levelMonk >= 10) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addMonkPurityOfBody;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
             if (levelMonk >= 11) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addMonkTranquility;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 if (monkWay.match(/Shadow/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addMonkCloakOfShadows;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelMonk >= 17) {
                 if (monkWay.match(/Death/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addMonkTouchOfTheLongDeath;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (monkWay.match(/Soul/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addMonkSunShield;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelMonk >= 18) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addMonkEmptyBody;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
         } else if (isPaladin == 1) {
             thisIteration = pad(totalSpells + 1, 5);
             totalSpells += 1;
-            buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t<id-${thisIteration}>\n`;
             buildXML += addPaladinDivineSense;
             buildXML += "<prepared type=\"number\">" + (chaMod + 1) + "</prepared>\n";
             buildXML += addPaladinDivineSense01;
-            buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t</id-${thisIteration}>\n`;
             thisIteration = pad(totalSpells + 1, 5);
             totalSpells += 1;
-            buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t<id-${thisIteration}>\n`;
             buildXML += addPaladinLayOnHands01;
             buildXML += "<prepared type=\"number\">" + (levelPaladin * 5) + "</prepared>\n";
             buildXML += addPaladinLayOnHands02;
-            buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t</id-${thisIteration}>\n`;
             if (levelPaladin >= 2) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addPaladinDivineSmite;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
             if (levelPaladin >= 3) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addPaladinDivineHealth;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 if (paladinOath.match(/Crown/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addPaladinChampionChallengeCrown;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addPaladinTurnTheTideCrown;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (paladinOath.match(/Devotion/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addPaladinSacredWeaponDevotion;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addPaladinTurnTheUnholyDevotion;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (paladinOath.match(/Ancients/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addPaladinNaturesWrathAncients;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addPaladinTurnTheFaithlessAncients;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (paladinOath.match(/Vengeance/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addPaladinAbjureEnemyVengeance;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addPaladinVowOfEnmityVengeance;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelPaladin >= 6) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addPaladinAuraOfProtection;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
             if (levelPaladin >= 7) {
                 if (paladinOath.match(/Devotion/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addPaladinAuraOfDevotion;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (paladinOath.match(/Ancients/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addPaladinAuraOfWarding;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelPaladin >= 10) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addPaladinAuraOfCourage;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
             if (levelPaladin >= 11) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addPaladinImprovedDivineSmite;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
             if (levelPaladin >= 15) {
                 if (paladinOath.match(/Crown/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addPaladinUnyieldingSpirit;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (paladinOath.match(/Devotion/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addPaladinPurityOfSpirit;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (paladinOath.match(/Ancients/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addPaladinUndyingSentinal;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelPaladin >= 20) {
                 if (paladinOath.match(/Vengeance/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addPaladinExaltedChampion;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (paladinOath.match(/Devotion/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addPaladinHolyNimbus;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (paladinOath.match(/Ancients/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addPaladinElderChampion;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (paladinOath.match(/Ancients/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addPaladinAvengingAngel;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
         } else if (isRanger == 1) {
             thisIteration = pad(totalSpells + 1, 5);
             totalSpells += 1;
-            buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t<id-${thisIteration}>\n`;
             buildXML += addRangerFavoredEnemy;
-            buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t</id-${thisIteration}>\n`;
 
             if (levelRanger >= 3) {
                 if (rangerArchtype.match(/Hunter/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addRangerColossusSlayer;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelRanger >= 7) {
                 if (rangerArchtype.match(/Hunter/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addRangerDefensiveTactics;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelRanger >= 8) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addRangerLandsStride;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
             if (levelRanger >= 10) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addRangerHideInPlainSight;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
             if (levelRanger >= 15) {
                 if (rangerArchtype.match(/Hunter/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addRangerSuperiorHuntersDefense;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelRanger >= 18) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addRangerFeralSenses;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
             if (levelRanger >= 20) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addRangerFoeSlayer;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
         } else if (isRogue == 1) {
             thisIteration = pad(totalSpells + 1, 5);
             totalSpells += 1;
-            buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t<id-${thisIteration}>\n`;
             buildXML += addRogueSneakAttack01;
             switch (levelRogue) {
                 case 1: case 2: 
@@ -3196,51 +3179,51 @@ function parseCharacter(inputChar) {
                     buildXML += "\t\t<label type=\"string\">DMG: 1d6</label>\n";
             }
             buildXML += addRogueSneakAttack02;
-            buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t</id-${thisIteration}>\n`;
             if (levelRogue >= 3) {
                 if (rogueArchetype.match(/Swashbuckler/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addRogueRakishAudacity;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelRogue >= 7) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addRogueEvasion;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
             if (levelRogue >= 9) {
                 if (rogueArchetype.match(/Swashbuckler/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addRoguePanache;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (rogueArchetype.match(/Trickster/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addRogueMagicalAmbush;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelRogue >= 13) {
                 if (rogueArchetype.match(/Swashbuckler/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addRogueElegantManeuver;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (rogueArchetype.match(/Trickster/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addRogueVersatileTrickster;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
 
             }
@@ -3248,310 +3231,310 @@ function parseCharacter(inputChar) {
                 if (rogueArchetype.match(/Assassin/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addRogueDeathStrike;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
         } else if (isSorcerer == 1) {
             if (sorcererOrigin.match(/Draconic/)) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addSorcererDragonAncestor;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             } else if (sorcererOrigin.match(/Wild/)) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addSorcererTidesOfChaos;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
             if (levelSorcerer >= 2) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addSorcererFontOfMagic;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
             if (levelSorcerer >= 6) {
                 if (sorcererOrigin.match(/Storm/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addSorcererHeartOfTheStorm;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (sorcererOrigin.match(/Draconic/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addSorcererElementalAffinity;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelSorcerer >= 14) {
                 if (sorcererOrigin.match(/Storm/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addSorcererStormsFury;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelSorcerer >= 18) {
                 if (sorcererOrigin.match(/Storm/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addSorcererWindSoul;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (sorcererOrigin.match(/Draconic/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addSorcererDraconicPresence;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
         } else if (isWarlock == 1) {
             if (warlockPatron.match(/Archfey/)) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addWarlockFeyPresence;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             } else if (warlockPatron.match(/Fiend/)) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addWarlockDarkOnesBlessing;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             } else if (warlockPatron.match(/Undying/)) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addWarlockAmongTheDead;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
             if (levelWarlock >= 6) {
                 if (warlockPatron.match(/Archfey/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWarlockMistyEscape;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (warlockPatron.match(/Fiend/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWarlockDarkOnesOwnLuck;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (warlockPatron.match(/Great/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWarlockEntropicWard;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (warlockPatron.match(/Undying/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWarlockDefyDeath;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelWarlock >= 10) {
                 if (warlockPatron.match(/Archfey/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWarlockBeguilingDefenses;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (warlockPatron.match(/Fiend/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWarlockFiendishResilience;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (warlockPatron.match(/Great/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWarlockThoughtShield;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelWarlock >= 14) {
                 if (warlockPatron.match(/Archfey/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWarlockDarkDelirium;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (warlockPatron.match(/Fiend/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWarlockHurlThroughHell;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (warlockPatron.match(/Great/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWarlockCreateThrall;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (warlockPatron.match(/Undying/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWarlockIndestructibleLife;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelWarlock >= 11) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addWarlockMysticArcanum;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
             if (levelWarlock >= 20) {
                 thisIteration = pad(totalSpells + 1, 5);
                 totalSpells += 1;
-                buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t<id-${thisIteration}>\n`;
                 buildXML += addWarlockEldritchMaster;
-                buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                buildXML += `\t\t\t</id-${thisIteration}>\n`;
             }
         } else if (isWizard == 1) {
             thisIteration = pad(totalSpells + 1, 5);
             totalSpells += 1;
-            buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t<id-${thisIteration}>\n`;
             buildXML += addWizardArcaneRecovery;
-            buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+            buildXML += `\t\t\t</id-${thisIteration}>\n`;
             if (levelWizard >= 2) {
                 if (wizardSchool.match(/Abjuration/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWizardArcaneWard;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (wizardSchool.match(/Divination/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWizardPortent;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (wizardSchool.match(/Enchantment/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWizardHypnoticGaze;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (wizardSchool.match(/Necromancy/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWizardGrimHarvest;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }  else if (wizardSchool.match(/Bladesinging/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWizardBladesong;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelWizard >= 6) {
                 if (wizardSchool.match(/Conjuration/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWizardBenignTransposition;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (wizardSchool.match(/Enchantment/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWizardInstinctiveCharm;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (wizardSchool.match(/Transmutation/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWizardTransmutersStone;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelWizard >= 10) {
                 if (wizardSchool.match(/Abjuration/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWizardImprovedAbjuration;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (wizardSchool.match(/Evocation/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWizardEmpoweredEvocation;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (wizardSchool.match(/Illusion/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWizardIllusorySelf;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (wizardSchool.match(/Necromancy/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWizardInuredToDeath;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (wizardSchool.match(/Transmutation/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWizardShapechanger;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
             if (levelWizard >= 14) {
                 if (wizardSchool.match(/Abjuration/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWizardSpellResistance;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (wizardSchool.match(/Conjuration/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWizardDurableSummons;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (wizardSchool.match(/Enchantment/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWizardAlterMemories;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (wizardSchool.match(/Evocation/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWizardOverchannel;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (wizardSchool.match(/Necromancy/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWizardCommandUndead;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 } else if (wizardSchool.match(/Bladesinging/)) {
                     thisIteration = pad(totalSpells + 1, 5);
                     totalSpells += 1;
-                    buildXML += "\t\t\t<id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
                     buildXML += addWizardSongOfVictory;
-                    buildXML += "\t\t\t</id-" + thisIteration + ">\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
         } else if (isArtificer == 1) {
