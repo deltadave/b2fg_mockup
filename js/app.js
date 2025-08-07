@@ -447,6 +447,21 @@ function parseCharacter(inputChar) {
     const parseStartTime = performance.now();
     console.log('=== Character Processing Performance Baseline ===');
     
+    // Performance optimization: cache expensive getObjects() calls
+    const objectCache = new Map();
+    
+    // Cached version of getObjects to avoid repeated recursive searches
+    function getCachedObjects(obj, key, val) {
+        const cacheKey = `${key}:${val}`;
+        if (objectCache.has(cacheKey)) {
+            return objectCache.get(cacheKey);
+        }
+        
+        const result = getObjects(obj, key, val);
+        objectCache.set(cacheKey, result);
+        return result;
+    }
+    
     // Helper function to safely access properties and prevent null reference errors
     function safeAccess(obj, path, defaultValue = null) {
         try {
@@ -637,7 +652,7 @@ function parseCharacter(inputChar) {
     var hasHalf = 0;
     //var halfProf = false;
     var profValue = 0;
-    var halfprof = getObjects(character, 'type', 'half-proficiency');
+    var halfprof = getCachedObjects(character, 'type', 'half-proficiency');
     for (var x in halfprof) {
         var hfprof = halfprof[x];
         var type = hfprof.subType;
@@ -660,7 +675,7 @@ function parseCharacter(inputChar) {
         }
         buildXML += "\t\t\t\t<stat type=\"string\">" + skillsRef[idCount - 1] + "</stat>\n";
 
-        var proficiencies = getObjects(character, 'type', 'proficiency');
+        var proficiencies = getCachedObjects(character, 'type', 'proficiency');
         if(proficiencies != null) {
             proficiencies.some(function(prof) {
                 var skill = prof.subType.replace(/-/g, '_');
@@ -669,7 +684,7 @@ function parseCharacter(inputChar) {
                 }
             });
         }
-        var expertise = getObjects(character, 'type', 'expertise');
+        var expertise = getCachedObjects(character, 'type', 'expertise');
         if(expertise != null) {
             expertise.some(function(exp) {
                 var expSkill = exp.subType.replace(/-/g, '_');
@@ -1010,7 +1025,7 @@ function parseCharacter(inputChar) {
     buildXML += "\t\t\t<total type=\"number\">" + totalHP + "</total>\n";
     buildXML += "\t\t</hp>\n";
 
-    var languages = getObjects(character, 'type', 'language');
+    var languages = getCachedObjects(character, 'type', 'language');
     buildXML += "\t\t<languagelist>\n";
     languages.some(function(current_lang, i) {
         thisIteration = pad(i + 1, 5);
@@ -3737,16 +3752,22 @@ const getTotalAbilityScore = function(character, scoreId) {
 
 const getObjects = function(obj, key, val) {
     var objects = [];
-    for (var i in obj) {
-        if (!obj.hasOwnProperty(i)) continue;
-        if (typeof obj[i] == 'object') {
-            objects = objects.concat(getObjects(obj[i], key, val));
-        } else
-        if (i == key && obj[i] == val || i == key && val == '') { //
-            objects.push(obj);
-        } else if (obj[i] == val && key == ''){
-            if (objects.lastIndexOf(obj) == -1){
-                objects.push(obj);
+    var stack = [obj]; // Use iterative approach instead of recursion
+    
+    while (stack.length > 0) {
+        var current = stack.pop();
+        
+        for (var i in current) {
+            if (!current.hasOwnProperty(i)) continue;
+            
+            if (typeof current[i] == 'object' && current[i] !== null) {
+                stack.push(current[i]); // Add to stack instead of recursive call
+            } else if (i == key && current[i] == val || i == key && val == '') {
+                objects.push(current);
+            } else if (current[i] == val && key == ''){
+                if (objects.indexOf(current) == -1){ // Use indexOf instead of lastIndexOf
+                    objects.push(current);
+                }
             }
         }
     }
