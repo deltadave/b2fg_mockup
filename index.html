@@ -299,7 +299,7 @@
                 this.innerHTML = '<i class="fas fa-sync"></i> Get Character Data';
                 this.disabled = false;
                 
-                showSecureNotification("Error fetching character data: " + error.message + "\nURL: " + fetchurl, 'error');
+                showSecureNotification("Error fetching character data: " + error.message + "\nCharacter ID: " + sanitizedId, 'error');
             });
         });
     </script>
