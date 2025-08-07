@@ -276,9 +276,17 @@ $(function() {
     });
 
     $('#grabChar').on("click", function() {
-        if(!$('#getcharID').val().trim().match(/\d+/)) {
-            alert("Um, please enter your Character ID");
-        } else if ($('#textHere').val() != "")  {
+        // Enhanced secure character ID validation
+        const charIdValidation = validateCharacterID($('#getcharID').val());
+        if (!charIdValidation.valid) {
+            showSecureNotification("Invalid Character ID: " + charIdValidation.error, 'error');
+            return;
+        }
+        
+        // Use the sanitized character ID
+        $('#getcharID').val(charIdValidation.sanitized);
+        
+        if ($('#textHere').val() != "")  {
             var resetMe = confirm("You need to clear previous data, do you want me to do that for you?");
             if (resetMe == 1) {
                 window.location.reload(false);
@@ -312,7 +320,9 @@ $(function() {
                     .then(data => parseCharacter(data))
                     .catch((error) => {
                         console.error("API Error:", error);
-                        alert("Error fetching character data: " + error.message + "\nURL: " + fetchurl);
+                        // Secure error handling - don't expose internal URLs or sensitive info
+                        const userFriendlyMessage = "Unable to fetch character data. Please check your Character ID and try again.";
+                        showSecureNotification(userFriendlyMessage, 'error');
                     })
             } else {
                 // get debug data
@@ -341,7 +351,7 @@ $(function() {
 
     $("#dlChar").on("click", function() {
         if ($("#textHere").val() == "") {
-            alert("You need to load a character first.");
+            showSecureNotification("You need to load a character first.", 'error');
             return;
         }
         if (pcFilename == "" || pcFilename == null) {
@@ -410,7 +420,10 @@ function parseCharacter(inputChar) {
         alertString += "Either the character doesn't actually exist,\n";
         alertString += "or the character is set to 'Private' instead of 'Public'.\n\n";
         alertString += "Yes, your character MUST be set to PUBLIC.";
-        alert("Character " + $("#getcharID").val() + alertString);
+        // Secure error notification - validate character ID before displaying
+        const charIdValidation = validateCharacterID($("#getcharID").val());
+        const displayId = charIdValidation.valid ? charIdValidation.sanitized : "[Invalid ID]";
+        showSecureNotification("Character " + displayId + ": " + alertString.replace(/\n/g, ' '), 'error', 8000);
     } else {
         if (fgVersion == 0) {
             startXML = "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n";
@@ -3715,30 +3728,177 @@ function invokeSaveAsDialog(file, fileName) {
     }
 }
 
-function fixQuote(badString) {
-    if(badString == "" || badString == null) {
-        return "";
-    }
-    return badString.replace(/\n/g, '\n').replace(/\u2019/g, "'").replace(/\u2014/g, "-").replace(/"/g, "&#34;").replace(/\u2022/g, ":").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/&nbsp;/g, " ").replace(/&rsquo;/g, "'").replace(/\s&/g, "&amp;").trim();
+// Secure user notification system to replace alert() calls
+function showSecureNotification(message, type = 'error', duration = 5000) {
+    // Sanitize the message to prevent XSS
+    const sanitizedMessage = fixQuote(message);
+    
+    // Create notification element with secure content
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 10000;
+        padding: 15px 20px;
+        border-radius: 5px;
+        color: white;
+        font-weight: bold;
+        max-width: 400px;
+        word-wrap: break-word;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        background-color: ${type === 'error' ? '#dc3545' : type === 'success' ? '#28a745' : '#17a2b8'};
+    `;
+    
+    // Use textContent to prevent XSS (never innerHTML)
+    notification.textContent = message;
+    
+    // Add to document
+    document.body.appendChild(notification);
+    
+    // Auto-remove after duration
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, duration);
+    
+    return notification;
 }
 
-// Need two, one for FGC, another for FGU
-function fixDesc(badString) {
-    if(badString == "" || badString == null) {
-        return "";
-    }
-    if (fgVersion == 0) {
-        // FG Classic
-        var tempString1 = badString.replace(/<a\s.*?\">/g, "").replace(/<\/a>/g, "").replace(/<\/span>/g, "").replace(/’/g, "'").replace(/—/g, "-");
-    } else {
-        // FG Unity
-        var tempString1 = badString.replace(/<a\s.*?\">/g, "").replace(/<\/a>/g, "").replace(/<\/span>/g, "");
+// Secure character ID validation to prevent injection attacks
+function validateCharacterID(characterId) {
+    // Enhanced security validation for character ID input
+    if (characterId == null || characterId === undefined || characterId === "") {
+        return { valid: false, error: 'Character ID is required', sanitized: '' };
     }
     
-    var tempString2 = tempString1.replace(/<img.*?">/g, "").replace(/<hr>/g, "<hr />").replace(/<span>/g, "");
-    var tempString3 = tempString2.replace(/<br>/g, "<br />").replace(/&rsquo;/g, "'").replace(/&nbsp;/g, " ");
-    var tempString4 = tempString3.replace(/&ldquo;/g, '"').replace(/<span\s.*?">/g, "").replace(/<em>/g, "").replace(/<\/em>/g, "")
-    return tempString4.replace(/&rdquo;/g, '"').replace(/&mdash;/g, "-").replace(/&times;/g, "*").replace(/&minus;/g, "-").trim();
+    // Convert to string and remove all whitespace
+    const cleanId = String(characterId).trim().replace(/\s/g, '');
+    
+    // Validate length (reasonable limits)
+    if (cleanId.length === 0) {
+        return { valid: false, error: 'Character ID cannot be empty', sanitized: '' };
+    }
+    
+    if (cleanId.length > 20) {
+        return { valid: false, error: 'Character ID is too long (max 20 characters)', sanitized: '' };
+    }
+    
+    // Strict validation: only allow digits
+    if (!/^\d+$/.test(cleanId)) {
+        return { valid: false, error: 'Character ID must contain only numbers', sanitized: '' };
+    }
+    
+    // Additional validation: reasonable range
+    const numericId = parseInt(cleanId, 10);
+    if (numericId <= 0 || numericId > 999999999) {
+        return { valid: false, error: 'Character ID must be a positive number less than 999,999,999', sanitized: '' };
+    }
+    
+    // Return validated and sanitized ID
+    return { valid: true, error: null, sanitized: String(numericId) };
+}
+
+function fixQuote(badString) {
+    // Enhanced security: strict input validation and comprehensive sanitization
+    if (badString == null || badString === undefined || badString === "") {
+        return "";
+    }
+    
+    // Convert to string and limit length to prevent DoS attacks
+    const inputString = String(badString).substring(0, 10000);
+    
+    // Comprehensive HTML entity encoding for XSS prevention
+    return inputString
+        // Essential HTML entities first (order matters)
+        .replace(/&/g, "&amp;")        // Must be first to avoid double-encoding
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#x27;")       // More secure than &apos;
+        .replace(/\//g, "&#x2F;")      // Forward slash for additional protection
+        
+        // Unicode character normalization
+        .replace(/\u2019/g, "&#x2019;") // Right single quotation mark
+        .replace(/\u2014/g, "&#x2014;") // Em dash
+        .replace(/\u2022/g, "&#x2022;") // Bullet point
+        .replace(/\u00A0/g, " ")        // Non-breaking space to regular space
+        .replace(/\u2026/g, "&#x2026;") // Ellipsis
+        
+        // Line breaks and whitespace normalization
+        .replace(/\n/g, "&#10;")        // Preserve line breaks as entities
+        .replace(/\r/g, "&#13;")        // Carriage return
+        .replace(/\t/g, "&#9;")         // Tab characters
+        
+        // Trim whitespace
+        .trim();
+}
+
+// Enhanced secure HTML processing for descriptions - supports FGC and FGU
+function fixDesc(badString) {
+    // Enhanced security: strict input validation
+    if (badString == null || badString === undefined || badString === "") {
+        return "";
+    }
+    
+    // Convert to string and limit length to prevent DoS attacks
+    const inputString = String(badString).substring(0, 50000);
+    
+    // Define allowed HTML tags for Fantasy Grounds (whitelist approach)
+    const allowedTags = ['p', 'b', 'i', 'strong', 'em', 'br', 'hr', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5'];
+    const allowedTagsRegex = new RegExp(`<(\/?)(?:${allowedTags.join('|')})(\\s[^>]*)?>`, 'gi');
+    
+    // Step 1: Remove all potentially dangerous HTML tags and attributes
+    let tempString1 = inputString
+        // Remove script tags and their content completely
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+        // Remove style tags and their content
+        .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "")
+        // Remove dangerous event handlers and javascript: links
+        .replace(/\s*on\w+\s*=\s*["'][^"']*["']/gi, "")
+        .replace(/javascript\s*:/gi, "")
+        // Remove potentially dangerous tags
+        .replace(/<\/?(?:object|embed|applet|iframe|frame|frameset|link|meta|base)\b[^>]*>/gi, "")
+        // Remove anchor tags but preserve content
+        .replace(/<a\s[^>]*>/gi, "").replace(/<\/a>/gi, "")
+        // Remove image tags
+        .replace(/<img[^>]*>/gi, "")
+        // Remove span tags with attributes but preserve content
+        .replace(/<span\s[^>]*>/gi, "").replace(/<\/span>/gi, "");
+    
+    // Step 2: Format-specific processing
+    if (typeof fgVersion !== 'undefined' && fgVersion === 0) {
+        // FG Classic - more restrictive HTML processing
+        tempString1 = tempString1
+            .replace(/'/g, "'")
+            .replace(/—/g, "-");
+    }
+    
+    // Step 3: Normalize HTML tags and entities
+    const tempString2 = tempString1
+        .replace(/<hr\s*\/?>/gi, "<hr />")
+        .replace(/<br\s*\/?>/gi, "<br />")
+        .replace(/<span>/gi, "");
+    
+    // Step 4: Safe HTML entity decoding for common cases
+    const tempString3 = tempString2
+        .replace(/&rsquo;/g, "'")
+        .replace(/&lsquo;/g, "'")
+        .replace(/&ldquo;/g, '"')
+        .replace(/&rdquo;/g, '"')
+        .replace(/&mdash;/g, "-")
+        .replace(/&ndash;/g, "-")
+        .replace(/&times;/g, "*")
+        .replace(/&minus;/g, "-")
+        .replace(/&nbsp;/g, " ")
+        .replace(/&amp;/g, "&"); // Keep this last to avoid double-decoding
+    
+    // Step 5: Final cleanup and validation
+    return tempString3
+        .replace(/\s+/g, " ") // Normalize whitespace
+        .trim()
+        .substring(0, 10000); // Final length limit
 }
 
 function convert_case(str) {

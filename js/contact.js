@@ -3,8 +3,20 @@ $(function(){
     $('#serverless-form').submit(function(e){
         e.preventDefault();
         var formdata = toJSONString(this);
-        console.log(formdata);
-        console.log( `${URL}` );
+        // Validate form data before sending
+        var parsedData;
+        try {
+            parsedData = JSON.parse(formdata);
+            // Basic validation - ensure required fields are present and not empty
+            if (!parsedData.name || !parsedData.email || !parsedData.message) {
+                $('#status').text('Please fill in all required fields').show();
+                return false;
+            }
+        } catch (e) {
+            $('#status').text('Error processing form data').show();
+            return false;
+        }
+        console.log('Sanitized form data:', formdata);
         $.ajax({
             type: "POST",
             crossDomain: "true",
@@ -40,7 +52,9 @@ $(function(){
 			var name = element.name;
 			var value = element.value;
 			if(name) {
-				obj[name] = value;
+				// Basic input sanitization for form data
+				var sanitizedValue = value ? value.substring(0, 10000).trim() : '';
+				obj[name] = sanitizedValue;
 			}
         }
         return JSON.stringify(obj);

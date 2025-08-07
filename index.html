@@ -166,7 +166,7 @@
             const characterIdInput = document.getElementById('characterId');
             
             if (!textarea.value.trim()) {
-                alert('No XML data to download. Please get character data first.');
+                showSecureNotification('No XML data to download. Please get character data first.', 'warning');
                 return;
             }
             
@@ -177,7 +177,9 @@
             // Create download link
             const a = document.createElement('a');
             a.href = url;
-            a.download = `character_${characterIdInput.value || 'export'}.xml`;
+            // Use sanitized filename
+            const sanitizedFilename = fixQuote(characterIdInput.value || 'export');
+            a.download = `character_${sanitizedFilename}.xml`;
             document.body.appendChild(a);
             a.click();
             
@@ -193,11 +195,13 @@
             const textarea = document.querySelector('textarea');
             const characterId = characterIdInput.value.trim();
             
-            // Validation
-            if (!characterId.match(/\d+/)) {
-                alert("Please enter a valid Character ID (numbers only)");
+            // Enhanced secure validation
+            const validation = validateCharacterID(characterId);
+            if (!validation.valid) {
+                showSecureNotification(validation.error, 'error');
                 return;
             }
+            const sanitizedId = validation.sanitized;
             
             if (textarea.value.trim() !== "") {
                 const resetMe = confirm("You need to clear previous data, do you want me to do that for you?");
@@ -213,10 +217,10 @@
             this.disabled = true;
             statusEl.style.display = 'none';
             
-            // Real API call
+            // Real API call using sanitized ID
             const proxyurl = "https://uakari-indigo.fly.dev/";
             const url = "https://character-service.dndbeyond.com/character/v5/character/";
-            const fetchurl = proxyurl + url + characterId;
+            const fetchurl = proxyurl + url + sanitizedId;
             
             console.log('Fetching:', fetchurl);
             
@@ -240,7 +244,7 @@
                 // Set up temporary elements for the original parseCharacter function
                 const tempCharIdInput = document.createElement('input');
                 tempCharIdInput.id = 'getcharID';
-                tempCharIdInput.value = characterId;
+                tempCharIdInput.value = sanitizedId;
                 tempCharIdInput.style.display = 'none';
                 document.body.appendChild(tempCharIdInput);
                 
@@ -295,7 +299,7 @@
                 this.innerHTML = '<i class="fas fa-sync"></i> Get Character Data';
                 this.disabled = false;
                 
-                alert("Error fetching character data: " + error.message + "\nURL: " + fetchurl);
+                showSecureNotification("Error fetching character data: " + error.message + "\nURL: " + fetchurl, 'error');
             });
         });
     </script>
