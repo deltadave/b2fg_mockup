@@ -660,6 +660,10 @@ function parseCharacter(inputChar) {
             hasHalf = 1;
         }
     }
+    // Performance timing: start skills processing
+    const skillsStartTime = performance.now();
+    console.log(`Pre-skills time: ${(skillsStartTime - setupTime).toFixed(2)}ms`);
+    
     buildXML += "\t\t<skilllist>\n";
     skills.some(function(element) {
         profValue = 0;
@@ -710,6 +714,10 @@ function parseCharacter(inputChar) {
         idCount += 1;
     });
     buildXML += "\t\t</skilllist>\n";
+    
+    // Performance timing: skills processing complete  
+    const skillsEndTime = performance.now();
+    console.log(`Skills processing time: ${(skillsEndTime - skillsStartTime).toFixed(2)}ms`);
 
     buildXML += "\t\t<classes>\n";
 
@@ -1070,6 +1078,10 @@ function parseCharacter(inputChar) {
     buildXML += "\t\t</traitlist>\n";
 
     totalFeatures = 0;
+    // Performance timing: start features processing
+    const featuresStartTime = performance.now();
+    console.log(`Pre-features time: ${(featuresStartTime - skillsEndTime).toFixed(2)}ms`);
+    
     buildXML += "\t\t<featurelist>\n";
     character.classes.some(function(current_class) {
         classLevel = current_class.level;
@@ -1201,6 +1213,10 @@ function parseCharacter(inputChar) {
     }
 
     buildXML += "\t\t</featurelist>\n";
+    
+    // Performance timing: features processing complete
+    const featuresEndTime = performance.now();
+    console.log(`Features processing time: ${(featuresEndTime - featuresStartTime).toFixed(2)}ms`);
 
     buildXML += "\t\t<abilities>\n";
     justAbilities.some(function(thisAbility, ja) {
@@ -3686,7 +3702,11 @@ function parseCharacter(inputChar) {
     // Performance summary table
     console.table({
         'Basic Setup': `${(setupTime - parseStartTime).toFixed(2)}ms`,
-        'Pre-Inventory Processing': `${(inventoryStartTime - setupTime).toFixed(2)}ms`, 
+        'Pre-Skills Processing': `${(skillsStartTime - setupTime).toFixed(2)}ms`,
+        'Skills Processing': `${(skillsEndTime - skillsStartTime).toFixed(2)}ms`, 
+        'Pre-Features Processing': `${(featuresStartTime - skillsEndTime).toFixed(2)}ms`,
+        'Features Processing': `${(featuresEndTime - featuresStartTime).toFixed(2)}ms`,
+        'Pre-Inventory Processing': `${(inventoryStartTime - featuresEndTime).toFixed(2)}ms`,
         'Inventory Processing': `${(inventoryEndTime - inventoryStartTime).toFixed(2)}ms`,
         'Final Assembly': `${(parseEndTime - inventoryEndTime).toFixed(2)}ms`,
         'Total Parse Time': `${totalParseTime.toFixed(2)}ms`
