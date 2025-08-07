@@ -313,16 +313,49 @@ $(function() {
                 })
                     .then(response => {
                         if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
+                            // Create specific error messages based on HTTP status codes
+                            let statusMessage = '';
+                            switch(response.status) {
+                                case 404:
+                                    statusMessage = 'Character not found. Please verify the Character ID and ensure the character is set to Public.';
+                                    break;
+                                case 403:
+                                    statusMessage = 'Access denied. Please ensure the character is set to Public, not Private.';
+                                    break;
+                                case 429:
+                                    statusMessage = 'Too many requests. Please wait a moment and try again.';
+                                    break;
+                                case 500:
+                                case 502:
+                                case 503:
+                                    statusMessage = 'D&D Beyond servers are experiencing issues. Please try again in a few minutes.';
+                                    break;
+                                default:
+                                    statusMessage = `Unable to fetch character data (Error ${response.status}). Please try again.`;
+                            }
+                            throw new Error(statusMessage);
                         }
                         return response.json();
                     })
                     .then(data => parseCharacter(data))
                     .catch((error) => {
                         console.error("API Error:", error);
-                        // Secure error handling - don't expose internal URLs or sensitive info
-                        const userFriendlyMessage = "Unable to fetch character data. Please check your Character ID and try again.";
-                        showSecureNotification(userFriendlyMessage, 'error');
+                        
+                        let userMessage = error.message;
+                        
+                        // Handle network-level errors with more specific messages
+                        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                            userMessage = 'Network error. Please check your internet connection and try again.';
+                        } else if (error.message.includes('JSON') || error.message.includes('Unexpected')) {
+                            userMessage = 'Received invalid data from D&D Beyond. Please try again.';
+                        } else if (error.message.includes('timeout')) {
+                            userMessage = 'Request timed out. Please try again.';
+                        }
+                        
+                        showSecureNotification(userMessage, 'error', 8000);
+                        
+                        // Reset button state to allow retry
+                        $("#getCharData").text("Get Character Data").prop('disabled', false);
                     })
             } else {
                 // get debug data
