@@ -3996,18 +3996,183 @@ function fixDesc(badString) {
         .replace(/<br\s*\/?>/gi, "<br />")
         .replace(/<span>/gi, "");
     
-    // Step 4: Safe HTML entity decoding for common cases
+    // Step 4: Comprehensive HTML entity decoding
     const tempString3 = tempString2
-        .replace(/&rsquo;/g, "'")
-        .replace(/&lsquo;/g, "'")
-        .replace(/&ldquo;/g, '"')
-        .replace(/&rdquo;/g, '"')
-        .replace(/&mdash;/g, "-")
-        .replace(/&ndash;/g, "-")
-        .replace(/&times;/g, "*")
-        .replace(/&minus;/g, "-")
-        .replace(/&nbsp;/g, " ")
-        .replace(/&amp;/g, "&"); // Keep this last to avoid double-decoding
+        // Quote marks and apostrophes
+        .replace(/&rsquo;/g, "'")        // Right single quotation mark
+        .replace(/&lsquo;/g, "'")        // Left single quotation mark
+        .replace(/&apos;/g, "'")         // Apostrophe
+        .replace(/&ldquo;/g, '"')        // Left double quotation mark
+        .replace(/&rdquo;/g, '"')        // Right double quotation mark
+        .replace(/&quot;/g, '"')         // Quotation mark
+        .replace(/&#8216;/g, "'")        // Numeric left single quote
+        .replace(/&#8217;/g, "'")        // Numeric right single quote
+        .replace(/&#8220;/g, '"')        // Numeric left double quote
+        .replace(/&#8221;/g, '"')        // Numeric right double quote
+        
+        // Dashes and hyphens
+        .replace(/&mdash;/g, "-")        // Em dash
+        .replace(/&ndash;/g, "-")        // En dash
+        .replace(/&#8212;/g, "-")        // Numeric em dash
+        .replace(/&#8211;/g, "-")        // Numeric en dash
+        
+        // Mathematical symbols
+        .replace(/&times;/g, "*")        // Multiplication sign
+        .replace(/&minus;/g, "-")        // Minus sign
+        .replace(/&plusmn;/g, "±")       // Plus-minus sign
+        .replace(/&divide;/g, "/")       // Division sign
+        .replace(/&frac12;/g, "1/2")     // Fraction one half
+        .replace(/&frac14;/g, "1/4")     // Fraction one quarter
+        .replace(/&frac34;/g, "3/4")     // Fraction three quarters
+        
+        // Spaces and formatting
+        //.replace(/&nbsp;/g, " ")         // Non-breaking space
+        .replace(/&ensp;/g, " ")         // En space
+        .replace(/&emsp;/g, " ")         // Em space
+        .replace(/&thinsp;/g, " ")       // Thin space
+        .replace(/&#160;/g, " ")         // Numeric non-breaking space
+        
+        // Special punctuation
+        .replace(/&hellip;/g, "...")     // Horizontal ellipsis
+        .replace(/&bull;/g, "•")         // Bullet
+        .replace(/&middot;/g, "·")       // Middle dot
+        .replace(/&#8230;/g, "...")      // Numeric ellipsis
+        .replace(/&#8226;/g, "•")        // Numeric bullet
+        
+        // Accented and special characters
+        .replace(/&copy;/g, "©")         // Copyright symbol
+        .replace(/&reg;/g, "®")          // Registered trademark
+        .replace(/&trade;/g, "™")        // Trademark symbol
+        .replace(/&deg;/g, "°")          // Degree symbol
+        
+        // Common accented letters
+        .replace(/0x2010;/g, "-")   //#hyphen
+        .replace(/0x2013;/g, "-")   //#endash
+        .replace(/0x2014;/g, "-")   //#emdash
+        .replace(/0x2015;/g, "-")   //#figure dash
+        .replace(/0x2018/g, "'")   //#left single quote
+        .replace(/0x2019/g, "'")   //#right single quote
+        .replace(/0x201C;/g, "\"")   //#left double quote
+        .replace(/0x201D;/g, "\"")   //#right double quote
+        .replace(/0x2022;/g, " ")
+        .replace(/'“';/g, "\"")
+        .replace(/'™';/g, "")
+        .replace(/'×';/g, "&#215;")
+        .replace(/'¡';/g, "&#161;")
+        .replace(/'¢';/g, "&#162;")
+        .replace(/'£';/g, "&#163;")
+        .replace(/'¤';/g, "&#164;")
+        .replace(/'¥';/g, "&#165;")
+        .replace(/'¦';/g, "&#166;")
+        .replace(/'§';/g, "&#167;")
+        .replace(/'¨';/g, "&#168;")
+        .replace(/'©';/g, "&#169;")
+        .replace(/'ª';/g, "&#170;")
+        .replace(/'«';/g, "&#171;")
+        .replace(/'¬';/g, "&#172;")
+        .replace(/'®';/g, "&#174;")
+        .replace(/'¯';/g, "&#175;")
+        .replace(/'°';/g, "&#176;")
+        .replace(/'±';/g, "&#177;")
+        .replace(/'²';/g, "&#178;")
+        .replace(/'³';/g, "&#179;")
+        .replace(/'´';/g, "&#180;")
+        .replace(/'µ';/g, "&#181;")
+        .replace(/'¶';/g, "&#182;")
+        .replace(/'·';/g, "&#183;")
+        .replace(/'¸';/g, "&#184;")
+        .replace(/'¹';/g, "&#185;")
+        .replace(/'º';/g, "&#186;")
+        .replace(/'»';/g, "&#187;")
+        .replace(/'¼';/g, "&#188;")
+        .replace(/'½';/g, "&#189;")
+        .replace(/'¾';/g, "&#190;")
+        .replace(/'¿';/g, "&#191;")
+        .replace(/'À';/g, "&#192;")
+        .replace(/'Á';/g, "&#193;")
+        .replace(/'Â';/g, "&#194;")
+        .replace(/'Ã';/g, "&#195;")
+        .replace(/'Ä';/g, "&#196;")
+        .replace(/'Å';/g, "&#197;")
+        .replace(/'Æ';/g, "&#198;")
+        .replace(/'Ç';/g, "&#199;")
+        .replace(/'È';/g, "&#200;")
+        .replace(/'É';/g, "&#201;")
+        .replace(/'Ê';/g, "&#202;")
+        .replace(/'Ë';/g, "&#203;")
+        .replace(/'Ì';/g, "&#204;")
+        .replace(/'Í';/g, "&#205;")
+        .replace(/'Î';/g, "&#206;")
+        .replace(/'Ï';/g, "&#207;")
+        .replace(/'Ð';/g, "&#208;")
+        .replace(/'Ñ';/g, "&#209;")
+        .replace(/'Ò';/g, "&#210;")
+        .replace(/'Ó';/g, "&#211;")
+        .replace(/'Ô';/g, "&#212;")
+        .replace(/'Õ';/g, "&#213;")
+        .replace(/'Ö';/g, "&#214;")
+        .replace(/'×';/g, "&#215;")
+        .replace(/'Ø';/g, "&#216;")
+        .replace(/'Ù';/g, "&#217;")
+        .replace(/'Ú';/g, "&#218;")
+        .replace(/'Û';/g, "&#219;")
+        .replace(/'Ü';/g, "&#220;")
+        .replace(/'Ý';/g, "&#221;")
+        .replace(/'Þ';/g, "&#222;")
+        .replace(/'ß';/g, "&#223;")
+        .replace(/'à';/g, "&#224;")
+        .replace(/'á';/g, "&#225;")
+        .replace(/'â';/g, "&#226;")
+        .replace(/'ã';/g, "&#227;")
+        .replace(/'ä';/g, "&#228;")
+        .replace(/'å';/g, "&#229;")
+        .replace(/'æ';/g, "&#230;")
+        .replace(/'ç';/g, "&#231;")
+        .replace(/'è';/g, "&#232;")
+        .replace(/'é';/g, "&#233;")
+        .replace(/'ê';/g, "&#234;")
+        .replace(/'ë';/g, "&#235;")
+        .replace(/'ì';/g, "&#236;")
+        .replace(/'í';/g, "&#237;")
+        .replace(/'î';/g, "&#238;")
+        .replace(/'ï';/g, "&#239;")
+        .replace(/'ð';/g, "&#240;")
+        .replace(/'ñ';/g, "&#241;")
+        .replace(/'ò';/g, "&#242;")
+        .replace(/'ó';/g, "&#243;")
+        .replace(/'Ó';/g, "&#211;")
+        .replace(/'ô';/g, "&#244;")
+        .replace(/'õ';/g, "&#245;")
+        .replace(/'ö';/g, "&#246;")
+        .replace(/'÷';/g, "&#247;")
+        .replace(/'ø';/g, "&#248;")
+        .replace(/'ù';/g, "&#249;")
+        .replace(/'ú';/g, "&#250;")
+        .replace(/'û';/g, "&#251;")
+        .replace(/'ü';/g, "&#252;")
+        .replace(/'ý';/g, "&#253;")
+        .replace(/'þ';/g, "&#254;")
+        .replace(/'ÿ';/g, "&#255;")
+        .replace(/'…';/g, "...")
+        .replace(/'˚';/g, "&#176;")
+        .replace(/'ﬁ';/g, "fi")
+        .replace(/'ﬂ';/g, "fl")
+        .replace(/'ﬀ';/g, "ff")
+        .replace(/'ﬃ';/g, "ffi")
+        .replace(/'ﬅ';/g, "st")
+        .replace(/'ﬆ';/g, "st")
+        .replace(/'&#145;';/g, "-")
+        .replace(/'&#146;';/g, "&#039;")
+        .replace(/'&#147;';/g, "&#034;")
+        .replace(/'&#148;';/g, "&#034;")
+        .replace(/'&#149;';/g, "&#x2022;")
+        .replace(/'&#150;';/g, "-")
+        .replace(/'&#151;';/g, "-")
+        
+        // Must be last to avoid double-decoding
+        .replace(/&lt;/g, "<")           // Less than
+        .replace(/&gt;/g, ">")           // Greater than
+        .replace(/&amp;/g, "&");         // Ampersand - keep this absolutely last
     
     // Step 5: Fix mismatched HTML tags to prevent XML parsing errors
     function balanceHtmlTags(html) {
