@@ -1761,7 +1761,7 @@ function parseCharacter(inputChar) {
             //  console.log("We got here");
             //}
         } else {
-            if (prof.friendlySubtypeName && (prof.friendlySubtypeName).match(/Saving\sThrows/) || holdProf.includes(prof.friendlySubtypeName)) {
+            if (prof.friendlySubtypeName && ((prof.friendlySubtypeName).match(/Saving\sThrows/) || holdProf.includes(prof.friendlySubtypeName))) {
                 // Skip Saving Throws in proficiencies
             } else {
                 switch (prof.friendlySubtypeName) {
@@ -4026,7 +4026,7 @@ function fixDesc(badString) {
         .replace(/&frac34;/g, "3/4")     // Fraction three quarters
         
         // Spaces and formatting
-        //.replace(/&nbsp;/g, " ")         // Non-breaking space
+        .replace(/&nbsp;/g, " ")         // Non-breaking space
         .replace(/&ensp;/g, " ")         // En space
         .replace(/&emsp;/g, " ")         // Em space
         .replace(/&thinsp;/g, " ")       // Thin space
