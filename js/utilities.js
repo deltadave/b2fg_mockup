@@ -382,6 +382,387 @@ function getPactMagicSlots(level) {
 }
 
 // =============================================================================
+// INVENTORY AND CONTAINER UTILITIES
+// =============================================================================
+
+/**
+ * Build a nested inventory structure from flat inventory array
+ * @param {Array} inventory - Flat inventory array from character data
+ * @param {string} characterId - Character ID (root container)
+ * @returns {Object} Nested inventory structure with containers and their contents
+ */
+function buildNestedInventory(inventory, characterId) {
+    console.log('Building nested inventory structure...');
+    
+    // Group items by their container
+    const itemsByContainer = {};
+    const containers = new Map();
+    
+    // First pass: identify all items and containers
+    inventory.forEach(item => {
+        const containerId = item.containerEntityId.toString();
+        
+        // Track containers
+        if (item.definition.isContainer) {
+            containers.set(item.id.toString(), {
+                item: item,
+                children: []
+            });
+        }
+        
+        // Group items by container
+        if (!itemsByContainer[containerId]) {
+            itemsByContainer[containerId] = [];
+        }
+        itemsByContainer[containerId].push(item);
+    });
+    
+    // Build the nested structure
+    const rootItems = itemsByContainer[characterId] || [];
+    const nestedInventory = {
+        characterId: characterId,
+        rootItems: [],
+        containers: containers
+    };
+    
+    rootItems.forEach(item => {
+        if (item.definition.isContainer) {
+            const containerData = {
+                ...item,
+                contents: itemsByContainer[item.id.toString()] || []
+            };
+            nestedInventory.rootItems.push(containerData);
+        } else {
+            nestedInventory.rootItems.push(item);
+        }
+    });
+    
+    console.log(`Found ${nestedInventory.rootItems.length} root items, ${containers.size} containers`);
+    return nestedInventory;
+}
+
+/**
+ * Generate Fantasy Grounds XML for a container's contents
+ * @param {Array} contents - Array of items inside the container
+ * @param {number} startIndex - Starting index for item IDs
+ * @returns {Object} Object with XML string and next available index
+ */
+function generateContainerContentsXML(contents, startIndex) {
+    let xml = '';
+    let currentIndex = startIndex;
+    
+    if (contents && contents.length > 0) {
+        xml += '\t\t\t\t<inventorylist>\n';
+        
+        contents.forEach(item => {
+            const thisIteration = pad(currentIndex, 5);
+            xml += `\t\t\t\t\t<id-${thisIteration}>\n`;
+            xml += `\t\t\t\t\t\t<count type="number">${parseInt(item.quantity)}</count>\n`;
+            xml += `\t\t\t\t\t\t<name type="string">${fixQuote(item.definition.name)}</name>\n`;
+            xml += `\t\t\t\t\t\t<weight type="number">${parseInt(item.definition.weight) / parseInt(item.definition.bundleSize)}</weight>\n`;
+            xml += '\t\t\t\t\t\t<locked type="number">1</locked>\n';
+            xml += '\t\t\t\t\t\t<isidentified type="number">1</isidentified>\n';
+            
+            // Add type information
+            if (item.definition.subType == null) {
+                xml += `\t\t\t\t\t\t<type type="string">${fixQuote(item.definition.filterType)}</type>\n`;
+            } else {
+                xml += `\t\t\t\t\t\t<type type="string">${fixQuote(item.definition.subType)}</type>\n`;
+            }
+            
+            // Add cost if available
+            if (item.definition.cost != null) {
+                xml += `\t\t\t\t\t\t<cost type="string">${item.definition.cost} gp</cost>\n`;
+            } else {
+                xml += '\t\t\t\t\t\t<cost type="string">-</cost>\n';
+            }
+            
+            // Add description if available
+            if (item.definition.description != null && item.definition.description !== '') {
+                xml += `\t\t\t\t\t\t<description type="formattedtext">${fixDesc(item.definition.description)}</description>\n`;
+            }
+            
+            xml += `\t\t\t\t\t</id-${thisIteration}>\n`;
+            currentIndex++;
+        });
+        
+        xml += '\t\t\t\t</inventorylist>\n';
+    }
+    
+    return { xml: xml, nextIndex: currentIndex };
+}
+
+/**
+ * Process inventory with proper Fantasy Grounds flat structure using <location> fields
+ * @param {Array} inventory - Character inventory array
+ * @param {string} characterId - Character ID
+ * @param {Object} state - Processing state object (includes weapon arrays, armor tracking, etc.)
+ * @returns {string} Complete inventory XML
+ */
+function processNestedInventoryXML(inventory, characterId, state) {
+    let xml = '';
+    let itemIndex = 1;
+    
+    // Create a map of container IDs to container names for location references
+    const containerNames = new Map();
+    
+    // First pass: identify containers and their names
+    inventory.forEach(item => {
+        if (item.definition.isContainer) {
+            containerNames.set(item.id.toString(), item.definition.name);
+        }
+    });
+    
+    console.log('Processing inventory with location-based structure...');
+    
+    // Process all items in flat structure
+    inventory.forEach(item => {
+        // Count ammunition for weapon processing
+        if (item.definition.name == "Crossbow Bolts") {
+            state.numBolts += parseInt(item.quantity);
+        } else if (item.definition.name == "Arrows") {
+            state.numArrows += parseInt(item.quantity);
+        } else if (item.definition.name == "Blowgun Needles") {
+            state.numNeedles += parseInt(item.quantity);
+        } else if (item.definition.name == "Sling Bullets") {
+            state.numBullets += parseInt(item.quantity);
+        }
+        
+        // Track armor and shield usage
+        if (item.equipped && item.definition.filterType == "Armor") {
+            if (item.definition.type == "Shield") {
+                state.usingShield = 1;
+            } else if (item.definition.type && item.definition.type.match("Armor")) {
+                state.wearingArmor = 1;
+                if (item.definition.type.match("Heavy")) {
+                    state.usingHeavyArmor = 1;
+                } else if (item.definition.type.match("Medium")) {
+                    state.usingMediumArmor = 1;
+                } else if (item.definition.type.match("Light")) {
+                    state.usingLightArmor = 1;
+                }
+            }
+        }
+        
+        // Process weapon tracking for items with damage property
+        if (item.definition.hasOwnProperty("damage") && item.definition.attackType != null) {
+            state.weaponID.push(itemIndex);
+            state.weaponName.push(item.definition.name);
+            
+            // Build properties string
+            let thisProperties = "";
+            if (item.definition.properties && Array.isArray(item.definition.properties)) {
+                item.definition.properties.forEach(weapProp => {
+                    if (weapProp.name == "Ammunition") {
+                        thisProperties += "Ammunition (" + item.definition.range + "/" + item.definition.longRange + "), ";
+                    } else if (weapProp.name == "Thrown") {
+                        thisProperties += "Thrown (" + item.definition.range + "/" + item.definition.longRange + "), ";
+                    } else {
+                        thisProperties += weapProp.name + ", ";
+                    }
+                });
+            }
+            thisProperties = thisProperties.trim().slice(0, -1);
+            state.weaponProperties.push(thisProperties);
+            
+            // Determine weapon base ability
+            if (thisProperties && thisProperties.includes("Finesse")) {
+                if (state.strScore >= state.dexScore) {
+                    state.weaponBase.push("strength");
+                } else {
+                    state.weaponBase.push("dexterity");
+                }
+            } else if (thisProperties && thisProperties.includes("Range")) {
+                state.weaponBase.push("dexterity");
+            } else {
+                state.weaponBase.push("base");
+            }
+            
+            // Calculate weapon bonus
+            let curWeapBon = 0;
+            if (item.definition.grantedModifiers && Array.isArray(item.definition.grantedModifiers)) {
+                for (let d = 0; d < item.definition.grantedModifiers.length; d++) {
+                    if (item.definition.grantedModifiers[d].type == "bonus" && item.equipped == true) {
+                        if (item.isAttuned == true && item.definition.canAttune == true) {
+                            curWeapBon = item.definition.grantedModifiers[d].value;
+                        } else if (item.definition.canAttune == false) {
+                            curWeapBon = item.definition.grantedModifiers[d].value;
+                        }
+                    }
+                }
+            }
+            state.weaponBonus.push(curWeapBon);
+            
+            // Process damage dice
+            if (item.definition.damage != null) {
+                if (state.fgVersion == 0) {
+                    let realString = "";
+                    for (let wd40 = 0; wd40 < item.definition.damage.diceCount; wd40++) {
+                        realString += "d" + item.definition.damage.diceValue + ",";
+                    }
+                    realString = realString.slice(0, -1);
+                    state.weaponDice.push(realString);
+                } else {
+                    state.weaponDice.push(item.definition.damage.diceCount + "d" + item.definition.damage.diceValue);
+                }
+            } else {
+                state.weaponDice.push("d0");
+            }
+            
+            if (item.definition.damageType != null) {
+                state.weaponType.push(item.definition.damageType.toLowerCase());
+            } else {
+                state.weaponType.push("");
+            }
+        }
+        
+        // Process armor class bonuses and saving throw bonuses
+        if (item.definition.hasOwnProperty("grantedModifiers")) {
+            for (let m = 0; m < item.definition.grantedModifiers.length; m++) {
+                if (item.definition.grantedModifiers[m].subType == "armor-class" && item.equipped == true && item.definition.grantedModifiers[m].type == "bonus") {
+                    if (item.definition.filterType == "Armor") {
+                        state.addBonusArmorAC += item.definition.grantedModifiers[m].value;
+                    } else {
+                        state.addBonusOtherAC += item.definition.grantedModifiers[m].value;
+                    }
+                }
+                if (item.definition.grantedModifiers[m].subType == "saving-throws" && item.equipped == true && item.definition.grantedModifiers[m].type == "bonus") {
+                    state.addSavingThrows += item.definition.grantedModifiers[m].value;
+                }
+            }
+        }
+
+        // Generate XML for this item
+        const thisIteration = pad(itemIndex, 5);
+        xml += `\t\t\t<id-${thisIteration}>\n`;
+        xml += `\t\t\t\t<count type="number">${parseInt(item.quantity)}</count>\n`;
+        xml += `\t\t\t\t<name type="string">${fixQuote(item.definition.name)}</name>\n`;
+        xml += `\t\t\t\t<weight type="number">${parseInt(item.definition.weight) / parseInt(item.definition.bundleSize)}</weight>\n`;
+        xml += "\t\t\t\t<locked type=\"number\">1</locked>\n";
+        xml += "\t\t\t\t<isidentified type=\"number\">1</isidentified>\n";
+
+        // Add location field if item is in a container
+        const containerEntityId = item.containerEntityId.toString();
+        if (containerEntityId !== characterId && containerNames.has(containerEntityId)) {
+            const containerName = containerNames.get(containerEntityId);
+            xml += `\t\t\t\t<location type="string">${fixQuote(containerName)}</location>\n`;
+        }
+
+        // Add type information and armor details
+        if(item.definition.subType == null) {
+            xml += `\t\t\t\t<type type="string">${fixQuote(item.definition.filterType)}</type>\n`;
+            if(item.definition.filterType == "Armor") {
+                if(item.definition.type != null && item.definition.type != "") {
+                    xml += `\t\t\t\t<subtype type="string">${fixQuote(item.definition.type)}</subtype>\n`;
+                    xml += `\t\t\t\t<ac type="number">${item.definition.armorClass}</ac>\n`;
+                }
+                if(item.definition.stealthCheck != null) {
+                    if(item.definition.stealthCheck == 2) {
+                        xml += "\t\t\t\t<stealth type=\"string\">Disadvantage</stealth>\n";
+                    } else {
+                        xml += "\t\t\t\t<stealth type=\"string\">-</stealth>\n";
+                    }
+                }
+                if(item.definition.strengthRequirement != null) {
+                    xml += `\t\t\t\t<strength type="string">Str ${item.definition.strengthRequirement}</strength>\n`;
+                } else {
+                    xml += "\t\t\t\t<strength type=\"string\">-</strength>\n";
+                }
+            }
+        } else {
+            xml += `\t\t\t\t<type type="string">${fixQuote(item.definition.subType)}</type>\n`;
+        }
+        
+        // Add cost
+        if(item.definition.cost == null) {
+            xml += "\t\t\t\t<cost type=\"string\">-</cost>\n";
+        } else {
+            xml += `\t\t\t\t<cost type="string">${item.definition.cost} gp</cost>\n`;
+        }
+        
+        // Add rarity/attunement info
+        if(item.definition.canAttune == true) {
+            xml += `\t\t\t\t<rarity type="string">${item.definition.rarity} (Requires Attunement)</rarity>\n`;
+        } else {
+            xml += `\t\t\t\t<rarity type="string">${item.definition.rarity}</rarity>\n`;
+        }
+        
+        // Handle equipped status
+        if(item.equipped == true) {
+            xml += "\t\t\t\t<carried type=\"number\">2</carried>\n";
+        } else {
+            xml += "\t\t\t\t<carried type=\"number\">1</carried>\n";
+        }
+        
+        // Add weapon damage and properties if applicable
+        if(item.definition.hasOwnProperty("damage") && item.definition.attackType != null) {
+            let thisDamage = "";
+            let thisDamType = "";
+            if(item.definition.damage != null) {
+                thisDamage = item.definition.damage.diceString;
+            }
+            if(item.definition.damageType != null) {
+                thisDamType = item.definition.damageType;
+            }
+            xml += `\t\t\t\t<damage type="string">${thisDamage} ${thisDamType}</damage>\n`;
+            
+            // Add weapon properties
+            let thisProperties = "";
+            if (item.definition.properties && Array.isArray(item.definition.properties)) {
+                item.definition.properties.forEach(weapProp => {
+                    if(weapProp.name == "Ammunition") {
+                        thisProperties += "Ammunition (" + item.definition.range + "/" + item.definition.longRange + "), ";
+                    } else if(weapProp.name == "Thrown") {
+                        thisProperties += "Thrown (" + item.definition.range + "/" + item.definition.longRange + "), ";
+                    } else {
+                        thisProperties += weapProp.name + ", ";
+                    }
+                });
+            }
+            thisProperties = thisProperties.trim().slice(0, -1);
+            xml += `\t\t\t\t<properties type="string">${thisProperties}</properties>\n`;
+            
+            // Add weapon bonus
+            if (item.definition.grantedModifiers && Array.isArray(item.definition.grantedModifiers)) {
+                for(let d = 0; d < item.definition.grantedModifiers.length; d++) {
+                    if (item.definition.grantedModifiers[d].type == "bonus" && item.equipped == true) {
+                        if (item.isAttuned == true && item.definition.canAttune == true) {
+                            xml += `\t\t\t\t<bonus type="number">${item.definition.grantedModifiers[d].value}</bonus>\n`;
+                        } else if (item.definition.canAttune == false) {
+                            xml += `\t\t\t\t<bonus type="number">${item.definition.grantedModifiers[d].value}</bonus>\n`;
+                        }
+                    }
+                }
+            }
+            
+            // Add weapon subtype for classification
+            const thisWeaponName = item.definition.name.toLowerCase().replace(/\s/g, "_").replace(/,/g, "");
+            if(state.simpleRangedWeapon && state.simpleRangedWeapon.indexOf(thisWeaponName) != -1) {
+                xml += "\t\t\t\t<subtype type=\"string\">Simple Ranged Weapon</subtype>\n";
+            } else if(state.simpleMeleeWeapon && state.simpleMeleeWeapon.indexOf(thisWeaponName) != -1) {
+                xml += "\t\t\t\t<subtype type=\"string\">Simple Melee Weapon</subtype>\n";
+            } else if(state.martialRangedWeapon && state.martialRangedWeapon.indexOf(thisWeaponName) != -1) {
+                xml += "\t\t\t\t<subtype type=\"string\">Martial Ranged Weapon</subtype>\n";
+            } else if(state.martialMeleeWeapon && state.martialMeleeWeapon.indexOf(thisWeaponName) != -1) {
+                xml += "\t\t\t\t<subtype type=\"string\">Martial Melee Weapon</subtype>\n";
+            }
+        }
+        
+        // Add description
+        if(item.definition.description == null) {
+            xml += "\t\t\t\t<description type=\"formattedtext\">-</description>\n";
+        } else {
+            xml += `\t\t\t\t<description type="formattedtext">${fixDesc(item.definition.description)}</description>\n`;
+        }
+        
+        xml += `\t\t\t</id-${thisIteration}>\n`;
+        itemIndex++;
+    });
+    
+    return xml;
+}
+
+// =============================================================================
 // ABILITY SCORE UTILITIES
 // =============================================================================
 
@@ -500,4 +881,9 @@ if (typeof window !== 'undefined') {
     window.getPactMagicSlots = getPactMagicSlots;
     window.getTotalAbilityScore = getTotalAbilityScore;
     window.processAbilityScoreBonuses = processAbilityScoreBonuses;
+    
+    // Inventory and container functions
+    window.buildNestedInventory = buildNestedInventory;
+    window.generateContainerContentsXML = generateContainerContentsXML;
+    window.processNestedInventoryXML = processNestedInventoryXML;
 }

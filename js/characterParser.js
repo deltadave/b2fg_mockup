@@ -841,276 +841,58 @@ function parseCharacter(inputChar) {
     console.log(`Pre-inventory processing time: ${(inventoryStartTime - parseStartTime).toFixed(2)}ms`);
     
     buildXML += "\t\t<inventorylist>\n";
-    const inventory = character.inventory;
-    if(inventory != null) inventory.some(function(item, i) {
-        if (item.definition.name == "Crossbow Bolts") {
-            numBolts += parseInt(item.quantity);
-        } else if (item.definition.name == "Arrows") {
-            numArrows += parseInt(item.quantity);
-        }  else if (item.definition.name == "Blowgun Needles") {
-            numNeedles += parseInt(item.quantity);
-        }  else if (item.definition.name == "Sling Bullets") {
-            numBullets += parseInt(item.quantity);
-        } 
-
-
-        thisIteration = pad(i + 1, 5);
-
-        buildXML += `\t\t\t<id-${thisIteration}>\n`;
-        buildXML += "\t\t\t\t<count type=\"number\">" + parseInt(item.quantity) + "</count>\n";
-        buildXML += "\t\t\t\t<name type=\"string\">" + fixQuote(item.definition.name) + "</name>\n";
-        buildXML += "\t\t\t\t<weight type=\"number\">" + parseInt(item.definition.weight) / parseInt(item.definition.bundleSize) + "</weight>\n";
-        buildXML += "\t\t\t\t<locked type=\"number\">1</locked>\n";
-        buildXML += "\t\t\t\t<isidentified type=\"number\">1</isidentified>\n";
-
-        if(item.definition.subType == null) {
-            buildXML += "\t\t\t\t<type type=\"string\">" + fixQuote(item.definition.filterType) + "</type>\n";
-            if(item.definition.filterType == "Armor") {
-                if(item.definition.type != null || item.definition.type != "") {
-                    buildXML += "\t\t\t\t<subtype type=\"string\">" + fixQuote(item.definition.type) + "</subtype>\n";
-                    buildXML += "\t\t\t\t<ac type=\"number\">" + item.definition.armorClass + "</ac>\n";
-                }
-                if(item.definition.stealthCheck != null) {
-                    if(item.definition.stealthCheck == 2) {
-                        buildXML += "\t\t\t\t<stealth type=\"string\">Disadvantage</stealth>\n";
-                    } else {
-                        buildXML += "\t\t\t\t<stealth type=\"string\">-</stealth>\n";
-                    }
-                }
-                if(item.definition.strengthRequirement != null) {
-                    buildXML += "\t\t\t\t<strength type=\"string\">Str " + item.definition.strengthRequirement + "</strength>\n";
-                } else {
-                    buildXML += "\t\t\t\t<strength type=\"string\">-</strength>\n";
-                }
-            }
-        } else {
-            buildXML += "\t\t\t\t<type type=\"string\">" + fixQuote(item.definition.subType) + "</type>\n";
-        }
-        if(item.definition.cost == null) {
-            buildXML += "\t\t\t\t<cost type=\"string\"></cost>\n";
-        } else {
-            buildXML += "\t\t\t\t<cost type=\"string\">" + item.definition.cost + " gp" + "</cost>\n";
-        }
-
-        if(item.definition.canAttune == true) {
-            buildXML += "\t\t\t\t<rarity type=\"string\">" + item.definition.rarity + " (Requires Attunement)</rarity>\n";
-        } else {
-            buildXML += "\t\t\t\t<rarity type=\"string\">" + item.definition.rarity + "</rarity>\n";
-        }
-        if(item.equipped == true) {
-            buildXML += "\t\t\t\t<carried type=\"number\">2</carried>\n";
-            if(item.definition.filterType == "Armor") {
-                if(item.definition.type == "Shield") {
-                    usingShield = 1;
-                } else if (item.definition.type && item.definition.type.match("Armor")) {
-                    wearingArmor = 1;
-                    if (item.definition.type.match("Heavy")) {
-                        usingHeavyArmor = 1;
-                    } else if (item.definition.type.match("Medium")) {
-                        usingMediumArmor = 1;
-                    } else if (item.definition.type.match("Light")) {
-                        usingLightArmor = 1;
-                    }
-                }
-            }
-        } else {
-            buildXML += "\t\t\t\t<carried type=\"number\">1</carried>\n";
-        }
-
-        // Only treat items as weapons if they have a non-null attackType (actual weapons)
-        if(item.definition.hasOwnProperty("damage") && item.definition.attackType != null) {
-            thisDamage = "";
-            thisDamType = "";
-            if(item.definition.damage != null) {
-                thisDamage = item.definition.damage.diceString;
-            }
-
-            if(item.definition.damageType != null) {
-                thisDamType = item.definition.damageType;
-            }
-
-            buildXML += "\t\t\t\t<damage type=\"string\">" + thisDamage + " " + thisDamType + "</damage>\n";
-            thisProperties = "";
-            // Safety check for v5 format where properties might be null
-            if (item.definition.properties && Array.isArray(item.definition.properties)) {
-                item.definition.properties.some(function(weapProp, i) {
-                if(weapProp.name == "Ammunition" ) {
-                    thisProperties += "Ammunition (" + item.definition.range + "/" + item.definition.longRange + "), ";
-                } else if(weapProp.name == "Thrown" ) {
-                    thisProperties += "Thrown (" + item.definition.range + "/" + item.definition.longRange + "), ";
-                } else {
-                    thisProperties += weapProp.name + ", ";
-                }
-            });
-            }
-            thisProperties = thisProperties.trim().slice(0, -1);
-            buildXML += "\t\t\t\t<properties type=\"string\">" + thisProperties + "</properties>\n";
-
-            // Get bonus for weapon, but this is only for Inventory, need to fix attacks
-            if (item.definition.grantedModifiers && Array.isArray(item.definition.grantedModifiers)) {
-                for(d = 0; d <= item.definition.grantedModifiers.length - 1; d++) {
-                if (item.definition.grantedModifiers[d].type == "bonus" && item.equipped == true) {
-                    if (item.isAttuned == true && item.definition.canAttune == true) {
-                        buildXML += "\t\t\t\t<bonus type=\"number\">" + item.definition.grantedModifiers[0].value + "</bonus>\n";
-                    } else if (item.definition.canAttune == false) {
-                        buildXML += "\t\t\t\t<bonus type=\"number\">" + item.definition.grantedModifiers[0].value + "</bonus>\n";
-                    }
-                }
-            }
-            }
-
-            weaponID.push(i + 1);
-            weaponName.push(item.definition.name);
-            weaponProperties.push(thisProperties);
-            //console.log(item.definition.name);
-            //console.log(thisProperties);
-            if(thisProperties && thisProperties.includes("Finesse")) {
-                if(strScore >= dexScore) {
-                    weaponBase.push("strength");
-                } else {
-                    weaponBase.push("dexterity");
-                }
-            } else if (thisProperties && thisProperties.includes("Range")) {
-                //console.log(item.definition.name);
-                weaponBase.push("dexterity");
-            } else {
-                weaponBase.push("base");
-            }
-
-            curWeapBon = 0;
-
-            if (item.hasOwnProperty("canAttune")) {
-                if (item.isAttuned == true && item.definition.canAttune == true) {
-                    for(d = 0; d <= item.definition.grantedModifiers.length - 1; d++) {
-                        curWeapBon = item.definition.grantedModifiers[d].value;
-                    }
-                }
-            } else {
-                for(e = 0; e <= item.definition.grantedModifiers.length - 1; e++) {
-                    curWeapBon = item.definition.grantedModifiers[e].value;
-                }
-            }
-            weaponBonus.push(curWeapBon);
-
-            if(item.definition.damage != null) {
-                if (fgVersion == 0) {
-                    var realString = "";
-                    // Classic and Unity do these differently
-                    for (wd40 = 0; wd40 < item.definition.damage.diceCount; wd40++) {
-                        realString += "d" + item.definition.damage.diceValue + ",";
-                    }
-                    realString = realString.slice(0, -1);
-                    weaponDice.push(realString);
-                } else {
-                    weaponDice.push(item.definition.damage.diceCount + "d" + item.definition.damage.diceValue);
-                }
-            } else {
-                weaponDice.push("d0");
-            }
-            if (item.definition.damageType != null) {
-                weaponType.push(item.definition.damageType.toLowerCase());
-            } else {
-                weaponType.push("");
-            }
-        }
-
-        // Only treat items with weaponBehaviors as weapons if they have a non-null attackType (actual weapons)
-        if (item.definition.hasOwnProperty("weaponBehaviors") && item.definition.attackType != null) {
-            if (item.definition.weaponBehaviors.length > 0) {
-                thisDamage = "";
-                thisDamType = "";
-                if(item.definition.weaponBehaviors[0].damage != null) {
-                    thisDamage = item.definition.weaponBehaviors[0].damage.diceString;
-                }
-
-                if(item.definition.weaponBehaviors[0].damageType != null) {
-                    thisDamType = item.definition.weaponBehaviors[0].damageType;
-                }
-
-                buildXML += "\t\t\t\t<damage type=\"string\">" + thisDamage + " " + thisDamType + "</damage>\n";
-                thisProperties = "";
-                item.definition.weaponBehaviors[0].properties.some(function(weapProp) {
-                    if(weapProp.name == "Ammunition" ) {
-                        thisProperties += "Ammunition (" + item.definition.range + "/" + item.definition.longRange + "), ";
-                    } else {
-                        if (weapProp.hasOwnProperty("notes")) {
-                            if (weapProp.notes != "" && weapProp.notes != undefined && weapProp != null) {
-                                thisProperties += weapProp.name + "(" + weapProp.notes + "), ";
-                            } else {
-                                thisProperties += weapProp.name + ", ";
-                            }
-                        }
-                    }
-                });
-                thisProperties = thisProperties.trim().slice(0, -1);
-                buildXML += "\t\t\t\t<properties type=\"string\">" + thisProperties + "</properties>\n";
-
-                weaponID.push(i + 1);
-                weaponName.push(item.definition.name);
-                weaponProperties.push(thisProperties);
-                if(item.definition.weaponBehaviors[0].damage != null) {
-                    weaponDice.push("d" + item.definition.weaponBehaviors[0].damage.diceValue);
-                    weaponDiceMult.push(item.definition.weaponBehaviors[0].damage.diceCount);
-                } else {
-                    weaponDice.push("d0");
-                    weaponDiceMult.push("0");
-                }
-                if (item.definition.weaponBehaviors[0].damageType != null) {
-                    weaponType.push(item.definition.weaponBehaviors[0].damageType.toLowerCase());
-                } else {
-                    weaponType.push("");
-                }
-                item.definition.grantedModifiers.some(function(doMods) {
-                    if (doMods.type == "bonus") {
-                        weaponBonus.push(doMods.value);
-                        buildXML += "\t\t\t\t<bonus type=\"number\">" + doMods.value + "</bonus>\n";
-                    }
-                });
-            } else {
-                // This item has weapon properties, but the length is 0
-                if (item.definition.hasOwnProperty("grantedModifiers")) {
-                    if (item.definition.grantedModifiers.length > 0) {
-                        for(l = 0; l <= item.definition.grantedModifiers.length - 1; l++) {
-                            if (item.definition.grantedModifiers[l].subType == "armor-class" && item.equipped == true && item.definition.grantedModifiers[l].type == "bonus") {
-                                addBonusOtherAC += item.definition.grantedModifiers[l].value;
-                            }
-                            if (item.definition.grantedModifiers[l].subType == "saving-throws" && item.equipped == true  && item.definition.grantedModifiers[l].type == "bonus") {
-                                addSavingThrows += item.definition.grantedModifiers[l].value;
-                            }
-                        }
-                    }
-                }
-            }
-        } else {
-            // Item does not have weaponBehaviors
-            if (item.definition.hasOwnProperty("grantedModifiers")) {
-                for(m = 0; m <= item.definition.grantedModifiers.length - 1; m++) {
-                    if (item.definition.grantedModifiers[m].subType == "armor-class" && item.equipped == true && item.definition.grantedModifiers[m].type == "bonus") {
-                        addBonusArmorAC += item.definition.grantedModifiers[m].value;
-                    }
-                    if (item.definition.grantedModifiers[m].subType == "saving-throws" && item.equipped == true && item.definition.grantedModifiers[m].type == "bonus") {
-                        addSavingThrows += item.definition.grantedModifiers[m].value;
-                    }
-                }
-            }
-        }
-
-        buildXML += "\t\t\t\t<description type=\"formattedtext\">\n";
-        buildXML += "\t\t\t\t\t" + fixDesc(item.definition.description) + "\n";
-        buildXML += "\t\t\t\t</description>\n";
-        thisWeaponName = item.definition.name.toLowerCase().replace(/\s/g, "_").replace(/,/g, "");
-        if(simpleRangedWeapon.indexOf(thisWeaponName) != -1) {
-            buildXML += "\t\t\t\t<subtype type=\"string\">Simple Ranged Weapon</subtype>\n";
-        } else if(simpleMeleeWeapon.indexOf(thisWeaponName) != -1) {
-            buildXML += "\t\t\t\t<subtype type=\"string\">Simple Melee Weapon</subtype>\n";
-        } else if(martialRangedWeapon.indexOf(thisWeaponName) != -1) {
-            buildXML += "\t\t\t\t<subtype type=\"string\">Martial Ranged Weapon</subtype>\n";
-        }  else if(martialMeleeWeapon.indexOf(thisWeaponName) != -1) {
-            buildXML += "\t\t\t\t<subtype type=\"string\">Martial Melee Weapon</subtype>\n";
-        }
-        buildXML += `\t\t\t</id-${thisIteration}>\n`;
-
-    });
+    
+    // Process nested inventory structure
+    const inventoryState = {
+        numBolts: numBolts,
+        numArrows: numArrows, 
+        numNeedles: numNeedles,
+        numBullets: numBullets,
+        weaponID: weaponID,
+        weaponName: weaponName,
+        weaponProperties: weaponProperties,
+        weaponDice: weaponDice,
+        weaponBase: weaponBase,
+        weaponBonus: weaponBonus,
+        weaponType: weaponType,
+        strScore: strScore,
+        dexScore: dexScore,
+        fgVersion: fgVersion,
+        usingShield: usingShield,
+        wearingArmor: wearingArmor,
+        usingHeavyArmor: usingHeavyArmor,
+        usingMediumArmor: usingMediumArmor,
+        usingLightArmor: usingLightArmor,
+        addBonusArmorAC: addBonusArmorAC,
+        addBonusOtherAC: addBonusOtherAC,
+        addSavingThrows: addSavingThrows,
+        simpleRangedWeapon: simpleRangedWeapon,
+        simpleMeleeWeapon: simpleMeleeWeapon,
+        martialRangedWeapon: martialRangedWeapon,
+        martialMeleeWeapon: martialMeleeWeapon
+    };
+    
+    const inventoryXML = processNestedInventoryXML(character.inventory, character.id.toString(), inventoryState);
+    buildXML += inventoryXML;
+    
+    // Update counts and tracking variables from nested processing
+    numBolts = inventoryState.numBolts;
+    numArrows = inventoryState.numArrows;
+    numNeedles = inventoryState.numNeedles;
+    numBullets = inventoryState.numBullets;
+    usingShield = inventoryState.usingShield;
+    wearingArmor = inventoryState.wearingArmor;
+    usingHeavyArmor = inventoryState.usingHeavyArmor;
+    usingMediumArmor = inventoryState.usingMediumArmor;
+    usingLightArmor = inventoryState.usingLightArmor;
+    addBonusArmorAC = inventoryState.addBonusArmorAC;
+    addBonusOtherAC = inventoryState.addBonusOtherAC;
+    addSavingThrows = inventoryState.addSavingThrows;
+    
+    // Old inventory processing removed - now handled by processNestedInventoryXML above
+    // Weapon tracking, armor calculations, and equipment processing is now handled in processNestedInventoryXML
+    
+    // Close the inventorylist section
     buildXML += "\t\t</inventorylist>\n";
     
     // Performance timing: inventory processing complete
