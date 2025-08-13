@@ -517,6 +517,11 @@ function processNestedInventoryXML(inventory, characterId, state) {
     
     // Process all items in flat structure
     inventory.forEach(item => {
+        // Skip items with zero or negative quantity
+        if (!item.quantity || item.quantity <= 0) {
+            return;
+        }
+        
         // Count ammunition for weapon processing
         if (item.definition.name == "Crossbow Bolts" || item.definition.name == "Bolts") {
             state.numBolts += parseInt(item.quantity);
@@ -854,6 +859,95 @@ function getTotalAbilityScore(character, scoreId) {
     return overrideScore !== null ? overrideScore : baseScore + bonusScore;
 }
 
+/**
+ * Calculate encumbrance values according to D&D 5E rules
+ * @param {Object} character - Character data
+ * @param {Array} inventory - Character inventory array
+ * @returns {Object} Encumbrance values for Fantasy Grounds XML
+ */
+function calculateEncumbrance(character, inventory) {
+    // Calculate total weight carried
+    let totalWeight = 0;
+    const characterId = character.id.toString();
+    
+    // Create a map of containers and their weight multipliers
+    const containerWeightMultipliers = new Map();
+    inventory.forEach(item => {
+        if (item.definition.isContainer && item.definition.weightMultiplier !== undefined) {
+            containerWeightMultipliers.set(item.id.toString(), item.definition.weightMultiplier);
+        }
+    });
+    
+    inventory.forEach(item => {
+        const itemWeight = item.definition.weight || 0;
+        const quantity = item.quantity;
+        
+        // Skip items with zero or null quantity
+        if (!quantity || quantity <= 0) {
+            return;
+        }
+        
+        const containerEntityId = item.containerEntityId.toString();
+        const characterId = character.id.toString();
+        
+        // Check if item is in a container with special weight rules
+        if (containerEntityId !== characterId && containerWeightMultipliers.has(containerEntityId)) {
+            const weightMultiplier = containerWeightMultipliers.get(containerEntityId);
+            if (weightMultiplier === 0) {
+                // Items in containers with weightMultiplier 0 (like Handy Haversack, Quiver of Ehlonna) don't add weight
+                return;
+            }
+        }
+        
+        // Add the item's weight
+        totalWeight += itemWeight * quantity;
+    });
+    
+    // Get character's Strength score
+    const strScore = getTotalAbilityScore(character, 1); // Strength is ID 1
+    
+    // Base carrying capacity is Strength score × 15
+    let baseCapacity = strScore * 15;
+    
+    // Check for Powerful Build trait (Goliaths count as one size larger)
+    let hasPowerfulBuild = false;
+    if (character.race.racialTraits) {
+        // Handle both array and object formats
+        const traitsArray = Array.isArray(character.race.racialTraits) 
+            ? character.race.racialTraits 
+            : Object.values(character.race.racialTraits);
+        
+        hasPowerfulBuild = traitsArray.some(trait => 
+            trait && trait.definition && trait.definition.name === "Powerful Build"
+        );
+    }
+    
+    if (hasPowerfulBuild) {
+        // Powerful Build doubles carrying capacity
+        baseCapacity *= 2;
+    }
+    
+    // D&D 5E encumbrance thresholds:
+    // - Normal: up to Strength × 5 (or × 10 with Powerful Build)
+    // - Encumbered: Strength × 5 to × 10 (or × 10 to × 20 with Powerful Build)
+    // - Heavily Encumbered: Strength × 10 to × 15 (or × 20 to × 30 with Powerful Build)
+    // - Max capacity: Strength × 15 (or × 30 with Powerful Build)
+    
+    const multiplier = hasPowerfulBuild ? 2 : 1;
+    const encumbered = strScore * 5 * multiplier;        // 85 for Str 17 with Powerful Build
+    const encumberedHeavy = strScore * 10 * multiplier;  // 170 for Str 17 with Powerful Build  
+    const maxCapacity = strScore * 15 * multiplier;      // 255 for Str 17 with Powerful Build
+    const liftPushDrag = strScore * 30 * multiplier;     // 510 for Str 17 with Powerful Build
+    
+    return {
+        load: Math.round(totalWeight),
+        max: maxCapacity,
+        encumbered: encumbered,
+        encumberedHeavy: encumberedHeavy,
+        liftPushDrag: liftPushDrag
+    };
+}
+
 // =============================================================================
 // GLOBAL EXPORTS FOR BROWSER COMPATIBILITY
 // =============================================================================
@@ -883,6 +977,7 @@ if (typeof window !== 'undefined') {
     window.getPactMagicSlots = getPactMagicSlots;
     window.getTotalAbilityScore = getTotalAbilityScore;
     window.processAbilityScoreBonuses = processAbilityScoreBonuses;
+    window.calculateEncumbrance = calculateEncumbrance;
     
     // Inventory and container functions
     window.buildNestedInventory = buildNestedInventory;

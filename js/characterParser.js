@@ -125,11 +125,19 @@ function parseCharacter(inputChar) {
     const charAlign = alignmentMap[character.alignmentId] || "None Selected";
 
     buildXML += `\t\t<alignment type="string">${charAlign}</alignment>\n`;
-    character.race.racialTraits.some((fleet_trait, i) => {
-        if(fleet_trait.definition.name == "Fleet of Foot" || fleet_trait.definition.name == "Swift") {
-            addSpeed += 5;
-        }
-    });
+    
+    // Handle racialTraits as either array or object
+    if (character.race.racialTraits) {
+        const traitsArray = Array.isArray(character.race.racialTraits) 
+            ? character.race.racialTraits 
+            : Object.values(character.race.racialTraits);
+        
+        traitsArray.some((fleet_trait, i) => {
+            if(fleet_trait && fleet_trait.definition && (fleet_trait.definition.name == "Fleet of Foot" || fleet_trait.definition.name == "Swift")) {
+                addSpeed += 5;
+            }
+        });
+    }
 
     // Destructure character traits for cleaner access
     const { personalityTraits, ideals, bonds, flaws } = character.traits;
@@ -1158,6 +1166,17 @@ function parseCharacter(inputChar) {
     if(character.age != null) buildXML += "\t\t<age type=\"string\">" + character.age + "</age>\n";
     buildXML += "\t\t<height type=\"string\">" + fixQuote(character.height) + "</height>\n";
     if(character.weight != null) buildXML += "\t\t<weight type=\"string\">" + character.weight + "</weight>\n";
+    
+    // Calculate and add encumbrance section
+    const encumbrance = calculateEncumbrance(character, character.inventory);
+    buildXML += "\t\t<encumbrance>\n";
+    buildXML += "\t\t\t<encumbered type=\"number\">" + encumbrance.encumbered + "</encumbered>\n";
+    buildXML += "\t\t\t<encumberedheavy type=\"number\">" + encumbrance.encumberedHeavy + "</encumberedheavy>\n";
+    buildXML += "\t\t\t<liftpushdrag type=\"number\">" + encumbrance.liftPushDrag + "</liftpushdrag>\n";
+    buildXML += "\t\t\t<load type=\"number\">" + encumbrance.load + "</load>\n";
+    buildXML += "\t\t\t<max type=\"number\">" + encumbrance.max + "</max>\n";
+    buildXML += "\t\t</encumbrance>\n";
+    
     buildXML += "\t\t<gender type=\"string\">" + fixQuote(character.gender) + "</gender>\n";
     buildXML += "\t\t<size type=\"string\">" + character.race.size + "</size>\n";
     buildXML += "\t\t<deity type=\"string\">" + fixQuote(character.faith) + "</deity>\n";
@@ -3111,4 +3130,88 @@ function parseCharacter(inputChar) {
 if (typeof window !== 'undefined') {
     // Main character parsing function
     window.parseCharacter = parseCharacter;
+}
+
+// =============================================================================
+// NODE.JS EXECUTION (for command line usage)
+// =============================================================================
+
+// Check if we're running in Node.js environment
+if (typeof module !== 'undefined' && module.exports) {
+    // We're in Node.js - check for command line arguments
+    if (process.argv.length > 2) {
+        const fs = require('fs');
+        const path = require('path');
+        
+        // Load dependencies
+        global.justAbilities = ["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"];
+        global.fgVersion = 1; // Default Fantasy Grounds version
+        
+        // Mock jQuery for Node.js environment
+        global.jQuery = {
+            extend: function(deep, target, ...sources) {
+                if (typeof deep !== 'boolean') {
+                    sources.unshift(target);
+                    target = deep;
+                    deep = false;
+                }
+                
+                for (let source of sources) {
+                    if (source) {
+                        for (let key in source) {
+                            if (source.hasOwnProperty(key)) {
+                                if (deep && typeof source[key] === 'object' && source[key] !== null) {
+                                    target[key] = target[key] || {};
+                                    jQuery.extend(true, target[key], source[key]);
+                                } else {
+                                    target[key] = source[key];
+                                }
+                            }
+                        }
+                    }
+                }
+                return target;
+            }
+        };
+        global.$ = function() { return { val: function() { return ''; } }; };
+        global.showSecureNotification = function() {};
+        global.validateCharacterID = function() { return true; };
+        
+        // Suppress console output during parsing for clean XML generation
+        const originalConsoleLog = console.log;
+        console.log = function() {};
+        
+        try {
+            // Load required scripts
+            eval(fs.readFileSync(path.join(__dirname, 'gameConstants.js'), 'utf8'));
+            eval(fs.readFileSync(path.join(__dirname, 'utilities.js'), 'utf8'));
+            
+            // Verify calculateEncumbrance is available
+            if (typeof calculateEncumbrance !== 'function') {
+                throw new Error('calculateEncumbrance function not available after loading utilities.js');
+            }
+            
+            // Get input file path from command line arguments
+            const inputFile = process.argv[2];
+            
+            // Read and parse the JSON file
+            const jsonData = JSON.parse(fs.readFileSync(inputFile, 'utf8'));
+            
+            // Parse the character
+            const xmlOutput = parseCharacter(jsonData);
+            
+            // Restore console.log and output the XML
+            console.log = originalConsoleLog;
+            console.log(xmlOutput);
+            
+        } catch (error) {
+            console.log = originalConsoleLog;
+            console.error('Error processing character:', error.message);
+            console.error('Stack trace:', error.stack);
+            process.exit(1);
+        }
+    }
+    
+    // Export for module usage
+    module.exports = { parseCharacter };
 }
