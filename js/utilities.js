@@ -386,6 +386,63 @@ function getPactMagicSlots(level) {
 // =============================================================================
 
 /**
+ * Process all ability score bonuses from all sources and populate character.bonusStats
+ * @param {Object} character - Character data to modify
+ */
+function processAbilityScoreBonuses(character) {
+    console.log('Processing ability score bonuses from all sources...');
+    
+    // Initialize bonusStats if it doesn't exist or has null values
+    if (!character.bonusStats || character.bonusStats.length === 0) {
+        character.bonusStats = [];
+        for (let i = 1; i <= 6; i++) {
+            character.bonusStats.push({ id: i, name: null, value: 0 });
+        }
+    } else {
+        // Ensure all bonusStats have numeric values instead of null
+        character.bonusStats.forEach(stat => {
+            if (stat.value === null || stat.value === undefined) {
+                stat.value = 0;
+            }
+        });
+    }
+    
+    // Define all modifier sources to check
+    const modifierSources = ['race', 'class', 'background', 'item', 'feat'];
+    
+    // Process modifiers from each source
+    modifierSources.forEach(source => {
+        if (character.modifiers && character.modifiers[source]) {
+            character.modifiers[source].forEach(modifier => {
+                if (modifier.type === "bonus" && modifier.subType && modifier.subType.endsWith("-score")) {
+                    // Extract ability from subType (e.g., "strength-score" -> "strength")
+                    const abilityName = modifier.subType.replace("-score", "");
+                    // Use existing justAbilities array from gameConstants.js
+                    const abilityId = justAbilities.indexOf(abilityName) + 1; // +1 because IDs are 1-based
+                    
+                    if (abilityId > 0 && modifier.fixedValue !== null && modifier.fixedValue !== undefined) {
+                        const bonus = parseInt(modifier.fixedValue) || 0;
+                        if (bonus > 0 && character.bonusStats[abilityId - 1]) {
+                            character.bonusStats[abilityId - 1].value += bonus;
+                            console.log(`Applied ${source} bonus: +${bonus} to ${abilityName} (ID: ${abilityId})`);
+                        }
+                    }
+                }
+            });
+        }
+    });
+    
+    // Log final bonus stats for debugging
+    console.log('Final ability score bonuses:');
+    justAbilities.forEach((ability, index) => {
+        const bonus = character.bonusStats[index].value;
+        if (bonus > 0) {
+            console.log(`  ${ability}: +${bonus}`);
+        }
+    });
+}
+
+/**
  * Get total ability score including base, racial, and feat bonuses
  * @param {Object} character - Character data
  * @param {number} scoreId - Ability score ID (1-6)
@@ -442,4 +499,5 @@ if (typeof window !== 'undefined') {
     // Specialized utility functions
     window.getPactMagicSlots = getPactMagicSlots;
     window.getTotalAbilityScore = getTotalAbilityScore;
+    window.processAbilityScoreBonuses = processAbilityScoreBonuses;
 }

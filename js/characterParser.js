@@ -776,6 +776,12 @@ function parseCharacter(inputChar) {
     const featuresEndTime = performance.now();
     console.log(`Features processing time: ${(featuresEndTime - featuresStartTime).toFixed(2)}ms`);
 
+    // Process all ability score bonuses from all sources before calculating final scores
+    const abilityBonusStartTime = performance.now();
+    processAbilityScoreBonuses(character);
+    const abilityBonusEndTime = performance.now();
+    console.log(`Ability score bonus processing time: ${(abilityBonusEndTime - abilityBonusStartTime).toFixed(2)}ms`);
+
     buildXML += "\t\t<abilities>\n";
     justAbilities.some(function(thisAbility, ja) {
         abilScore = parseInt(getTotalAbilityScore(character, ja + 1));
