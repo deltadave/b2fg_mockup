@@ -518,7 +518,7 @@ function processNestedInventoryXML(inventory, characterId, state) {
     // Process all items in flat structure
     inventory.forEach(item => {
         // Count ammunition for weapon processing
-        if (item.definition.name == "Crossbow Bolts") {
+        if (item.definition.name == "Crossbow Bolts" || item.definition.name == "Bolts") {
             state.numBolts += parseInt(item.quantity);
         } else if (item.definition.name == "Arrows") {
             state.numArrows += parseInt(item.quantity);
@@ -548,6 +548,8 @@ function processNestedInventoryXML(inventory, characterId, state) {
         if (item.definition.hasOwnProperty("damage") && item.definition.attackType != null) {
             state.weaponID.push(itemIndex);
             state.weaponName.push(item.definition.name);
+            state.weaponQuantity = state.weaponQuantity || [];
+            state.weaponQuantity.push(parseInt(item.quantity));
             
             // Build properties string
             let thisProperties = "";

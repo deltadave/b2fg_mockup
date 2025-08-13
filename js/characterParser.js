@@ -855,6 +855,7 @@ function parseCharacter(inputChar) {
         weaponBase: weaponBase,
         weaponBonus: weaponBonus,
         weaponType: weaponType,
+        weaponQuantity: [],
         strScore: strScore,
         dexScore: dexScore,
         fgVersion: fgVersion,
@@ -921,6 +922,8 @@ function parseCharacter(inputChar) {
         buildXML += "\t\t\t\t\t\t<type type=\"string\">" + weaponType[x] + "</type>\n";
         buildXML += "\t\t\t\t\t</id-00001>\n";
         buildXML += "\t\t\t\t</damagelist>\n";
+        
+        // Add maxammo for ranged and thrown weapons
         if (weaponName[x] && weaponName[x].includes("Crossbow")) {
             buildXML += "\t\t\t\t<maxammo type=\"number\">" + numBolts + "</maxammo>\n";
         } else if (weaponName[x] && weaponName[x].includes("Sling")) {
@@ -929,6 +932,13 @@ function parseCharacter(inputChar) {
             buildXML += "\t\t\t\t<maxammo type=\"number\">" + numNeedles + "</maxammo>\n";
         } else if (weaponName[x] && (weaponName[x].includes("Shortbow") || weaponName[x].includes("Longbow"))) {
             buildXML += "\t\t\t\t<maxammo type=\"number\">" + numArrows + "</maxammo>\n";
+        } else if (weaponProperties[x] && weaponProperties[x].match(/Thrown/)) {
+            // For thrown weapons, use the weapon's own quantity as maxammo
+            const weaponQuantity = inventoryState.weaponQuantity[x] || 1;
+            buildXML += "\t\t\t\t<maxammo type=\"number\">" + weaponQuantity + "</maxammo>\n";
+        } else if (weaponProperties[x] && weaponProperties[x].match(/Range/)) {
+            // For other ranged weapons without specific ammunition, set maxammo to 1
+            buildXML += "\t\t\t\t<maxammo type=\"number\">1</maxammo>\n";
         } 
         buildXML += "\t\t\t\t<attackbonus type=\"number\">" + weaponBonus[x] + "</attackbonus>\n";
         buildXML += "\t\t\t\t<attackstat type=\"string\">" + weaponBase[x] + "</attackstat>\n";
