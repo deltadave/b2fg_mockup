@@ -8,6 +8,7 @@
 
 import { CharacterFetcher, type FetchResult, type CharacterData } from '@/domain/character/services/CharacterFetcher';
 import { featureFlags } from '@/core/FeatureFlags';
+import { gameConfigService } from '@/shared/services/GameConfigService';
 
 export interface ConversionProgress {
   step: string;
@@ -33,6 +34,20 @@ export class CharacterConverterFacade {
 
   constructor() {
     this.characterFetcher = new CharacterFetcher();
+    this.initializeGameConfig();
+  }
+
+  /**
+   * Initialize game configuration
+   */
+  private async initializeGameConfig(): Promise<void> {
+    if (!gameConfigService.isLoaded()) {
+      try {
+        await gameConfigService.loadConfigs();
+      } catch (error) {
+        console.warn('Failed to load game configuration, using fallback values:', error);
+      }
+    }
   }
 
   /**
@@ -240,24 +255,128 @@ export class CharacterConverterFacade {
     const characterName = characterData.name || 'Unknown Character';
     const characterId = characterData.id || 0;
     
-    // Simple mock XML for demonstration
+    // Generate Fantasy Grounds compatible XML using the proper template structure
+    const totalLevel = this.calculateTotalLevel(characterData);
+    const proficiencyBonus = gameConfigService.calculateProficiencyBonus(totalLevel);
+    
     const mockXML = `<?xml version="1.0" encoding="UTF-8"?>
-<character>
-  <name type="string">${characterName}</name>
-  <id type="number">${characterId}</id>
-  <stats>
-    ${characterData.stats?.map((stat: any) => 
-      `<stat${stat.id} type="number">${stat.value || 10}</stat${stat.id}>`
-    ).join('\n    ') || ''}
-  </stats>
-  <classes>
-    ${characterData.classes?.map((cls: any) => 
-      `<class name="${cls.definition?.name || 'Unknown'}" level="${cls.level || 1}"/>`
-    ).join('\n    ') || ''}
-  </classes>
-  <!-- This is a simplified mock XML for testing the fetch functionality -->
-  <!-- Full XML generation will be implemented in Phase 2 of the refactor -->
-</character>`;
+<root version="4.7" dataversion="20241002" release="8.1|CoreRPG:7">
+  <character>
+    <name type="string">${characterName}</name>
+    <gender type="string">${characterData.gender || ''}</gender>
+    <deity type="string">${characterData.faith || ''}</deity>
+    <age type="string">${characterData.age || ''}</age>
+    <appearance type="string">${characterData.hair ? `Hair: ${characterData.hair}, Eyes: ${characterData.eyes || ''}, Skin: ${characterData.skin || ''}` : ''}</appearance>
+    <height type="string">${characterData.height || ''}</height>
+    <weight type="string">${characterData.weight ? characterData.weight.toString() : ''}</weight>
+    <size type="string">${gameConfigService.getDefaultSize()}</size>
+    <alignment type="string">${gameConfigService.getAlignmentName(characterData.alignmentId)}</alignment>
+    <bonds type="string"></bonds>
+    <flaws type="string"></flaws>
+    <ideals type="string"></ideals>
+    <personalitytraits type="string"></personalitytraits>
+    <race type="string">${characterData.race?.fullName || 'Unknown'}</race>
+    <racelink type="windowreference">
+      <class>reference_race</class>
+      <recordname>reference.race.${(characterData.race?.fullName || 'unknown').toLowerCase().replace(/\s+/g, '')}@*</recordname>
+    </racelink>
+    <background type="string">${characterData.background?.definition?.name || ''}</background>
+    <backgroundlink type="windowreference">
+      <class>reference_background</class>
+      <recordname>reference.background.${(characterData.background?.definition?.name || 'unknown').toLowerCase().replace(/\s+/g, '')}@*</recordname>
+    </backgroundlink>
+    <level type="number">${totalLevel}</level>
+    <profbonus type="number">${proficiencyBonus}</profbonus>
+    <notes type="formattedtext">
+      <p>Character converted from D&D Beyond (ID: ${characterId}) using Modern Converter v2.0</p>
+      <p>This demonstrates the new character fetching system with proper Fantasy Grounds template structure.</p>
+      <p>Full character parsing will be implemented in Phase 2 of the refactor.</p>
+    </notes>
+    <perception type="number">0</perception>
+    <perceptionmodifier type="number">0</perceptionmodifier>
+    <exp type="number">${characterData.currentXp || 0}</exp>
+    <expneeded type="number">0</expneeded>
+    
+    <!-- Abilities with proper template structure -->
+    <abilities>
+      ${this.generateAbilitiesXML(characterData)}
+    </abilities>
+    
+    <!-- Classes with template structure -->
+    <classes>
+      ${characterData.classes?.map((cls: any, index: number) => 
+        `<id-${String(index + 1).padStart(5, '0')}>
+        <casterpactmagic type="number">0</casterpactmagic>
+        <hddie type="dice">${cls.definition?.hitDie ? `d${cls.definition.hitDie}` : gameConfigService.getDefaultHitDie()}</hddie>
+        <hdused type="number">0</hdused>
+        <level type="number">${cls.level || 1}</level>
+        <name type="string">${cls.definition?.name || 'Unknown'}</name>
+        <shortcut type="windowreference">
+          <class>reference_class</class>
+          <recordname>reference.class.${(cls.definition?.name || 'unknown').toLowerCase()}@*</recordname>
+        </shortcut>
+      </id-${String(index + 1).padStart(5, '0')}>`
+      ).join('\n      ') || ''}
+    </classes>
+    
+    <!-- Currency -->
+    <coins>
+      ${gameConfigService.getCurrencies().map((currency, index) => 
+        `<slot${index + 1}>
+        <amount type="number">0</amount>
+        <name type="string">${currency.name}</name>
+      </slot${index + 1}>`
+      ).join('\n      ')}
+    </coins>
+    
+    <!-- Defenses -->
+    <defenses>
+      <ac>
+        <armor type="number">0</armor>
+        <misc type="number">0</misc>
+        <prof type="number">0</prof>
+        <shield type="number">0</shield>
+        <stat2 type="string">dexterity</stat2>
+        <temporary type="number">0</temporary>
+        <total type="number">${gameConfigService.getBaseArmorClass()}</total>
+      </ac>
+    </defenses>
+    
+    <!-- Encumbrance -->
+    <encumbrance>
+      <encumbered type="number">0</encumbered>
+      <encumberedheavy type="number">0</encumberedheavy>
+      <liftpushdrag type="number">0</liftpushdrag>
+      <load type="number">0</load>
+      <max type="number">0</max>
+    </encumbrance>
+    
+    <!-- Placeholder sections for Phase 2 -->
+    <featlist>
+      <!-- Feats will be added in Phase 2 -->
+    </featlist>
+    
+    <featurelist>
+      <!-- Class/Race features will be added in Phase 2 -->
+    </featurelist>
+    
+    <inventorylist>
+      <!-- Equipment will be added in Phase 2 -->
+    </inventorylist>
+    
+    <languagelist>
+      <!-- Languages will be added in Phase 2 -->
+    </languagelist>
+    
+    <powergrouplist>
+      <!-- Spells/Powers will be added in Phase 2 -->
+    </powergrouplist>
+    
+    <skilllist>
+      <!-- Skills will be added in Phase 2 -->
+    </skilllist>
+  </character>
+</root>`;
 
     console.log('Generated mock XML for character:', characterName);
     return mockXML;
@@ -302,6 +421,34 @@ export class CharacterConverterFacade {
       return total + (cls.level || 0);
     }, 0) || 1;
   }
+
+  /**
+   * Generate abilities XML with proper template structure
+   */
+  private generateAbilitiesXML(characterData: CharacterData): string {
+    const abilities = gameConfigService.getAbilities();
+    
+    return abilities.map((ability) => {
+      const stat = characterData.stats?.find((s: any) => s.id === ability.id);
+      const bonusStat = characterData.bonusStats?.find((b: any) => b.id === ability.id);
+      const overrideStat = characterData.overrideStats?.find((o: any) => o.id === ability.id);
+      
+      // Calculate final score
+      const baseScore = stat?.value || gameConfigService.getDefaultAbilityScore();
+      const bonusValue = bonusStat?.value || 0;
+      const finalScore = overrideStat?.value || (baseScore + bonusValue);
+      const modifier = gameConfigService.calculateAbilityModifier(finalScore);
+      
+      return `<${ability.name}>
+        <bonus type="number">${modifier}</bonus>
+        <save type="number">${modifier}</save>
+        <savemodifier type="number">0</savemodifier>
+        <saveprof type="number">0</saveprof>
+        <score type="number">${finalScore}</score>
+      </${ability.name}>`;
+    }).join('\n      ');
+  }
+
 
   /**
    * Get current feature flag status for debugging

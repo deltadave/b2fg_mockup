@@ -1,0 +1,68 @@
+{
+  "title": "D&D 5e Core Game Rules",
+  "description": "Core mechanical rules and calculations for D&D 5e",
+  "proficiencyBonus": {
+    "formula": "Math.ceil(level / 4) + 1", 
+    "description": "Proficiency bonus increases every 4 levels",
+    "table": {
+      "1-4": 2,
+      "5-8": 3,
+      "9-12": 4,
+      "13-16": 5,
+      "17-20": 6
+    }
+  },
+  "characterLevels": {
+    "minimum": 1,
+    "maximum": 20,
+    "default": 1
+  },
+  "hitDice": {
+    "description": "Available hit die types for classes",
+    "types": ["d6", "d8", "d10", "d12"],
+    "default": "d8"
+  },
+  "armorClass": {
+    "baseAC": 10,
+    "description": "Base AC when unarmored",
+    "modifiers": {
+      "dexterity": "Primary AC modifier for most armor types",
+      "armor": "Flat bonus from armor",
+      "shield": "Flat bonus from shields (+2 typical)",
+      "misc": "Miscellaneous bonuses (spells, magic items, etc.)"
+    }
+  },
+  "sizes": {
+    "tiny": "Tiny",
+    "small": "Small", 
+    "medium": "Medium",
+    "large": "Large",
+    "huge": "Huge",
+    "gargantuan": "Gargantuan",
+    "default": "Medium"
+  },
+  "experiencePoints": {
+    "levelThresholds": {
+      "1": 0,
+      "2": 300,
+      "3": 900,
+      "4": 2700,
+      "5": 6500,
+      "6": 14000,
+      "7": 23000,
+      "8": 34000,
+      "9": 48000,
+      "10": 64000,
+      "11": 85000,
+      "12": 100000,
+      "13": 120000,
+      "14": 140000,
+      "15": 165000,
+      "16": 195000,
+      "17": 225000,
+      "18": 265000,
+      "19": 305000,
+      "20": 355000
+    }
+  }
+}

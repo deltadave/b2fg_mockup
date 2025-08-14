@@ -1,0 +1,54 @@
+{
+  "title": "D&D 5e Ability Scores",
+  "description": "Configuration for the six core ability scores in D&D 5e",
+  "abilities": [
+    {
+      "id": 1,
+      "name": "strength",
+      "displayName": "Strength",
+      "abbreviation": "STR",
+      "description": "Measures physical power and athletic training"
+    },
+    {
+      "id": 2,
+      "name": "dexterity", 
+      "displayName": "Dexterity",
+      "abbreviation": "DEX",
+      "description": "Measures agility, reflexes, and balance"
+    },
+    {
+      "id": 3,
+      "name": "constitution",
+      "displayName": "Constitution", 
+      "abbreviation": "CON",
+      "description": "Measures health, stamina, and vital force"
+    },
+    {
+      "id": 4,
+      "name": "intelligence",
+      "displayName": "Intelligence",
+      "abbreviation": "INT", 
+      "description": "Measures reasoning ability, memory, and analytical thinking"
+    },
+    {
+      "id": 5,
+      "name": "wisdom",
+      "displayName": "Wisdom",
+      "abbreviation": "WIS",
+      "description": "Measures awareness, intuition, and insight"
+    },
+    {
+      "id": 6,
+      "name": "charisma",
+      "displayName": "Charisma",
+      "abbreviation": "CHA",
+      "description": "Measures force of personality, leadership, and confidence"
+    }
+  ],
+  "calculations": {
+    "modifierFormula": "Math.floor((score - 10) / 2)",
+    "defaultScore": 10,
+    "minimumScore": 1,
+    "maximumScore": 30
+  }
+}

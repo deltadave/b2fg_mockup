@@ -1,0 +1,20 @@
+{
+  "title": "D&D 5e Alignments",
+  "description": "Mapping of D&D Beyond alignment IDs to alignment names",
+  "mappings": {
+    "1": "Lawful Good",
+    "2": "Neutral Good", 
+    "3": "Chaotic Good",
+    "4": "Lawful Neutral",
+    "5": "True Neutral",
+    "6": "Chaotic Neutral",
+    "7": "Lawful Evil",
+    "8": "Neutral Evil",
+    "9": "Chaotic Evil"
+  },
+  "default": "True Neutral",
+  "notes": [
+    "These IDs correspond to D&D Beyond's internal alignment system",
+    "Default is used when no alignment ID is provided or ID is invalid"
+  ]
+}

@@ -8,6 +8,7 @@ import { featureFlags } from '@/core/FeatureFlags';
 // Import CharacterFetcher service for testing
 import { characterFetcher } from '@/domain/character/services/CharacterFetcher';
 import { characterConverterFacade } from '@/application/facades/CharacterConverterFacade';
+import { gameConfigService } from '@/shared/services/GameConfigService';
 
 // Initialize Alpine.js stores and components
 import './presentation/alpineStores';
@@ -23,12 +24,21 @@ if (typeof window !== 'undefined') {
   (window as any).featureFlags = featureFlags;
   (window as any).characterFetcher = characterFetcher;
   (window as any).characterConverterFacade = characterConverterFacade;
+  (window as any).gameConfigService = gameConfigService;
 }
 
 // Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   console.log('Modern converter initialized');
   console.log('Feature flags loaded:', Object.keys(featureFlags.getAllFlags()));
+  
+  // Initialize game configuration
+  try {
+    await gameConfigService.loadConfigs();
+    console.log('Game configuration loaded successfully');
+  } catch (error) {
+    console.warn('Failed to load game configuration, using fallbacks:', error);
+  }
   
   // Start Alpine.js
   Alpine.start();
