@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D Beyond to Fantasy Grounds Converter v2.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="min-h-screen bg-dnd-dark text-white">
+        <nav class="bg-dnd-red p-4">
+            <div class="container mx-auto flex justify-between items-center">
+                <div class="flex space-x-6">
+                    <a href="index.html" class="text-dnd-gold font-semibold"><i class="fas fa-home"></i> Home</a>
+                    <a href="about.html" class="text-white hover:text-dnd-gold"><i class="fas fa-info-circle"></i> About</a>
+                    <a href="contact.html" class="text-white hover:text-dnd-gold"><i class="fas fa-envelope"></i> Contact</a>
+                    <a href="donate.html" class="text-white hover:text-dnd-gold"><i class="fas fa-heart"></i> Donate</a>
+                </div>
+                <div class="font-cinzel text-xl font-semibold text-dnd-gold">
+                    Character Transfer Tool v2.0
+                </div>
+            </div>
+        </nav>
+
+        <main class="container mx-auto py-12 px-4">
+            <div class="text-center mb-12">
+                <h1 class="font-cinzel text-5xl font-bold text-dnd-gold mb-4">
+                    D&D Beyond to Fantasy Grounds
+                </h1>
+                <p class="text-xl text-gray-300">
+                    Convert your D&D Beyond characters to Fantasy Grounds format with modern tools
+                </p>
+                <div class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg inline-block">
+                    <i class="fas fa-flask mr-2"></i>
+                    Development Version 2.0 - Modern Refactor in Progress
+                </div>
+            </div>
+
+            <!-- Feature Flag Status -->
+            <div class="bg-gray-800 rounded-lg p-6 mb-8">
+                <h2 class="text-xl font-semibold mb-4 text-dnd-gold">
+                    <i class="fas fa-flag mr-2"></i>
+                    Modernization Status
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="bg-gray-700 p-4 rounded">
+                        <div class="flex items-center justify-between">
+                            <span>Build System</span>
+                            <span class="text-green-400"><i class="fas fa-check"></i></span>
+                        </div>
+                    </div>
+                    <div class="bg-gray-700 p-4 rounded">
+                        <div class="flex items-center justify-between">
+                            <span>TypeScript</span>
+                            <span class="text-green-400"><i class="fas fa-check"></i></span>
+                        </div>
+                    </div>
+                    <div class="bg-gray-700 p-4 rounded">
+                        <div class="flex items-center justify-between">
+                            <span>Tailwind CSS</span>
+                            <span class="text-green-400"><i class="fas fa-check"></i></span>
+                        </div>
+                    </div>
+                    <div class="bg-gray-700 p-4 rounded">
+                        <div class="flex items-center justify-between">
+                            <span>Feature Flags</span>
+                            <span class="text-yellow-400"><i class="fas fa-clock"></i></span>
+                        </div>
+                    </div>
+                    <div class="bg-gray-700 p-4 rounded">
+                        <div class="flex items-center justify-between">
+                            <span>Alpine.js Components</span>
+                            <span class="text-yellow-400"><i class="fas fa-clock"></i></span>
+                        </div>
+                    </div>
+                    <div class="bg-gray-700 p-4 rounded">
+                        <div class="flex items-center justify-between">
+                            <span>Legacy Integration</span>
+                            <span class="text-red-400"><i class="fas fa-times"></i></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="bg-gray-800 rounded-lg p-6">
+                <h2 class="text-xl font-semibold mb-4 text-dnd-gold">
+                    <i class="fas fa-link mr-2"></i>
+                    Quick Links
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <a href="../legacy/index.html" class="bg-dnd-red hover:bg-red-700 p-4 rounded-lg block transition-colors">
+                        <div class="flex items-center">
+                            <i class="fas fa-arrow-left mr-3"></i>
+                            <div>
+                                <div class="font-semibold">Use Legacy Version</div>
+                                <div class="text-sm text-gray-300">Current working converter</div>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="#" class="bg-gray-600 p-4 rounded-lg block cursor-not-allowed opacity-50">
+                        <div class="flex items-center">
+                            <i class="fas fa-cog mr-3"></i>
+                            <div>
+                                <div class="font-semibold">Modern Converter</div>
+                                <div class="text-sm text-gray-300">Coming soon...</div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
