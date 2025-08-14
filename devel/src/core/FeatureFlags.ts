@@ -152,6 +152,12 @@ export class FeatureFlags {
 export const defaultFeatureFlags: FeatureFlagConfig = {
   environment: 'development',
   flags: {
+    'character_fetcher': {
+      key: 'character_fetcher',
+      enabled: false,
+      description: 'Use new CharacterFetcher service for D&D Beyond API calls',
+      rolloutPercentage: 10
+    },
     'modern_converter': {
       key: 'modern_converter',
       enabled: true,
@@ -193,6 +199,12 @@ export const defaultFeatureFlags: FeatureFlagConfig = {
       conditions: {
         environment: 'development'
       }
+    },
+    'debug_character_data': {
+      key: 'debug_character_data',
+      enabled: false,
+      description: 'Log detailed character data to console for debugging',
+      rolloutPercentage: 0
     }
   }
 };

@@ -14,7 +14,7 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    exclude: ['**/stores/**']
+    exclude: ['stores']
   },
   build: {
     outDir: 'dist',

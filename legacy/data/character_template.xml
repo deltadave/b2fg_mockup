@@ -1,0 +1,1447 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root version="4.7" dataversion="20241002" release="8.1|CoreRPG:7">
+	<character>
+		<name type="string"></name>
+		<gender type="string"></gender>
+		<deity type="string"></deity>
+		<age type="string"></age>
+		<appearance type="string"></appearance>
+		<height type="string"></height>
+		<weight type="string"></weight>
+		<size type="string"></size>
+		<alignment type="string"></alignment>
+		<bonds type="string"></bonds>
+		<flaws type="string"></flaws>
+		<ideals type="tring"></ideals>
+		<personalitytraits type="string"></personalitytraits>
+		<race type="string"></race>
+		<racelink type="windowreference">
+			<class></class>
+			<recordname></recordname>
+		</racelink>
+		<background type="string"></background>
+		<backgroundlink type="windowreference">
+			<class></class>
+			<recordname></recordname>
+		</backgroundlink>
+		<level type="number"></level>
+		<profbonus type="number"></profbonus>
+		<notes type="string"></notes>
+		<perception type="number"></perception>
+		<perceptionmodifier type="number"></perceptionmodifier>
+		<exp type="number"></exp>
+		<expneeded type="number"></expneeded>
+		<abilities>
+			<charisma>
+				<bonus type="number"></bonus>
+				<save type="number"></save>
+				<savemodifier type="number"></savemodifier>
+				<saveprof type="number"></saveprof>
+				<score type="number"></score>
+			</charisma>
+			<constitution>
+				<bonus type="number"></bonus>
+				<save type="number"></save>
+				<savemodifier type="number"></savemodifier>
+				<saveprof type="number"></saveprof>
+				<score type="number"></score>
+			</constitution>
+			<dexterity>
+				<bonus type="number"></bonus>
+				<save type="number"></save>
+				<savemodifier type="number"></savemodifier>
+				<saveprof type="number"></saveprof>
+				<score type="number"></score>
+			</dexterity>
+			<intelligence>
+				<bonus type="number"></bonus>
+				<save type="number"></save>
+				<savemodifier type="number"></savemodifier>
+				<saveprof type="number"></saveprof>
+				<score type="number"></score>
+			</intelligence>
+			<strength>
+				<bonus type="number"></bonus>
+				<save type="number"></save>
+				<savemodifier type="number"></savemodifier>
+				<saveprof type="number"></saveprof>
+				<score type="number"></score>
+			</strength>
+			<wisdom>
+				<bonus type="number"></bonus>
+				<save type="number"></save>
+				<savemodifier type="number"></savemodifier>
+				<saveprof type="number"></saveprof>
+				<score type="number"></score>
+			</wisdom>
+		</abilities>
+		<classes>
+			<id-00001>
+				<casterpactmagic type="number"></casterpactmagic>
+				<hddie type="dice"></hddie>
+				<hdused type="number"></hdused>
+				<level type="number"></level>
+				<name type="string"></name>
+				<shortcut type="windowreference">
+					<class></class>
+					<recordname></recordname>
+				</shortcut>
+			</id-00001>
+			<id-00002>
+				<casterlevelinvmult type="number"></casterlevelinvmult>
+				<casterpactmagic type="number"></casterpactmagic>
+				<hddie type="dice"></hddie>
+				<hdused type="number"></hdused>
+				<level type="number"></level>
+				<name type="string"></name>
+				<shortcut type="windowreference">
+					<class></class>
+					<recordname></recordname>
+				</shortcut>
+			</id-00002>
+		</classes>
+		<coins>
+			<slot1>
+				<amount type="number"></amount>
+				<name type="string"></name>
+			</slot1>
+			<slot2>
+				<amount type="number"></amount>
+				<name type="string"></name>
+			</slot2>
+			<slot3>
+				<amount type="number"></amount>
+				<name type="string"></name>
+			</slot3>
+			<slot4>
+				<amount type="number"></amount>
+				<name type="string"></name>
+			</slot4>
+			<slot5>
+				<amount type="number"></amount>
+				<name type="string"></name>
+			</slot5>
+			<slot6>
+				<amount type="number"></amount>
+			</slot6>
+		</coins>
+		<defenses>
+			<ac>
+				<armor type="number"></armor>
+				<misc type="number"></misc>
+				<prof type="number"></prof>
+				<shield type="number"></shield>
+				<stat2 type="string"></stat2>
+				<temporary type="number"></temporary>
+				<total type="number"></total>
+			</ac>
+		</defenses>
+		<encumbrance>
+			<encumbered type="number"></encumbered>
+			<encumberedheavy type="number"></encumberedheavy>
+			<liftpushdrag type="number"></liftpushdrag>
+			<load type="number"></load>
+			<max type="number"></max>
+		</encumbrance>
+		<featlist>
+			<id-00001>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<text type="formattedtext">
+					<p></p>
+					<list>
+						<li></li>
+						<li></li>
+						<li></li>
+						<li></li>
+					</list>
+				</text>
+			</id-00001>
+			<id-00002>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<text type="formattedtext">
+					<p></p>
+				</text>
+			</id-00002>
+		</featlist>
+		<featurelist>
+			<id-00001>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<source type="string"></source>
+				<text type="formattedtext">
+					<p></p>
+					<p></p>
+					<list>
+						<li></li>
+						<li></li>
+						<li></li>
+					</list>
+					<p></p>
+					<p></p>
+					<p></p>
+				</text>
+			</id-00001>
+			<id-00002>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<source type="string"></source>
+				<text type="formattedtext">
+					<p></p>
+				</text>
+			</id-00002>
+			<id-00003>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<source type="string"></source>
+				<text type="formattedtext">
+					<p></p>
+				</text>
+			</id-00003>
+			<id-00004>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<source type="string"></source>
+				<text type="formattedtext">
+					<p></p>
+					<p></p>
+				</text>
+			</id-00004>
+			<id-00005>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<source type="string"></source>
+				<text type="formattedtext">
+					<p></p>
+				</text>
+			</id-00005>
+			<id-00006>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<text type="formattedtext">
+					<p></p>
+				</text>
+			</id-00006>
+			<id-00007>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<text type="formattedtext">
+					<p></p>
+					<p></p>
+					<p></p>
+					<p></p>
+					<p></p>
+					<p></p>
+				</text>
+			</id-00007>
+			<id-00008>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<source type="string"></source>
+				<text type="formattedtext">
+					<p></p>
+					<list>
+						<li></li>
+						<li></li>
+					</list>
+					<table>
+						<tr>
+							<td></td>
+							<td></td>
+						</tr>
+						<tr>
+							<td></td>
+							<td></td>
+						</tr>
+						<tr>
+							<td></td>
+							<td></td>
+						</tr>
+						<tr>
+							<td></td>
+							<td></td>
+						</tr>
+						<tr>
+							<td></td>
+							<td></td>
+						</tr>
+						<tr>
+							<td></td>
+							<td></td>
+						</tr>
+						<tr>
+							<td></td>
+							<td></td>
+						</tr>
+					</table>
+				</text>
+			</id-00008>
+			<id-00009>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<source type="string"></source>
+				<text type="formattedtext">
+					<p></p>
+					<p></p>
+					<p></p>
+					<p></p>
+					<p></p>
+					<p></p>
+					<table>
+						<tr>
+							<td></td>
+							<td></td>
+							<td></td>
+						</tr>
+						<tr>
+							<td></td>
+							<td></td>
+							<td></td>
+						</tr>
+						<tr>
+							<td></td>
+							<td></td>
+							<td></td>
+						</tr>
+						<tr>
+							<td></td>
+							<td></td>
+							<td></td>
+						</tr>
+						<tr>
+							<td></td>
+							<td></td>
+							<td></td>
+						</tr>
+						<tr>
+							<td></td>
+							<td></td>
+							<td></td>
+						</tr>
+					</table>
+				</text>
+			</id-00009>
+			<id-00010>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<source type="string"></source>
+				<text type="formattedtext">
+					<p></p>
+					<p></p>
+					<p></p>
+				</text>
+			</id-00010>
+			<id-00011>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<source type="string"></source>
+				<text type="formattedtext">
+					<p></p>
+				</text>
+			</id-00011>
+			<id-00012>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<source type="string"></source>
+				<text type="formattedtext">
+					<p></p>
+					<list>
+						<li></li>
+						<li></li>
+					</list>
+					<p></p>
+				</text>
+			</id-00012>
+			<id-00013>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<text type="formattedtext">
+					<p></p>
+					<p></p>
+					<p></p>
+				</text>
+			</id-00013>
+			<id-00014>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<text type="formattedtext">
+					<p></p>
+					<p></p>
+				</text>
+			</id-00014>
+			<id-00016>
+				<name type="string"></name>
+				<source type="string"></source>
+				<text type="formattedtext">
+					<p></p>
+					<p></p>
+				</text>
+				<type type="string"></type>
+			</id-00016>
+		</featurelist>
+		<hp>
+			<deathsavefail type="number"></deathsavefail>
+			<deathsavesuccess type="number"></deathsavesuccess>
+			<temporary type="number"></temporary>
+			<total type="number"></total>
+			<wounds type="number"></wounds>
+		</hp>
+		<initiative>
+			<misc type="number"></misc>
+			<prof type="number"></prof>
+			<temporary type="number"></temporary>
+			<total type="number"></total>
+		</initiative>
+		<inventorylist>
+			<id-00001>
+				<attune type="number"></attune>
+				<carried type="number"></carried>
+				<cost type="string"></cost>
+				<count type="number"></count>
+				<description type="formattedtext">
+					<p></p>
+					<p></p>
+				</description>
+				<isidentified type="number"></isidentified>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<rarity type="string"></rarity>
+				<type type="string"></type>
+				<weight type="number"></weight>
+			</id-00001>
+			<id-00002>
+				<attune type="number"></attune>
+				<carried type="number"></carried>
+				<cost type="string"></cost>
+				<count type="number"></count>
+				<description type="formattedtext">
+					<p></p>
+					<p></p>
+					<p></p>
+					<p></p>
+					<p></p>
+				</description>
+				<isidentified type="number"></isidentified>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<rarity type="string"></rarity>
+				<type type="string"></type>
+				<weight type="number"></weight>
+			</id-00002>
+			<id-00003>
+				<attune type="number"></attune>
+				<carried type="number"></carried>
+				<cost type="string"></cost>
+				<count type="number"></count>
+				<damage type="string"></damage>
+				<description type="formattedtext">
+					<p></p>
+					<p></p>
+					<p></p>
+				</description>
+				<isidentified type="number"></isidentified>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<properties type="string"></properties>
+				<rarity type="string"></rarity>
+				<subtype type="string"></subtype>
+				<type type="string"></type>
+				<weight type="number"></weight>
+			</id-00003>
+			<id-00004>
+				<attune type="number"></attune>
+				<carried type="number"></carried>
+				<cost type="string"></cost>
+				<count type="number"></count>
+				<damage type="string"></damage>
+				<description type="formattedtext">
+					<p></p>
+					<p></p>
+					<p></p>
+				</description>
+				<isidentified type="number"></isidentified>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<properties type="string"></properties>
+				<rarity type="string"></rarity>
+				<subtype type="string"></subtype>
+				<type type="string"></type>
+				<weight type="number"></weight>
+			</id-00004>
+			<id-00005>
+				<attune type="number"></attune>
+				<carried type="number"></carried>
+				<cost type="string"></cost>
+				<count type="number"></count>
+				<description type="formattedtext">
+					<p></p>
+					<p></p>
+				</description>
+				<isidentified type="number"></isidentified>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<rarity type="string"></rarity>
+				<type type="string"></type>
+				<weight type="number"></weight>
+			</id-00005>
+			<id-00006>
+				<attune type="number"></attune>
+				<carried type="number"></carried>
+				<cost type="string"></cost>
+				<count type="number"></count>
+				<description type="formattedtext">
+					<p></p>
+				</description>
+				<isidentified type="number"></isidentified>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<rarity type="string"></rarity>
+				<type type="string"></type>
+				<weight type="number"></weight>
+			</id-00006>
+			<id-00007>
+				<attune type="number"></attune>
+				<carried type="number"></carried>
+				<cost type="string"></cost>
+				<count type="number"></count>
+				<damage type="string"></damage>
+				<description type="formattedtext">
+					<p></p>
+					<p></p>
+					<p></p>
+				</description>
+				<isidentified type="number"></isidentified>
+				<location type="string"></location>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<properties type="string"></properties>
+				<rarity type="string"></rarity>
+				<subtype type="string"></subtype>
+				<type type="string"></type>
+				<weight type="number"></weight>
+			</id-00007>
+			<id-00008>
+				<attune type="number"></attune>
+				<carried type="number"></carried>
+				<cost type="string"></cost>
+				<count type="number"></count>
+				<damage type="string"></damage>
+				<description type="formattedtext">
+					<p></p>
+				</description>
+				<isidentified type="number"></isidentified>
+				<location type="string"></location>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<properties type="string"></properties>
+				<rarity type="string"></rarity>
+				<type type="string"></type>
+				<weight type="number"></weight>
+			</id-00008>
+			<id-00009>
+				<attune type="number"></attune>
+				<carried type="number"></carried>
+				<cost type="string"></cost>
+				<count type="number"></count>
+				<description type="formattedtext">
+					<p></p>
+				</description>
+				<isidentified type="number"></isidentified>
+				<location type="string"></location>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<rarity type="string"></rarity>
+				<type type="string"></type>
+				<weight type="number"></weight>
+			</id-00009>
+			<id-00010>
+				<attune type="number"></attune>
+				<carried type="number"></carried>
+				<cost type="string"></cost>
+				<count type="number"></count>
+				<description type="formattedtext">
+					<p></p>
+				</description>
+				<isidentified type="number"></isidentified>
+				<location type="string"></location>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<rarity type="string"></rarity>
+				<type type="string"></type>
+				<weight type="number"></weight>
+			</id-00010>
+			<id-00011>
+				<attune type="number"></attune>
+				<carried type="number"></carried>
+				<cost type="string"></cost>
+				<count type="number"></count>
+				<description type="formattedtext">
+					<p></p>
+				</description>
+				<isidentified type="number"></isidentified>
+				<location type="string"></location>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<rarity type="string"></rarity>
+				<type type="string"></type>
+				<weight type="number"></weight>
+			</id-00011>
+			<id-00012>
+				<attune type="number"></attune>
+				<carried type="number"></carried>
+				<cost type="string"></cost>
+				<count type="number"></count>
+				<description type="formattedtext">
+					<p></p>
+				</description>
+				<isidentified type="number"></isidentified>
+				<location type="string"></location>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<rarity type="string"></rarity>
+				<type type="string"></type>
+				<weight type="number"></weight>
+			</id-00012>
+			<id-00013>
+				<attune type="number"></attune>
+				<carried type="number"></carried>
+				<cost type="string"></cost>
+				<count type="number"></count>
+				<description type="formattedtext">
+					<p></p>
+				</description>
+				<isidentified type="number"></isidentified>
+				<location type="string"></location>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<rarity type="string"></rarity>
+				<type type="string"></type>
+				<weight type="number"></weight>
+			</id-00013>
+			<id-00014>
+				<attune type="number"></attune>
+				<carried type="number"></carried>
+				<cost type="string"></cost>
+				<count type="number"></count>
+				<description type="formattedtext">
+					<p></p>
+				</description>
+				<isidentified type="number"></isidentified>
+				<location type="string"></location>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<rarity type="string"></rarity>
+				<type type="string"></type>
+				<weight type="number"></weight>
+			</id-00014>
+			<id-00015>
+				<attune type="number"></attune>
+				<carried type="number"></carried>
+				<cost type="string"></cost>
+				<count type="number"></count>
+				<description type="formattedtext">
+					<p></p>
+				</description>
+				<isidentified type="number"></isidentified>
+				<location type="string"></location>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<rarity type="string"></rarity>
+				<type type="string"></type>
+				<weight type="number"></weight>
+			</id-00015>
+			<id-00016>
+				<attune type="number"></attune>
+				<carried type="number"></carried>
+				<cost type="string"></cost>
+				<count type="number"></count>
+				<description type="formattedtext">
+					<p></p>
+				</description>
+				<isidentified type="number"></isidentified>
+				<location type="string"></location>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<rarity type="string"></rarity>
+				<type type="string"></type>
+				<weight type="number"></weight>
+			</id-00016>
+		</inventorylist>
+		<languagelist>
+			<id-00001>
+				<name type="string"></name>
+			</id-00001>
+			<id-00002>
+				<name type="string"></name>
+			</id-00002>
+			<id-00003>
+				<name type="string"></name>
+			</id-00003>
+		</languagelist>
+		<powergroup>
+			<id-00001>
+				<castertype type="string"></castertype>
+				<name type="string"></name>
+				<stat type="string"></stat>
+			</id-00001>
+			<id-00002>
+				<name type="string"></name>
+			</id-00002>
+		</powergroup>
+		<powermeta>
+			<pactmagicslots1>
+				<max type="number"></max>
+			</pactmagicslots1>
+			<pactmagicslots2>
+				<max type="number"></max>
+			</pactmagicslots2>
+			<pactmagicslots3>
+				<max type="number"></max>
+			</pactmagicslots3>
+			<pactmagicslots4>
+				<max type="number"></max>
+			</pactmagicslots4>
+			<pactmagicslots5>
+				<max type="number"></max>
+			</pactmagicslots5>
+			<pactmagicslots6>
+				<max type="number"></max>
+			</pactmagicslots6>
+			<pactmagicslots7>
+				<max type="number"></max>
+			</pactmagicslots7>
+			<pactmagicslots8>
+				<max type="number"></max>
+			</pactmagicslots8>
+			<pactmagicslots9>
+				<max type="number"></max>
+			</pactmagicslots9>
+			<spellslots1>
+				<max type="number"></max>
+			</spellslots1>
+			<spellslots2>
+				<max type="number"></max>
+			</spellslots2>
+			<spellslots3>
+				<max type="number"></max>
+			</spellslots3>
+			<spellslots4>
+				<max type="number"></max>
+			</spellslots4>
+			<spellslots5>
+				<max type="number"></max>
+			</spellslots5>
+			<spellslots6>
+				<max type="number"></max>
+			</spellslots6>
+			<spellslots7>
+				<max type="number"></max>
+			</spellslots7>
+			<spellslots8>
+				<max type="number"></max>
+			</spellslots8>
+			<spellslots9>
+				<max type="number"></max>
+			</spellslots9>
+		</powermeta>
+		<powers>
+			<id-00001>
+				<actions>
+					<id-00001>
+						<order type="number"></order>
+						<savemagic type="number"></savemagic>
+						<savetype type="string"></savetype>
+						<type type="string"></type>
+					</id-00001>
+					<id-00002>
+						<damagelist>
+							<id-00001>
+								<bonus type="number"></bonus>
+								<dice type="dice"></dice>
+								<type type="string"></type>
+							</id-00001>
+						</damagelist>
+						<order type="number"></order>
+						<type type="string"></type>
+					</id-00002>
+				</actions>
+				<castingtime type="string"></castingtime>
+				<components type="string"></components>
+				<description type="formattedtext">
+					<p></p>
+					<p></p>
+				</description>
+				<duration type="string"></duration>
+				<group type="string"></group>
+				<level type="number"></level>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<prepared type="number"></prepared>
+				<range type="string"></range>
+				<ritual type="number"></ritual>
+				<school type="string"></school>
+			</id-00001>
+			<id-00002>
+				<actions>
+					<id-00001>
+						<damagelist>
+							<id-00001>
+								<bonus type="number"></bonus>
+								<dice type="dice"></dice>
+								<type type="string"></type>
+							</id-00001>
+						</damagelist>
+						<order type="number"></order>
+						<type type="string"></type>
+					</id-00001>
+					<id-00002>
+						<apply type="string"></apply>
+						<durmod type="number"></durmod>
+						<label type="string"></label>
+						<order type="number"></order>
+						<targeting type="string"></targeting>
+						<type type="string"></type>
+					</id-00002>
+				</actions>
+				<castingtime type="string"></castingtime>
+				<components type="string"></components>
+				<description type="formattedtext">
+					<p></p>
+					<p></p>
+				</description>
+				<duration type="string"></duration>
+				<group type="string"></group>
+				<level type="number"></level>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<prepared type="number"></prepared>
+				<range type="string"></range>
+				<ritual type="number"></ritual>
+				<school type="string"></school>
+			</id-00002>
+			<id-00003>
+				<actions>
+					<id-00001>
+						<damagelist>
+							<id-00001>
+								<bonus type="number"></bonus>
+								<dice type="dice"></dice>
+								<stat type="string"></stat>
+								<type type="string"></type>
+							</id-00001>
+						</damagelist>
+						<order type="number"></order>
+						<type type="string"></type>
+					</id-00001>
+					<id-00002>
+						<apply type="string"></apply>
+						<label type="string"></label>
+						<order type="number"></order>
+						<targeting type="string"></targeting>
+						<type type="string"></type>
+					</id-00002>
+				</actions>
+				<castingtime type="string"></castingtime>
+				<components type="string"></components>
+				<description type="formattedtext">
+					<p></p>
+					<p></p>
+				</description>
+				<duration type="string"></duration>
+				<group type="string"></group>
+				<level type="number"></level>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<prepared type="number"></prepared>
+				<range type="string"></range>
+				<ritual type="number"></ritual>
+				<school type="string"></school>
+			</id-00003>
+			<id-00004>
+				<actions>
+					<id-00001>
+						<order type="number"></order>
+						<savemagic type="number"></savemagic>
+						<savetype type="string"></savetype>
+						<type type="string"></type>
+					</id-00001>
+					<id-00002>
+						<damagelist>
+							<id-00001>
+								<bonus type="number"></bonus>
+								<dice type="dice"></dice>
+								<type type="string"></type>
+							</id-00001>
+						</damagelist>
+						<order type="number"></order>
+						<type type="string"></type>
+					</id-00002>
+				</actions>
+				<castingtime type="string"></castingtime>
+				<components type="string"></components>
+				<description type="formattedtext">
+					<p></p>
+					<p></p>
+				</description>
+				<duration type="string"></duration>
+				<group type="string"></group>
+				<level type="number"></level>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<prepared type="number"></prepared>
+				<range type="string"></range>
+				<ritual type="number"></ritual>
+				<school type="string"></school>
+			</id-00004>
+			<id-00005>
+				<actions>
+					<id-00001>
+						<order type="number"></order>
+						<savemagic type="number"></savemagic>
+						<savetype type="string"></savetype>
+						<type type="string"></type>
+					</id-00001>
+					<id-00002>
+						<damagelist>
+							<id-00001>
+								<bonus type="number"></bonus>
+								<dice type="dice"></dice>
+								<type type="string"></type>
+							</id-00001>
+						</damagelist>
+						<order type="number"></order>
+						<type type="string"></type>
+					</id-00002>
+				</actions>
+				<castingtime type="string"></castingtime>
+				<components type="string"></components>
+				<description type="formattedtext">
+					<p></p>
+					<p></p>
+				</description>
+				<duration type="string"></duration>
+				<group type="string"></group>
+				<level type="number"></level>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<prepared type="number"></prepared>
+				<range type="string"></range>
+				<ritual type="number"></ritual>
+				<school type="string"></school>
+			</id-00005>
+			<id-00006>
+				<actions>
+					<id-00001>
+						<durmod type="number"></durmod>
+						<label type="string"></label>
+						<order type="number"></order>
+						<type type="string"></type>
+					</id-00001>
+				</actions>
+				<castingtime type="string"></castingtime>
+				<components type="string"></components>
+				<description type="formattedtext">
+					<p></p>
+				</description>
+				<duration type="string"></duration>
+				<group type="string"></group>
+				<level type="number"></level>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<prepared type="number"></prepared>
+				<range type="string"></range>
+				<ritual type="number"></ritual>
+				<school type="string"></school>
+			</id-00006>
+			<id-00007>
+				<actions>
+					<id-00001>
+						<durmod type="number"></durmod>
+						<durunit type="string"></durunit>
+						<label type="string"></label>
+						<order type="number"></order>
+						<targeting type="string"></targeting>
+						<type type="string"></type>
+					</id-00001>
+				</actions>
+				<castingtime type="string"></castingtime>
+				<components type="string"></components>
+				<description type="formattedtext">
+					<p></p>
+					<p></p>
+					<p></p>
+				</description>
+				<duration type="string"></duration>
+				<group type="string"></group>
+				<level type="number"></level>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<prepared type="number"></prepared>
+				<range type="string"></range>
+				<ritual type="number"></ritual>
+				<school type="string"></school>
+			</id-00007>
+			<id-00008>
+				<actions>
+					<id-00001>
+						<durmod type="number"></durmod>
+						<durunit type="string"></durunit>
+						<label type="string"></label>
+						<order type="number"></order>
+						<type type="string"></type>
+					</id-00001>
+				</actions>
+				<castingtime type="string"></castingtime>
+				<components type="string"></components>
+				<description type="formattedtext">
+					<p></p>
+				</description>
+				<duration type="string"></duration>
+				<group type="string"></group>
+				<level type="number"></level>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<prepared type="number"></prepared>
+				<range type="string"></range>
+				<ritual type="number"></ritual>
+				<school type="string"></school>
+			</id-00008>
+			<id-00009>
+				<actions>
+					<id-00001>
+						<durmod type="number"></durmod>
+						<durunit type="string"></durunit>
+						<label type="string"></label>
+						<order type="number"></order>
+						<targeting type="string"></targeting>
+						<type type="string"></type>
+					</id-00001>
+				</actions>
+				<cast type="number"></cast>
+				<description type="formattedtext">
+					<p></p>
+					<list>
+						<li></li>
+						<li></li>
+						<li></li>
+					</list>
+					<p></p>
+					<p></p>
+					<p></p>
+				</description>
+				<group type="string"></group>
+				<level type="number"></level>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<prepared type="number"></prepared>
+				<ritual type="number"></ritual>
+				<source type="string"></source>
+			</id-00009>
+			<id-00010>
+				<actions>
+					<id-00001>
+						<apply type="string"></apply>
+						<durmod type="number"></durmod>
+						<label type="string"></label>
+						<order type="number"></order>
+						<targeting type="string"></targeting>
+						<type type="string"></type>
+					</id-00001>
+				</actions>
+				<cast type="number"></cast>
+				<description type="formattedtext">
+					<p></p>
+					<p></p>
+				</description>
+				<group type="string"></group>
+				<level type="number"></level>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<prepared type="number"></prepared>
+				<ritual type="number"></ritual>
+				<source type="string"></source>
+			</id-00010>
+			<id-00011>
+				<actions>
+					<id-00001>
+						<durmod type="number"></durmod>
+						<label type="string"></label>
+						<order type="number"></order>
+						<targeting type="string"></targeting>
+						<type type="string"></type>
+					</id-00001>
+				</actions>
+				<cast type="number"></cast>
+				<description type="formattedtext">
+					<p></p>
+				</description>
+				<group type="string"></group>
+				<level type="number"></level>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<prepared type="number"></prepared>
+				<ritual type="number"></ritual>
+				<source type="string"></source>
+			</id-00011>
+		</powers>
+		<proficiencylist>
+			<id-00003>
+				<name type="string"></name>
+			</id-00003>
+			<id-00004>
+				<name type="string"></name>
+			</id-00004>
+			<id-00005>
+				<name type="string"></name>
+			</id-00005>
+			<id-00009>
+				<name type="string"></name>
+			</id-00009>
+			<id-00014>
+				<name type="string"></name>
+			</id-00014>
+			<id-00016>
+				<name type="string"></name>
+			</id-00016>
+			<id-00017>
+				<name type="string"></name>
+			</id-00017>
+			<id-00018>
+				<name type="string"></name>
+			</id-00018>
+		</proficiencylist>
+		<skilllist>
+			<id-00001>
+				<misc type="number"></misc>
+				<name type="string"></name>
+				<prof type="number"></prof>
+				<shortcut type="number"></shortcut>
+				<stat type="string"></stat>
+				<total type="number"></total>
+			</id-00001>
+			<id-00002>
+				<misc type="number"></misc>
+				<name type="string"></name>
+				<prof type="number"></prof>
+				<shortcut type="number"></shortcut>
+				<stat type="string"></stat>
+				<total type="number"></total>
+			</id-00002>
+			<id-00003>
+				<misc type="number"></misc>
+				<name type="string"></name>
+				<prof type="number"></prof>
+				<shortcut type="number"></shortcut>
+				<stat type="string"></stat>
+				<total type="number"></total>
+			</id-00003>
+			<id-00004>
+				<misc type="number"></misc>
+				<name type="string"></name>
+				<prof type="number"></prof>
+				<shortcut type="number"></shortcut>
+				<stat type="string"></stat>
+				<total type="number"></total>
+			</id-00004>
+			<id-00005>
+				<misc type="number"></misc>
+				<name type="string"></name>
+				<prof type="number"></prof>
+				<shortcut type="number"></shortcut>
+				<stat type="string"></stat>
+				<total type="number"></total>
+			</id-00005>
+			<id-00006>
+				<misc type="number"></misc>
+				<name type="string"></name>
+				<prof type="number"></prof>
+				<shortcut type="number"></shortcut>
+				<stat type="string"></stat>
+				<total type="number"></total>
+			</id-00006>
+			<id-00007>
+				<misc type="number"></misc>
+				<name type="string"></name>
+				<prof type="number"></prof>
+				<shortcut type="number"></shortcut>
+				<stat type="string"></stat>
+				<total type="number"></total>
+			</id-00007>
+			<id-00008>
+				<misc type="number"></misc>
+				<name type="string"></name>
+				<prof type="number"></prof>
+				<shortcut type="number"></shortcut>
+				<stat type="string"></stat>
+				<total type="number"></total>
+			</id-00008>
+			<id-00009>
+				<misc type="number"></misc>
+				<name type="string"></name>
+				<prof type="number"></prof>
+				<shortcut type="number"></shortcut>
+				<stat type="string"></stat>
+				<total type="number"></total>
+			</id-00009>
+			<id-00010>
+				<misc type="number"></misc>
+				<name type="string"></name>
+				<prof type="number"></prof>
+				<shortcut type="number"></shortcut>
+				<stat type="string"></stat>
+				<total type="number"></total>
+			</id-00010>
+			<id-00011>
+				<misc type="number"></misc>
+				<name type="string"></name>
+				<prof type="number"></prof>
+				<shortcut type="number"></shortcut>
+				<stat type="string"></stat>
+				<total type="number"></total>
+			</id-00011>
+			<id-00012>
+				<misc type="number"></misc>
+				<name type="string"></name>
+				<prof type="number"></prof>
+				<shortcut type="number"></shortcut>
+				<stat type="string"></stat>
+				<total type="number"></total>
+			</id-00012>
+			<id-00013>
+				<misc type="number"></misc>
+				<name type="string"></name>
+				<prof type="number"></prof>
+				<shortcut type="number"></shortcut>
+				<stat type="string"></stat>
+				<total type="number"></total>
+			</id-00013>
+			<id-00014>
+				<misc type="number"></misc>
+				<name type="string"></name>
+				<prof type="number"></prof>
+				<shortcut type="number"></shortcut>
+				<stat type="string"></stat>
+				<total type="number"></total>
+			</id-00014>
+			<id-00015>
+				<misc type="number"></misc>
+				<name type="string"></name>
+				<prof type="number"></prof>
+				<shortcut type="number"></shortcut>
+				<stat type="string"></stat>
+				<total type="number"></total>
+			</id-00015>
+			<id-00016>
+				<misc type="number"></misc>
+				<name type="string"></name>
+				<prof type="number"></prof>
+				<shortcut type="number"></shortcut>
+				<stat type="string"></stat>
+				<total type="number"></total>
+			</id-00016>
+			<id-00017>
+				<misc type="number"></misc>
+				<name type="string"></name>
+				<prof type="number"></prof>
+				<shortcut type="number"></shortcut>
+				<stat type="string"></stat>
+				<total type="number"></total>
+			</id-00017>
+			<id-00018>
+				<misc type="number"></misc>
+				<name type="string"></name>
+				<prof type="number"></prof>
+				<shortcut type="number"></shortcut>
+				<stat type="string"></stat>
+				<total type="number"></total>
+			</id-00018>
+		</skilllist>
+		<speed>
+			<armor type="number"></armor>
+			<base type="number"></base>
+			<misc type="number"></misc>
+			<temporary type="number"></temporary>
+			<total type="number"></total>
+		</speed>
+		<subracelink type="windowreference">
+			<class />
+			<recordname />
+		</subracelink>
+		<traitlist>
+			<id-00001>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<source type="string"></source>
+				<text type="formattedtext">
+					<p></p>
+				</text>
+				<type type="string"></type>
+			</id-00001>
+			<id-00002>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<source type="string"></source>
+				<text type="formattedtext">
+					<p></p>
+				</text>
+				<type type="string"></type>
+			</id-00002>
+			<id-00003>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<source type="string"></source>
+				<text type="formattedtext">
+					<p></p>
+				</text>
+				<type type="string"></type>
+			</id-00003>
+			<id-00004>
+				<locked type="number"></locked>
+				<name type="string"></name>
+				<source type="string"></source>
+				<text type="formattedtext">
+					<p></p>
+				</text>
+				<type type="string"></type>
+			</id-00004>
+		</traitlist>
+		<weaponlist>
+			<id-00001>
+				<attackbonus type="number"></attackbonus>
+				<attackstat type="string"></attackstat>
+				<carried type="number"></carried>
+				<damagelist>
+					<id-00001>
+						<bonus type="number"></bonus>
+						<dice type="dice"></dice>
+						<stat type="string"></stat>
+						<type type="string"></type>
+					</id-00001>
+				</damagelist>
+				<handling type="number"></handling>
+				<isidentified type="number"></isidentified>
+				<name type="string"></name>
+				<properties type="string"></properties>
+				<shortcut type="windowreference">
+					<class></class>
+					<recordname></recordname>
+				</shortcut>
+				<type type="number"></type>
+			</id-00001>
+			<id-00002>
+				<attackbonus type="number"></attackbonus>
+				<attackstat type="string"></attackstat>
+				<carried type="number"></carried>
+				<damagelist>
+					<id-00001>
+						<bonus type="number"></bonus>
+						<dice type="dice"></dice>
+						<stat type="string"></stat>
+						<type type="string"></type>
+					</id-00001>
+				</damagelist>
+				<handling type="number"></handling>
+				<isidentified type="number"></isidentified>
+				<maxammo type="number"></maxammo>
+				<name type="string"></name>
+				<properties type="string"></properties>
+				<shortcut type="windowreference">
+					<class></class>
+					<recordname></recordname>
+				</shortcut>
+				<type type="number"></type>
+			</id-00002>
+			<id-00003>
+				<attackbonus type="number"></attackbonus>
+				<attackstat type="string"></attackstat>
+				<carried type="number"></carried>
+				<damagelist>
+					<id-00001>
+						<bonus type="number"></bonus>
+						<dice type="dice"></dice>
+						<stat type="string"></stat>
+						<type type="string"></type>
+					</id-00001>
+				</damagelist>
+				<handling type="number"></handling>
+				<isidentified type="number"></isidentified>
+				<maxammo type="number"></maxammo>
+				<name type="string"></name>
+				<properties type="string"></properties>
+				<shortcut type="windowreference">
+					<class></class>
+					<recordname></recordname>
+				</shortcut>
+				<type type="number"></type>
+			</id-00003>
+			<id-00004>
+				<attackbonus type="number"></attackbonus>
+				<attackstat type="string"></attackstat>
+				<carried type="number"></carried>
+				<damagelist>
+					<id-00001>
+						<bonus type="number"></bonus>
+						<dice type="dice"></dice>
+						<stat type="string"></stat>
+						<type type="string"></type>
+					</id-00001>
+				</damagelist>
+				<handling type="number"></handling>
+				<isidentified type="number"></isidentified>
+				<maxammo type="number"></maxammo>
+				<name type="string"></name>
+				<properties type="string"></properties>
+				<shortcut type="windowreference">
+					<class></class>
+					<recordname></recordname>
+				</shortcut>
+				<type type="number"></type>
+			</id-00004>
+			<id-00005>
+				<attackbonus type="number"></attackbonus>
+				<attackstat type="string"></attackstat>
+				<carried type="number"></carried>
+				<damagelist>
+					<id-00001>
+						<bonus type="number"></bonus>
+						<dice type="dice"></dice>
+						<stat type="string"></stat>
+						<type type="string"></type>
+					</id-00001>
+				</damagelist>
+				<handling type="number"></handling>
+				<isidentified type="number"></isidentified>
+				<name type="string"></name>
+				<properties type="string"></properties>
+				<shortcut type="windowreference">
+					<class></class>
+					<recordname></recordname>
+				</shortcut>
+				<type type="number"></type>
+			</id-00005>
+			<id-00006>
+				<attackbonus type="number"></attackbonus>
+				<attackstat type="string"></attackstat>
+				<carried type="number"></carried>
+				<damagelist>
+					<id-00001>
+						<bonus type="number"></bonus>
+						<dice type="dice"></dice>
+						<stat type="string"></stat>
+						<type type="string"></type>
+					</id-00001>
+				</damagelist>
+				<handling type="number"></handling>
+				<isidentified type="number"></isidentified>
+				<name type="string"></name>
+				<properties type="string"></properties>
+				<shortcut type="windowreference">
+					<class></class>
+					<recordname></recordname>
+				</shortcut>
+				<type type="number"></type>
+			</id-00006>
+		</weaponlist>
+	</character>
+</root>

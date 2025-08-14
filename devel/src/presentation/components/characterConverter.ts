@@ -26,8 +26,6 @@ export interface CharacterConverterData {
   convertCharacter(): Promise<void>;
   resetForm(): void;
   downloadResult(): void;
-  fetchCharacterData(characterId: string): Promise<any>;
-  generateXML(characterData: any): Promise<string>;
   delay(ms: number): Promise<void>;
   updateFeatureFlags(): void;
 }
@@ -116,34 +114,46 @@ Alpine.data('characterConverter', (): CharacterConverterData => ({
       const sanitizedId = this.characterId.trim();
       console.log('Converting character:', sanitizedId);
       
-      // Step 2: Fetch character data
-      this.currentStep = 'Fetching character data...';
-      this.progress = 30;
+      // Check if debug mode is enabled
+      const debugEnabled = (window as any).featureFlags?.isEnabled('debug_character_data');
+      if (debugEnabled) {
+        console.log('🔍 Debug mode enabled - detailed character data will be logged');
+      }
       
-      const characterData = await this.fetchCharacterData(sanitizedId);
+      // Step 2-4: Use CharacterConverterFacade for full conversion
+      const facade = (window as any).characterConverterFacade;
+      if (!facade) {
+        throw new Error('CharacterConverterFacade not available');
+      }
+
+      // Set up progress callback
+      facade.onProgress = (step: string, percentage: number) => {
+        this.currentStep = step;
+        this.progress = percentage;
+      };
+
+      const result = await facade.convertFromDNDBeyond(sanitizedId);
       
-      // Step 3: Process character data
-      this.currentStep = 'Processing character data...';
-      this.progress = 60;
-      await this.delay(500);
-      
-      // Step 4: Generate XML
-      this.currentStep = 'Generating Fantasy Grounds XML...';
-      this.progress = 80;
-      
-      const xml = await this.generateXML(characterData);
-      
+      if (!result.success) {
+        throw new Error(result.error || 'Conversion failed');
+      }
+
       // Step 5: Complete
       this.currentStep = 'Complete!';
       this.progress = 100;
       
       // Store result
-      const characterName: string = characterData?.name || 'Unknown Character';
+      const characterName = result.characterData?.name || 'Unknown Character';
       const conversionResults = Alpine.store('conversionResults');
-      conversionResults.setResult(xml, characterName);
+      conversionResults.setResult(result.xml!, characterName);
       
       const notifications = Alpine.store('notifications');
-      notifications.addSuccess(`Character "${characterName}" converted successfully!`);
+      const isDebugMode = (window as any).featureFlags?.isEnabled('debug_character_data');
+      const successMessage = isDebugMode 
+        ? `Character "${characterName}" converted successfully! Check console for detailed data.`
+        : `Character "${characterName}" converted successfully!`;
+      
+      notifications.addSuccess(successMessage);
       
     } catch (error) {
       console.error('Conversion error:', error);
@@ -159,64 +169,6 @@ Alpine.data('characterConverter', (): CharacterConverterData => ({
     }
   },
   
-  async fetchCharacterData(characterId: string) {
-    // Use the same proxy and API as legacy code
-    const proxyUrl = 'https://uakari-indigo.fly.dev/';
-    const apiUrl = 'https://character-service.dndbeyond.com/character/v5/character/';
-    const fetchUrl = proxyUrl + apiUrl + characterId;
-    
-    const headers = new Headers();
-    headers.append('Accept', 'application/json');
-    headers.append('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
-    
-    const response = await fetch(fetchUrl, {
-      method: 'GET',
-      headers: headers
-    });
-    
-    if (!response.ok) {
-      let errorMessage = `HTTP ${response.status}`;
-      
-      switch (response.status) {
-        case 404:
-          errorMessage = 'Character not found. Please verify the Character ID and ensure the character is set to Public.';
-          break;
-        case 403:
-          errorMessage = 'Access denied. Please ensure the character is set to Public, not Private.';
-          break;
-        case 429:
-          errorMessage = 'Too many requests. Please wait a moment and try again.';
-          break;
-        case 500:
-        case 502:
-        case 503:
-          errorMessage = 'D&D Beyond servers are experiencing issues. Please try again in a few minutes.';
-          break;
-      }
-      
-      throw new Error(errorMessage);
-    }
-    
-    return await response.json();
-  },
-  
-  async generateXML(characterData: any): Promise<string> {
-    // For now, we'll create a placeholder XML
-    // Later this will integrate with the extracted legacy parsing logic
-    const characterName = characterData?.name || 'Unknown Character';
-    const characterId = characterData?.id || 'unknown';
-    
-    return `<?xml version="1.0" encoding="UTF-8"?>
-<root version="4.0">
-  <character>
-    <name type="string">${characterName}</name>
-    <charsheet type="string">dnd5e</charsheet>
-    <notes type="string">Converted from D&D Beyond (ID: ${characterId}) using Modern Converter v2.0</notes>
-    <!-- TODO: Integrate with legacy character parsing logic -->
-    <placeholder type="string">This is a placeholder XML. Integration with legacy parsing logic pending.</placeholder>
-  </character>
-</root>`;
-  },
   
   resetForm() {
     this.characterId = '';

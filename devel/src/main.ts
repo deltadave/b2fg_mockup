@@ -5,6 +5,10 @@ import Alpine from 'alpinejs';
 // Initialize feature flags system
 import { featureFlags } from '@/core/FeatureFlags';
 
+// Import CharacterFetcher service for testing
+import { characterFetcher } from '@/domain/character/services/CharacterFetcher';
+import { characterConverterFacade } from '@/application/facades/CharacterConverterFacade';
+
 // Initialize Alpine.js stores and components
 import './presentation/alpineStores';
 import './presentation/components/characterConverter';
@@ -14,9 +18,11 @@ import './presentation/components/featureFlagAdmin';
 console.log('D&D Beyond to Fantasy Grounds Converter v2.0 - Development Build');
 console.log('Modern refactor in progress...');
 
-// Make feature flags globally accessible for debugging
+// Make services globally accessible for debugging and testing
 if (typeof window !== 'undefined') {
   (window as any).featureFlags = featureFlags;
+  (window as any).characterFetcher = characterFetcher;
+  (window as any).characterConverterFacade = characterConverterFacade;
 }
 
 // Initialize when DOM is ready
