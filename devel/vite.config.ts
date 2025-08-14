@@ -13,6 +13,9 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src')
     }
   },
+  optimizeDeps: {
+    exclude: ['**/stores/**']
+  },
   build: {
     outDir: 'dist',
     rollupOptions: {
