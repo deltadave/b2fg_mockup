@@ -9,6 +9,8 @@
 import { CharacterFetcher, type FetchResult, type CharacterData } from '@/domain/character/services/CharacterFetcher';
 import { featureFlags } from '@/core/FeatureFlags';
 import { gameConfigService } from '@/shared/services/GameConfigService';
+import { ObjectSearch } from '@/shared/utils/ObjectSearch';
+import { StringSanitizer } from '@/shared/utils/StringSanitizer';
 
 export interface ConversionProgress {
   step: string;
@@ -107,6 +109,53 @@ export class CharacterConverterFacade {
         });
         
         console.log('📄 Full Character Object:', characterData);
+        
+        // Demonstrate ObjectSearch service if enabled
+        if (featureFlags.isEnabled('object_search_service')) {
+          console.log('🔍 ObjectSearch Service Demo:');
+          
+          // Find proficiency modifiers
+          const proficiencies = ObjectSearch.findByType(characterData, 'proficiency');
+          console.log(`Found ${proficiencies.length} proficiency modifiers:`, proficiencies);
+          
+          // Find class features
+          const classFeatures = ObjectSearch.findByType(characterData, 'feature');
+          console.log(`Found ${classFeatures.length} class features:`, classFeatures.slice(0, 3));
+          
+          // Find by entity type (common D&D Beyond pattern)
+          const classesList = ObjectSearch.findByEntityType(characterData, '1446578651'); // Classes
+          console.log(`Found ${classesList.length} classes via entityTypeId:`, classesList);
+          
+          // Show available keys for debugging
+          const allKeys = ObjectSearch.getAllKeys(characterData, 5);
+          console.log(`Available keys (depth 5): ${allKeys.length} total`, allKeys.slice(0, 20));
+        }
+        
+        // Demonstrate StringSanitizer service if enabled
+        if (featureFlags.isEnabled('string_sanitizer_service')) {
+          console.log('🧹 StringSanitizer Service Demo:');
+          
+          // Test with potentially dangerous content
+          const testStrings = [
+            characterData.name || 'Unknown Character',
+            '<script>alert("XSS")</script>Test Name',
+            'Character "The Bold" & Strong',
+            'javascript:alert(1)',
+            'Text with\nnewlines\tand control\x00chars'
+          ];
+          
+          testStrings.forEach((testString, index) => {
+            const sanitized = this.sanitizeString(testString);
+            const report = StringSanitizer.sanitizeWithReport(testString);
+            console.log(`Test ${index + 1}:`, {
+              original: testString,
+              sanitized: sanitized,
+              wasModified: report.wasModified,
+              removedPatterns: report.removedPatterns
+            });
+          });
+        }
+        
         console.groupEnd();
       }
       
@@ -451,6 +500,23 @@ export class CharacterConverterFacade {
 
 
   /**
+   * Sanitize string content using either new StringSanitizer or legacy method
+   * Based on feature flags for gradual migration
+   * 
+   * @param input - String to sanitize
+   * @returns Sanitized string safe for XML
+   */
+  private sanitizeString(input: unknown): string {
+    if (featureFlags.isEnabled('string_sanitizer_service')) {
+      return StringSanitizer.sanitizeForXML(input);
+    } else {
+      // Legacy fallback - would call legacy fixQuote function
+      // For now, we'll use the compatibility function
+      return StringSanitizer.sanitizeForXML(input);
+    }
+  }
+
+  /**
    * Get current feature flag status for debugging
    */
   getFeatureFlagStatus(): Record<string, boolean> {
@@ -458,7 +524,9 @@ export class CharacterConverterFacade {
       character_fetcher: featureFlags.isEnabled('character_fetcher'),
       modern_converter: featureFlags.isEnabled('modern_converter'),
       legacy_fallback: featureFlags.isEnabled('legacy_fallback'),
-      debug_character_data: featureFlags.isEnabled('debug_character_data')
+      debug_character_data: featureFlags.isEnabled('debug_character_data'),
+      object_search_service: featureFlags.isEnabled('object_search_service'),
+      string_sanitizer_service: featureFlags.isEnabled('string_sanitizer_service')
     };
   }
 }

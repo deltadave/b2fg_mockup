@@ -9,6 +9,8 @@ import { featureFlags } from '@/core/FeatureFlags';
 import { characterFetcher } from '@/domain/character/services/CharacterFetcher';
 import { characterConverterFacade } from '@/application/facades/CharacterConverterFacade';
 import { gameConfigService } from '@/shared/services/GameConfigService';
+import { ObjectSearch } from '@/shared/utils/ObjectSearch';
+import { StringSanitizer } from '@/shared/utils/StringSanitizer';
 
 // Initialize Alpine.js stores and components
 import './presentation/alpineStores';
@@ -25,6 +27,8 @@ if (typeof window !== 'undefined') {
   (window as any).characterFetcher = characterFetcher;
   (window as any).characterConverterFacade = characterConverterFacade;
   (window as any).gameConfigService = gameConfigService;
+  (window as any).ObjectSearch = ObjectSearch;
+  (window as any).StringSanitizer = StringSanitizer;
 }
 
 // Initialize when DOM is ready

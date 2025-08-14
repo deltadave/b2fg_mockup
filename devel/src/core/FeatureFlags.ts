@@ -154,9 +154,9 @@ export const defaultFeatureFlags: FeatureFlagConfig = {
   flags: {
     'character_fetcher': {
       key: 'character_fetcher',
-      enabled: false,
+      enabled: true,
       description: 'Use new CharacterFetcher service for D&D Beyond API calls',
-      rolloutPercentage: 10
+      rolloutPercentage: 100
     },
     'modern_converter': {
       key: 'modern_converter',
@@ -171,26 +171,26 @@ export const defaultFeatureFlags: FeatureFlagConfig = {
     },
     'bulk_conversion': {
       key: 'bulk_conversion',
-      enabled: false,
+      enabled: true,
       description: 'Enable bulk character conversion feature',
-      rolloutPercentage: 0
+      rolloutPercentage: 100
     },
     'advanced_mapping': {
       key: 'advanced_mapping',
-      enabled: false,
+      enabled: true,
       description: 'Enable advanced field mapping configuration'
     },
     'character_preview': {
       key: 'character_preview',
       enabled: true,
       description: 'Show character preview before conversion',
-      rolloutPercentage: 50
+      rolloutPercentage: 100
     },
     'export_formats': {
       key: 'export_formats',
-      enabled: false,
+      enabled: true,
       description: 'Enable multiple export format options (JSON, PDF, etc.)',
-      rolloutPercentage: 10
+      rolloutPercentage: 100
     },
     'performance_metrics': {
       key: 'performance_metrics',
@@ -202,9 +202,21 @@ export const defaultFeatureFlags: FeatureFlagConfig = {
     },
     'debug_character_data': {
       key: 'debug_character_data',
-      enabled: false,
+      enabled: true,
       description: 'Log detailed character data to console for debugging',
-      rolloutPercentage: 0
+      rolloutPercentage: 100
+    },
+    'object_search_service': {
+      key: 'object_search_service',
+      enabled: true,
+      description: 'Use new ObjectSearch service instead of legacy getObjects() function',
+      rolloutPercentage: 100
+    },
+    'string_sanitizer_service': {
+      key: 'string_sanitizer_service',
+      enabled: true,
+      description: 'Use new StringSanitizer service instead of legacy fixQuote() function',
+      rolloutPercentage: 100
     }
   }
 };
