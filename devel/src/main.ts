@@ -11,6 +11,9 @@ import { characterConverterFacade } from '@/application/facades/CharacterConvert
 import { gameConfigService } from '@/shared/services/GameConfigService';
 import { ObjectSearch } from '@/shared/utils/ObjectSearch';
 import { StringSanitizer } from '@/shared/utils/StringSanitizer';
+import { SafeAccess } from '@/shared/utils/SafeAccess';
+import { AbilityScoreUtils } from '@/domain/character/constants/AbilityConstants';
+import { AbilityScoreProcessor } from '@/domain/character/services/AbilityScoreProcessor';
 
 // Initialize Alpine.js stores and components
 import './presentation/alpineStores';
@@ -29,6 +32,9 @@ if (typeof window !== 'undefined') {
   (window as any).gameConfigService = gameConfigService;
   (window as any).ObjectSearch = ObjectSearch;
   (window as any).StringSanitizer = StringSanitizer;
+  (window as any).SafeAccess = SafeAccess;
+  (window as any).AbilityScoreUtils = AbilityScoreUtils;
+  (window as any).AbilityScoreProcessor = AbilityScoreProcessor;
 }
 
 // Initialize when DOM is ready

@@ -217,6 +217,32 @@ export const defaultFeatureFlags: FeatureFlagConfig = {
       enabled: true,
       description: 'Use new StringSanitizer service instead of legacy fixQuote() function',
       rolloutPercentage: 100
+    },
+    'safe_access_service': {
+      key: 'safe_access_service',
+      enabled: true,
+      description: 'Use new SafeAccess service instead of legacy safeAccess() function',
+      rolloutPercentage: 100
+    },
+    'ability_constants': {
+      key: 'ability_constants',
+      enabled: true,
+      description: 'Use new AbilityConstants instead of legacy justAbilities array',
+      rolloutPercentage: 100
+    },
+    'ability_score_processor': {
+      key: 'ability_score_processor',
+      enabled: true,
+      description: 'Use new AbilityScoreProcessor service instead of legacy processAbilityScoreBonuses() function',
+      rolloutPercentage: 100
+    },
+    'debug_ability_score_processor': {
+      key: 'debug_ability_score_processor',
+      enabled: false,
+      description: 'Enable detailed debugging output for ability score modifier sources',
+      conditions: {
+        environment: 'development'
+      }
     }
   }
 };

@@ -11,6 +11,9 @@ import { featureFlags } from '@/core/FeatureFlags';
 import { gameConfigService } from '@/shared/services/GameConfigService';
 import { ObjectSearch } from '@/shared/utils/ObjectSearch';
 import { StringSanitizer } from '@/shared/utils/StringSanitizer';
+import { SafeAccess } from '@/shared/utils/SafeAccess';
+import { AbilityScoreUtils, ABILITY_NAMES } from '@/domain/character/constants/AbilityConstants';
+import { AbilityScoreProcessor } from '@/domain/character/services/AbilityScoreProcessor';
 
 export interface ConversionProgress {
   step: string;
@@ -154,6 +157,130 @@ export class CharacterConverterFacade {
               removedPatterns: report.removedPatterns
             });
           });
+        }
+        
+        // Demonstrate SafeAccess service if enabled
+        if (featureFlags.isEnabled('safe_access_service')) {
+          console.log('🛡️ SafeAccess Service Demo:');
+          
+          // Test various access patterns common in D&D Beyond data
+          const testPaths = [
+            'name',
+            'race.fullName',
+            'race.definition.name',
+            'classes.0.definition.name',
+            'classes.0.level',
+            'stats.0.value',
+            'nonexistent.path',
+            'race.racialTraits.0.definition.name',
+            'preferences.privacy.showStats'
+          ];
+          
+          testPaths.forEach(path => {
+            const value = this.safeAccess(characterData, path);
+            const result = SafeAccess.getWithResult(characterData, path);
+            console.log(`Path: ${path}`, {
+              value: value,
+              found: result.found,
+              type: typeof value,
+              depth: result.depth
+            });
+          });
+          
+          // Demonstrate advanced features
+          const multipleResults = SafeAccess.getMultiple(characterData, [
+            'name', 'race.fullName', 'classes.0.level'
+          ]);
+          console.log('Multiple path access:', multipleResults);
+          
+          // Show all available paths (limited depth for readability)
+          const availablePaths = SafeAccess.getAllPaths(characterData, 3);
+          console.log(`Available paths (depth 3): ${availablePaths.length} total`, availablePaths.slice(0, 15));
+        }
+        
+        // Demonstrate AbilityConstants if enabled
+        if (featureFlags.isEnabled('ability_constants')) {
+          console.log('💪 AbilityConstants Demo:');
+          
+          // Test ability score calculations with character data
+          const abilities = this.getAbilityScores(characterData);
+          console.log('Character Ability Scores:', abilities);
+          
+          // Calculate modifiers for all abilities
+          const modifiers: Record<string, number> = {};
+          ABILITY_NAMES.forEach(ability => {
+            const score = abilities[ability] || 10;
+            modifiers[ability] = AbilityScoreUtils.calculateModifier(score);
+          });
+          console.log('Ability Modifiers:', modifiers);
+          
+          // Demonstrate utility functions
+          console.log('Ability Mappings:', {
+            strengthId: AbilityScoreUtils.getAbilityIdByName('strength'),
+            dexterityAbbr: AbilityScoreUtils.getAbbreviation('dexterity'),
+            constitutionById: AbilityScoreUtils.getAbilityById(3)?.name,
+            validScores: {
+              normal: AbilityScoreUtils.isValidScore(18, false),
+              withMagic: AbilityScoreUtils.isValidScore(22, true)
+            }
+          });
+          
+          // Show carrying capacity if strength is available
+          if (abilities.strength) {
+            const carryingCapacity = AbilityScoreUtils.calculateCarryingCapacity(abilities.strength);
+            console.log(`Carrying Capacity (STR ${abilities.strength}):`, carryingCapacity);
+          }
+        }
+        
+        // Demonstrate AbilityScoreProcessor if enabled
+        if (featureFlags.isEnabled('ability_score_processor')) {
+          console.log('⚡ AbilityScoreProcessor Service Demo:');
+          
+          // Enable detailed debugging if flag is set
+          if (featureFlags.isEnabled('debug_ability_score_processor')) {
+            AbilityScoreProcessor.setDebugMode(true);
+            console.log('🔍 Debug mode enabled for ability score processing');
+          }
+          
+          // Process ability score bonuses with detailed breakdown
+          const abilityResult = this.processAbilityBonuses(characterData);
+          console.log('Processed Ability Scores:', abilityResult.totalScores);
+          
+          // Reset debug mode
+          AbilityScoreProcessor.setDebugMode(false);
+          
+          // Show bonus breakdown if any bonuses were applied
+          if (abilityResult.debugInfo.appliedBonuses.length > 0) {
+            console.log('Applied Bonuses:', abilityResult.debugInfo.appliedBonuses);
+            console.log('Final Bonus Summary:', abilityResult.debugInfo.finalBonusSummary);
+          }
+          
+          // Demonstrate legacy format compatibility
+          const legacyFormat = AbilityScoreProcessor.processLegacyFormat(characterData);
+          console.log('Legacy Format Output:', legacyFormat.slice(0, 3)); // Show first 3 abilities
+          
+          // Show individual ability score calculations
+          console.log('Individual Score Calculations:');
+          ABILITY_NAMES.forEach((ability, index) => {
+            const abilityId = index + 1;
+            const totalScore = AbilityScoreProcessor.getTotalAbilityScore(characterData, abilityId);
+            console.log(`  ${ability} (ID ${abilityId}): ${totalScore} (modifier: ${AbilityScoreUtils.calculateModifier(totalScore)})`);
+          });
+          
+          // Validate character data structure
+          const validation = AbilityScoreProcessor.validateCharacterData(characterData);
+          console.log('Character Data Validation:', {
+            isValid: validation.isValid,
+            issueCount: validation.issues.length,
+            warningCount: validation.warnings.length
+          });
+          
+          if (validation.warnings.length > 0) {
+            console.warn('Character Data Warnings:', validation.warnings);
+          }
+          if (validation.issues.length > 0) {
+            console.error('Character Data Issues:', validation.issues);
+          }
         }
         
         console.groupEnd();
@@ -477,15 +604,12 @@ export class CharacterConverterFacade {
   private generateAbilitiesXML(characterData: CharacterData): string {
     const abilities = gameConfigService.getAbilities();
     
+    // Get properly calculated ability scores (uses our corrected logic)
+    const calculatedAbilities = this.getAbilityScores(characterData);
+    
     return abilities.map((ability) => {
-      const stat = characterData.stats?.find((s: any) => s.id === ability.id);
-      const bonusStat = characterData.bonusStats?.find((b: any) => b.id === ability.id);
-      const overrideStat = characterData.overrideStats?.find((o: any) => o.id === ability.id);
-      
-      // Calculate final score
-      const baseScore = stat?.value || gameConfigService.getDefaultAbilityScore();
-      const bonusValue = bonusStat?.value || 0;
-      const finalScore = overrideStat?.value || (baseScore + bonusValue);
+      // Use our properly calculated final scores instead of raw bonusStats
+      const finalScore = calculatedAbilities[ability.name] || gameConfigService.getDefaultAbilityScore();
       const modifier = gameConfigService.calculateAbilityModifier(finalScore);
       
       return `<${ability.name}>
@@ -517,6 +641,93 @@ export class CharacterConverterFacade {
   }
 
   /**
+   * Safely access nested object properties using either new SafeAccess or legacy method
+   * Based on feature flags for gradual migration
+   * 
+   * @param obj - Object to access
+   * @param path - Dot-separated path
+   * @param defaultValue - Default value if path not found
+   * @returns Value at path or defaultValue
+   */
+  private safeAccess(obj: unknown, path: string, defaultValue: any = null): any {
+    if (featureFlags.isEnabled('safe_access_service')) {
+      return SafeAccess.get(obj, path, defaultValue);
+    } else {
+      // Legacy fallback - would call legacy safeAccess function
+      // For now, we'll use the compatibility function
+      return SafeAccess.get(obj, path, defaultValue);
+    }
+  }
+
+  /**
+   * Process ability score bonuses using either modern AbilityScoreProcessor or legacy method
+   * Based on feature flags for gradual migration
+   * 
+   * @param characterData - Character data from D&D Beyond
+   * @returns Processed ability score result with bonuses and totals
+   */
+  private processAbilityBonuses(characterData: CharacterData): any {
+    if (featureFlags.isEnabled('ability_score_processor')) {
+      return AbilityScoreProcessor.processAbilityScoreBonuses(characterData);
+    } else {
+      // Legacy fallback - would call legacy processAbilityScoreBonuses function
+      // For now, we'll use the compatibility function
+      return AbilityScoreProcessor.processAbilityScoreBonuses(characterData);
+    }
+  }
+
+  /**
+   * Get ability scores using either modern AbilityScoreProcessor or legacy method
+   * Based on feature flags for gradual migration
+   * 
+   * @param characterData - Character data from D&D Beyond
+   * @returns Object with ability names as keys and scores as values
+   */
+  private getAbilityScores(characterData: CharacterData): Record<string, number> {
+    if (featureFlags.isEnabled('ability_score_processor')) {
+      // Use the modern AbilityScoreProcessor to get properly calculated scores
+      const result = AbilityScoreProcessor.processAbilityScoreBonuses(characterData);
+      const abilities: Record<string, number> = {};
+      
+      // Extract total scores from the processed result
+      ABILITY_NAMES.forEach(abilityName => {
+        abilities[abilityName] = result.totalScores[abilityName]?.total || 10;
+      });
+      
+      return abilities;
+    } else if (featureFlags.isEnabled('ability_constants')) {
+      // Use AbilityConstants but with original bonusStats (legacy behavior)
+      return AbilityScoreUtils.convertLegacyAbilities(
+        characterData.stats || [],
+        characterData.bonusStats,
+        characterData.overrideStats
+      );
+    } else {
+      // Legacy fallback - manual processing
+      const abilities: Record<string, number> = {};
+      const abilityNames = ['strength', 'dexterity', 'constitution', 'intelligence', 'wisdom', 'charisma'];
+      
+      abilityNames.forEach((name, index) => {
+        const baseStat = characterData.stats?.[index]?.value || 10;
+        const bonus = characterData.bonusStats?.[index]?.value || 0;
+        const override = characterData.overrideStats?.[index]?.value;
+        
+        abilities[name] = override !== null && override !== undefined ? override : baseStat + bonus;
+      });
+      
+      return abilities;
+    }
+  }
+
+  /**
+   * Enable or disable ability score processor debugging
+   */
+  enableAbilityScoreDebug(enabled: boolean = true): void {
+    AbilityScoreProcessor.setDebugMode(enabled);
+    console.log(`🔍 Ability Score Processor debug mode ${enabled ? 'enabled' : 'disabled'}`);
+  }
+
+  /**
    * Get current feature flag status for debugging
    */
   getFeatureFlagStatus(): Record<string, boolean> {
@@ -526,7 +737,11 @@ export class CharacterConverterFacade {
       legacy_fallback: featureFlags.isEnabled('legacy_fallback'),
       debug_character_data: featureFlags.isEnabled('debug_character_data'),
       object_search_service: featureFlags.isEnabled('object_search_service'),
-      string_sanitizer_service: featureFlags.isEnabled('string_sanitizer_service')
+      string_sanitizer_service: featureFlags.isEnabled('string_sanitizer_service'),
+      safe_access_service: featureFlags.isEnabled('safe_access_service'),
+      ability_constants: featureFlags.isEnabled('ability_constants'),
+      ability_score_processor: featureFlags.isEnabled('ability_score_processor'),
+      debug_ability_score_processor: featureFlags.isEnabled('debug_ability_score_processor')
     };
   }
 }
