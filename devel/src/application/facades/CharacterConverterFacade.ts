@@ -15,6 +15,9 @@ import { SafeAccess } from '@/shared/utils/SafeAccess';
 import { AbilityScoreUtils, ABILITY_NAMES } from '@/domain/character/constants/AbilityConstants';
 import { AbilityScoreProcessor } from '@/domain/character/services/AbilityScoreProcessor';
 import { SpellSlotCalculator, type ClassInfo } from '@/domain/character/services/SpellSlotCalculator';
+import { InventoryProcessor, type InventoryProcessingOptions } from '@/domain/character/services/InventoryProcessor';
+import { EncumbranceCalculator, type CharacterStrength, type EncumbranceOptions } from '@/domain/character/services/EncumbranceCalculator';
+import { type InventoryItem } from '@/domain/character/models/Inventory';
 
 export interface ConversionProgress {
   step: string;
@@ -36,10 +39,14 @@ export interface ConversionResult {
 
 export class CharacterConverterFacade {
   private characterFetcher: CharacterFetcher;
+  private inventoryProcessor: InventoryProcessor;
+  private encumbranceCalculator: EncumbranceCalculator;
   public onProgress?: (step: string, percentage: number) => void;
 
   constructor() {
     this.characterFetcher = new CharacterFetcher();
+    this.inventoryProcessor = new InventoryProcessor();
+    this.encumbranceCalculator = new EncumbranceCalculator();
     this.initializeGameConfig();
   }
 
@@ -561,14 +568,7 @@ export class CharacterConverterFacade {
       </ac>
     </defenses>
     
-    <!-- Encumbrance -->
-    <encumbrance>
-      <encumbered type="number">0</encumbered>
-      <encumberedheavy type="number">0</encumberedheavy>
-      <liftpushdrag type="number">0</liftpushdrag>
-      <load type="number">0</load>
-      <max type="number">0</max>
-    </encumbrance>
+    ${this.generateEncumbranceXML(characterData)}
     
     <!-- Placeholder sections for Phase 2 -->
     <featlist>
@@ -579,9 +579,7 @@ export class CharacterConverterFacade {
       <!-- Class/Race features will be added in Phase 2 -->
     </featurelist>
     
-    <inventorylist>
-      <!-- Equipment will be added in Phase 2 -->
-    </inventorylist>
+    ${this.generateInventoryXML(characterData)}
     
     <languagelist>
       <!-- Languages will be added in Phase 2 -->
@@ -1039,6 +1037,200 @@ export class CharacterConverterFacade {
   }
 
   /**
+   * Generate encumbrance XML using modern services or legacy fallback
+   * 
+   * @param characterData - Character data from D&D Beyond
+   * @returns Encumbrance XML string for Fantasy Grounds
+   */
+  private generateEncumbranceXML(characterData: CharacterData): string {
+    try {
+      const encumbranceResult = this.calculateEncumbrance(characterData);
+      
+      if (encumbranceResult) {
+        console.log(`⚖️ Generated encumbrance XML: ${encumbranceResult.totalWeight} lbs, ${encumbranceResult.encumbranceLevel}`);
+        
+        return `<!-- Encumbrance -->
+    <encumbrance>
+      <encumbered type="number">${encumbranceResult.carryingCapacity.normal}</encumbered>
+      <encumberedheavy type="number">${encumbranceResult.carryingCapacity.normal * 2}</encumberedheavy>
+      <liftpushdrag type="number">${encumbranceResult.carryingCapacity.push}</liftpushdrag>
+      <load type="number">${Math.round(encumbranceResult.totalWeight)}</load>
+      <max type="number">${encumbranceResult.carryingCapacity.normal}</max>
+    </encumbrance>`;
+      } else {
+        console.warn('No encumbrance data calculated');
+        return `<!-- Encumbrance -->
+    <encumbrance>
+      <encumbered type="number">0</encumbered>
+      <encumberedheavy type="number">0</encumberedheavy>
+      <liftpushdrag type="number">0</liftpushdrag>
+      <load type="number">0</load>
+      <max type="number">0</max>
+    </encumbrance>`;
+      }
+    } catch (error) {
+      console.error('Failed to generate encumbrance XML:', error);
+      return `<!-- Encumbrance generation failed -->
+    <encumbrance>
+      <encumbered type="number">0</encumbered>
+      <encumberedheavy type="number">0</encumberedheavy>
+      <liftpushdrag type="number">0</liftpushdrag>
+      <load type="number">0</load>
+      <max type="number">0</max>
+    </encumbrance>`;
+    }
+  }
+
+  /**
+   * Generate inventory XML using modern services or legacy fallback
+   * 
+   * @param characterData - Character data from D&D Beyond
+   * @returns Inventory XML string for Fantasy Grounds
+   */
+  private generateInventoryXML(characterData: CharacterData): string {
+    try {
+      const inventoryResult = this.processInventory(characterData);
+      
+      if (inventoryResult.xmlResult && inventoryResult.xmlResult.xml) {
+        console.log(`📦 Generated inventory XML: ${inventoryResult.statistics.totalItems} items`);
+        return inventoryResult.xmlResult.xml;
+      } else {
+        console.warn('No inventory XML generated');
+        return '<inventorylist>\n\t\t\t<!-- No inventory items -->\n\t\t</inventorylist>';
+      }
+    } catch (error) {
+      console.error('Failed to generate inventory XML:', error);
+      return '<inventorylist>\n\t\t\t<!-- Inventory generation failed -->\n\t\t</inventorylist>';
+    }
+  }
+
+  /**
+   * Process character inventory using modern services or legacy fallback
+   * 
+   * @param characterData - Character data from D&D Beyond
+   * @returns Processed inventory result with XML and statistics
+   */
+  processInventory(characterData: CharacterData): any {
+    if (featureFlags.isEnabled('inventory_processor')) {
+      try {
+        console.log('🎒 Using modern InventoryProcessor service');
+        
+        // Convert D&D Beyond inventory format to our domain model
+        const inventory = this.convertToInventoryItems(characterData.inventory || []);
+        const characterId = characterData.id;
+        
+        const options: InventoryProcessingOptions = {
+          includeZeroQuantityItems: false,
+          respectContainerHierarchy: true,
+          generateDetailedXML: false,
+          sanitizeOutput: featureFlags.isEnabled('string_sanitizer_service'),
+          includeCostInformation: true,
+          markItemsAsIdentified: true
+        };
+        
+        return this.inventoryProcessor.processInventory(inventory, characterId, options);
+      } catch (error) {
+        console.warn('InventoryProcessor failed, falling back to legacy:', error);
+        // Fall through to legacy
+      }
+    }
+    
+    // Legacy fallback - would call legacy buildNestedInventory() function
+    console.log('📦 Using legacy inventory processing');
+    return {
+      nestedStructure: { characterId: characterData.id, rootItems: [], containers: new Map(), totalItems: 0, totalWeight: 0 },
+      xmlResult: { xml: '<!-- Legacy inventory processing not implemented -->', itemCount: 0, totalWeight: 0, containerCount: 0, debugInfo: { processedItems: 0, skippedItems: 0, containerItems: 0, magicContainers: [] } },
+      statistics: { totalItems: 0, containerCount: 0, magicContainers: 0, totalWeight: 0 }
+    };
+  }
+
+  /**
+   * Calculate character encumbrance using modern services or legacy fallback
+   * 
+   * @param characterData - Character data from D&D Beyond  
+   * @returns Encumbrance calculation with carrying capacity and penalties
+   */
+  calculateEncumbrance(characterData: CharacterData): any {
+    if (featureFlags.isEnabled('encumbrance_calculator')) {
+      try {
+        console.log('⚖️ Using modern EncumbranceCalculator service');
+        
+        // Convert character data to required format
+        const characterStrength: CharacterStrength = {
+          id: characterData.id,
+          strengthScore: this.getAbilityScore(characterData, 1), // STR = id 1
+          hasPowerfulBuild: EncumbranceCalculator.hasPowerfulBuild(characterData)
+        };
+        
+        const inventory = this.convertToInventoryItems(characterData.inventory || []);
+        
+        const options: EncumbranceOptions = {
+          includeContainerWeights: true,
+          respectMagicContainers: true,
+          applyRacialTraits: true
+        };
+        
+        return this.encumbranceCalculator.calculateEncumbrance(characterStrength, inventory, options);
+      } catch (error) {
+        console.warn('EncumbranceCalculator failed, falling back to legacy:', error);
+        // Fall through to legacy
+      }
+    }
+    
+    // Legacy fallback - would call legacy calculateEncumbrance() function
+    console.log('⚖️ Using legacy encumbrance calculation');
+    return {
+      totalWeight: 0,
+      carryingCapacity: { normal: 0, push: 0, lift: 0, powerfulBuild: false },
+      encumbranceLevel: 'unencumbered' as const,
+      speedPenalty: 0,
+      disadvantageOnChecks: false
+    };
+  }
+
+  /**
+   * Convert D&D Beyond inventory format to domain model
+   */
+  private convertToInventoryItems(ddbInventory: any[]): InventoryItem[] {
+    return ddbInventory.map(item => ({
+      id: item.id,
+      entityTypeId: item.entityTypeId,
+      definition: {
+        id: item.definition.id,
+        name: item.definition.name,
+        weight: item.definition.weight || 0,
+        bundleSize: item.definition.bundleSize || 1,
+        isContainer: item.definition.isContainer || false,
+        weightMultiplier: item.definition.weightMultiplier,
+        filterType: item.definition.filterType,
+        subType: item.definition.subType,
+        description: item.definition.description,
+        cost: item.definition.cost ? {
+          quantity: item.definition.cost.quantity,
+          unit: item.definition.cost.unit as 'cp' | 'sp' | 'ep' | 'gp' | 'pp'
+        } : undefined
+      },
+      quantity: item.quantity,
+      isAttuned: item.isAttuned || false,
+      equipped: item.equipped || false,
+      containerEntityId: item.containerEntityId,
+      charges: item.charges,
+      customName: item.customName,
+      customWeight: item.customWeight,
+      customCost: item.customCost
+    }));
+  }
+
+  /**
+   * Get ability score from character data
+   */
+  private getAbilityScore(characterData: CharacterData, abilityId: number): number {
+    const stat = characterData.stats?.find(s => s.id === abilityId);
+    const bonusStat = characterData.bonusStats?.find(s => s.id === abilityId);
+    return (stat?.value || 10) + (bonusStat?.value || 0);
+  }
+
+  /**
    * Get current feature flag status for debugging
    */
   getFeatureFlagStatus(): Record<string, boolean> {
@@ -1054,7 +1246,11 @@ export class CharacterConverterFacade {
       ability_score_processor: featureFlags.isEnabled('ability_score_processor'),
       debug_ability_score_processor: featureFlags.isEnabled('debug_ability_score_processor'),
       spell_slot_calculator: featureFlags.isEnabled('spell_slot_calculator'),
-      debug_spell_slot_calculator: featureFlags.isEnabled('debug_spell_slot_calculator')
+      debug_spell_slot_calculator: featureFlags.isEnabled('debug_spell_slot_calculator'),
+      inventory_processor: featureFlags.isEnabled('inventory_processor'),
+      encumbrance_calculator: featureFlags.isEnabled('encumbrance_calculator'),
+      inventory_processor_debug: featureFlags.isEnabled('inventory_processor_debug'),
+      encumbrance_calculator_debug: featureFlags.isEnabled('encumbrance_calculator_debug')
     };
   }
 }

@@ -257,6 +257,34 @@ export const defaultFeatureFlags: FeatureFlagConfig = {
       conditions: {
         environment: 'development'
       }
+    },
+    'inventory_processor': {
+      key: 'inventory_processor',
+      enabled: true,
+      description: 'Use new InventoryProcessor service instead of legacy inventory functions',
+      rolloutPercentage: 100
+    },
+    'encumbrance_calculator': {
+      key: 'encumbrance_calculator',
+      enabled: true,
+      description: 'Use new EncumbranceCalculator service instead of legacy calculateEncumbrance() function',
+      rolloutPercentage: 100
+    },
+    'inventory_processor_debug': {
+      key: 'inventory_processor_debug',
+      enabled: false,
+      description: 'Enable detailed debugging output for inventory processing',
+      conditions: {
+        environment: 'development'
+      }
+    },
+    'encumbrance_calculator_debug': {
+      key: 'encumbrance_calculator_debug',
+      enabled: false,
+      description: 'Enable detailed debugging output for encumbrance calculations',
+      conditions: {
+        environment: 'development'
+      }
     }
   }
 };
