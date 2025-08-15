@@ -475,7 +475,7 @@ export class CharacterConverterFacade {
 
     // For now, we'll create a simple mock XML since the legacy parser isn't available
     // This demonstrates that the data fetch is working correctly
-    const characterName = characterData.name || 'Unknown Character';
+    const characterName = this.sanitizeString(characterData.name || 'Unknown Character');
     const characterId = characterData.id || 0;
     
     // Generate Fantasy Grounds compatible XML using the proper template structure
@@ -486,35 +486,31 @@ export class CharacterConverterFacade {
 <root version="4.7" dataversion="20241002" release="8.1|CoreRPG:7">
   <character>
     <name type="string">${characterName}</name>
-    <gender type="string">${characterData.gender || ''}</gender>
-    <deity type="string">${characterData.faith || ''}</deity>
-    <age type="string">${characterData.age || ''}</age>
-    <appearance type="string">${characterData.hair ? `Hair: ${characterData.hair}, Eyes: ${characterData.eyes || ''}, Skin: ${characterData.skin || ''}` : ''}</appearance>
-    <height type="string">${characterData.height || ''}</height>
-    <weight type="string">${characterData.weight ? characterData.weight.toString() : ''}</weight>
+    <gender type="string">${this.sanitizeString(characterData.gender || '')}</gender>
+    <deity type="string">${this.sanitizeString(characterData.faith || '')}</deity>
+    <age type="string">${this.sanitizeString(characterData.age || '')}</age>
+    <appearance type="string">${this.sanitizeString(characterData.hair ? `Hair: ${characterData.hair}, Eyes: ${characterData.eyes || ''}, Skin: ${characterData.skin || ''}` : '')}</appearance>
+    <height type="string">${this.sanitizeString(characterData.height || '')}</height>
+    <weight type="string">${this.sanitizeString(characterData.weight ? characterData.weight.toString() : '')}</weight>
     <size type="string">${gameConfigService.getDefaultSize()}</size>
-    <alignment type="string">${gameConfigService.getAlignmentName(characterData.alignmentId)}</alignment>
+    <alignment type="string">${this.sanitizeString(gameConfigService.getAlignmentName(characterData.alignmentId))}</alignment>
     <bonds type="string"></bonds>
     <flaws type="string"></flaws>
     <ideals type="string"></ideals>
     <personalitytraits type="string"></personalitytraits>
-    <race type="string">${characterData.race?.fullName || 'Unknown'}</race>
+    <race type="string">${this.sanitizeString(characterData.race?.fullName || 'Unknown')}</race>
     <racelink type="windowreference">
       <class>reference_race</class>
-      <recordname>reference.race.${(characterData.race?.fullName || 'unknown').toLowerCase().replace(/\s+/g, '')}@*</recordname>
+      <recordname>reference.race.${this.sanitizeString((characterData.race?.fullName || 'unknown').toLowerCase().replace(/\s+/g, ''))}@*</recordname>
     </racelink>
-    <background type="string">${characterData.background?.definition?.name || ''}</background>
+    <background type="string">${this.sanitizeString(characterData.background?.definition?.name || '')}</background>
     <backgroundlink type="windowreference">
       <class>reference_background</class>
-      <recordname>reference.background.${(characterData.background?.definition?.name || 'unknown').toLowerCase().replace(/\s+/g, '')}@*</recordname>
+      <recordname>reference.background.${this.sanitizeString((characterData.background?.definition?.name || 'unknown').toLowerCase().replace(/\s+/g, ''))}@*</recordname>
     </backgroundlink>
     <level type="number">${totalLevel}</level>
     <profbonus type="number">${proficiencyBonus}</profbonus>
-    <notes type="formattedtext">
-      <p>Character converted from D&D Beyond (ID: ${characterId}) using Modern Converter v2.0</p>
-      <p>This demonstrates the new character fetching system with proper Fantasy Grounds template structure.</p>
-      <p>Full character parsing will be implemented in Phase 2 of the refactor.</p>
-    </notes>
+    <notes type="string">${this.sanitizeString(`Character converted from D&D Beyond (ID: ${characterId}) using Modern Converter v2.0`)}</notes>
     <perception type="number">0</perception>
     <perceptionmodifier type="number">0</perceptionmodifier>
     <exp type="number">${characterData.currentXp || 0}</exp>
@@ -533,10 +529,10 @@ export class CharacterConverterFacade {
         <hddie type="dice">${cls.definition?.hitDie ? `d${cls.definition.hitDie}` : gameConfigService.getDefaultHitDie()}</hddie>
         <hdused type="number">0</hdused>
         <level type="number">${cls.level || 1}</level>
-        <name type="string">${cls.definition?.name || 'Unknown'}</name>
+        <name type="string">${this.sanitizeString(cls.definition?.name || 'Unknown')}</name>
         <shortcut type="windowreference">
           <class>reference_class</class>
-          <recordname>reference.class.${(cls.definition?.name || 'unknown').toLowerCase()}@*</recordname>
+          <recordname>reference.class.${this.sanitizeString((cls.definition?.name || 'unknown').toLowerCase())}@*</recordname>
         </shortcut>
       </id-${String(index + 1).padStart(5, '0')}>`
       ).join('\n      ') || ''}
@@ -547,7 +543,7 @@ export class CharacterConverterFacade {
       ${gameConfigService.getCurrencies().map((currency, index) => 
         `<slot${index + 1}>
         <amount type="number">0</amount>
-        <name type="string">${currency.name}</name>
+        <name type="string">${this.sanitizeString(currency.name)}</name>
       </slot${index + 1}>`
       ).join('\n      ')}
     </coins>
@@ -712,7 +708,7 @@ export class CharacterConverterFacade {
       if (slotCount > 0) {
         xml += `      <id-${String(groupId).padStart(5, '0')}>
         <castertype type="string">memorized</castertype>
-        <name type="string">${level.name} Spells</name>
+        <name type="string">${this.sanitizeString(level.name + ' Spells')}</name>
         <stat type="string">charisma</stat>
         <powers>
           <!-- Spell slots: ${slotCount} -->
