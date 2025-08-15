@@ -28,6 +28,7 @@ export interface CharacterConverterData {
   downloadResult(): void;
   delay(ms: number): Promise<void>;
   updateFeatureFlags(): void;
+  validateWarlockPactMagic(result: any, notifications: any): void;
 }
 
 // Character converter Alpine.js component
@@ -149,6 +150,10 @@ Alpine.data('characterConverter', (): CharacterConverterData => ({
       
       const notifications = Alpine.store('notifications');
       const isDebugMode = (window as any).featureFlags?.isEnabled('debug_character_data');
+      
+      // Check if this is a warlock and validate pact magic
+      this.validateWarlockPactMagic(result, notifications);
+      
       const successMessage = isDebugMode 
         ? `Character "${characterName}" converted successfully! Check console for detailed data.`
         : `Character "${characterName}" converted successfully!`;
@@ -209,5 +214,75 @@ Alpine.data('characterConverter', (): CharacterConverterData => ({
   // Utility method for delays
   delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
+  },
+
+  // Validate warlock pact magic in converted characters
+  validateWarlockPactMagic(result: any, notifications: any) {
+    if (!result.success || !result.characterData || !result.xml) return;
+    
+    // Check if this character has warlock levels
+    const classes = result.characterData.classes || [];
+    const warlockClass = classes.find((cls: any) => 
+      cls.definition?.name?.toLowerCase() === 'warlock'
+    );
+    
+    if (!warlockClass) return; // Not a warlock, skip validation
+    
+    const warlockLevel = warlockClass.level;
+    const characterName = result.characterData.name || 'Unknown';
+    const xml = result.xml;
+    
+    // Expected pact magic slots for this warlock level
+    let expectedSlots = {};
+    if (warlockLevel >= 17) expectedSlots = { level5: 4 };
+    else if (warlockLevel >= 15) expectedSlots = { level5: 3 };
+    else if (warlockLevel >= 11) expectedSlots = { level5: 2 };
+    else if (warlockLevel >= 9) expectedSlots = { level5: 2 };
+    else if (warlockLevel >= 7) expectedSlots = { level4: 2 };
+    else if (warlockLevel >= 5) expectedSlots = { level3: 2 };
+    else if (warlockLevel >= 3) expectedSlots = { level2: 2 };
+    else if (warlockLevel >= 2) expectedSlots = { level1: 2 };
+    else if (warlockLevel >= 1) expectedSlots = { level1: 1 };
+    
+    // Look for pact magic slots in XML
+    const pactMagicRegex = /<pactmagicslots(\d+)><max type="number">(\d+)<\/max>/g;
+    const pactMatches = [...xml.matchAll(pactMagicRegex)];
+    
+    let foundSlots: string[] = [];
+    let validationPassed = false;
+    
+    if (pactMatches.length > 0) {
+      pactMatches.forEach(match => {
+        const level = match[1];
+        const slots = match[2];
+        if (slots !== '0') {
+          foundSlots.push(`L${level}: ${slots}`);
+          
+          // Check if this matches expected slots
+          const expectedKey = `level${level}`;
+          if (expectedSlots[expectedKey] && parseInt(slots) === expectedSlots[expectedKey]) {
+            validationPassed = true;
+          }
+        }
+      });
+      
+      if (validationPassed) {
+        notifications.addInfo(`🎭 Warlock validated: Level ${warlockLevel} ${characterName} correctly has pact magic slots (${foundSlots.join(', ')})`);
+      } else {
+        const expectedDesc = Object.entries(expectedSlots).map(([key, val]) => `L${key.replace('level', '')}: ${val}`).join(', ');
+        notifications.addWarning(`⚠️ Warlock issue: Level ${warlockLevel} ${characterName} has unexpected pact magic slots. Found: ${foundSlots.join(', ')}, Expected: ${expectedDesc}`);
+      }
+    } else {
+      // Check if regular spell slots were generated instead
+      const spellSlotRegex = /<spellslots(\d+)><max type="number">(\d+)<\/max>/g;
+      const spellMatches = [...xml.matchAll(spellSlotRegex)];
+      const regularSlots = spellMatches.filter(match => match[2] !== '0').map(match => `L${match[1]}: ${match[2]}`);
+      
+      if (regularSlots.length > 0) {
+        notifications.addError(`❌ Warlock error: Level ${warlockLevel} ${characterName} has regular spell slots instead of pact magic (${regularSlots.join(', ')})`);
+      } else {
+        notifications.addError(`❌ Warlock error: Level ${warlockLevel} ${characterName} has no spell slots generated`);
+      }
+    }
   }
 }));

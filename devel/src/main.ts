@@ -14,6 +14,7 @@ import { StringSanitizer } from '@/shared/utils/StringSanitizer';
 import { SafeAccess } from '@/shared/utils/SafeAccess';
 import { AbilityScoreUtils } from '@/domain/character/constants/AbilityConstants';
 import { AbilityScoreProcessor } from '@/domain/character/services/AbilityScoreProcessor';
+import { SpellSlotCalculator } from '@/domain/character/services/SpellSlotCalculator';
 
 // Initialize Alpine.js stores and components
 import './presentation/alpineStores';
@@ -35,6 +36,7 @@ if (typeof window !== 'undefined') {
   (window as any).SafeAccess = SafeAccess;
   (window as any).AbilityScoreUtils = AbilityScoreUtils;
   (window as any).AbilityScoreProcessor = AbilityScoreProcessor;
+  (window as any).SpellSlotCalculator = SpellSlotCalculator;
 }
 
 // Initialize when DOM is ready

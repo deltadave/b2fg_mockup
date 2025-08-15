@@ -243,6 +243,20 @@ export const defaultFeatureFlags: FeatureFlagConfig = {
       conditions: {
         environment: 'development'
       }
+    },
+    'spell_slot_calculator': {
+      key: 'spell_slot_calculator',
+      enabled: true,
+      description: 'Use new SpellSlotCalculator service instead of legacy getSpellSlots() function',
+      rolloutPercentage: 100
+    },
+    'debug_spell_slot_calculator': {
+      key: 'debug_spell_slot_calculator',
+      enabled: false,
+      description: 'Enable detailed debugging output for spell slot calculations',
+      conditions: {
+        environment: 'development'
+      }
     }
   }
 };

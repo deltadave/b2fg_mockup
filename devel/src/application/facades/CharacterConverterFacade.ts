@@ -14,6 +14,7 @@ import { StringSanitizer } from '@/shared/utils/StringSanitizer';
 import { SafeAccess } from '@/shared/utils/SafeAccess';
 import { AbilityScoreUtils, ABILITY_NAMES } from '@/domain/character/constants/AbilityConstants';
 import { AbilityScoreProcessor } from '@/domain/character/services/AbilityScoreProcessor';
+import { SpellSlotCalculator, type ClassInfo } from '@/domain/character/services/SpellSlotCalculator';
 
 export interface ConversionProgress {
   step: string;
@@ -283,6 +284,52 @@ export class CharacterConverterFacade {
           }
         }
         
+        // Demonstrate SpellSlotCalculator if enabled
+        if (featureFlags.isEnabled('spell_slot_calculator')) {
+          console.log('🪄 SpellSlotCalculator Service Demo:');
+          
+          // Enable detailed debugging if flag is set
+          if (featureFlags.isEnabled('debug_spell_slot_calculator')) {
+            SpellSlotCalculator.setDebugMode(true);
+            console.log('🔍 Debug mode enabled for spell slot calculation');
+          }
+          
+          // Extract class information from character data
+          const classInfo = this.extractClassInfo(characterData);
+          console.log('Extracted Classes:', classInfo);
+          
+          // Calculate spell slots
+          const spellSlotResult = this.calculateSpellSlots(classInfo);
+          console.log('Calculated Spell Slots:', spellSlotResult.spellSlots);
+          
+          // Reset debug mode
+          SpellSlotCalculator.setDebugMode(false);
+          
+          // Show detailed breakdown
+          console.log('Caster Level Breakdown:', spellSlotResult.casterBreakdown);
+          console.log('Class Contributions:', spellSlotResult.debugInfo.classContributions);
+          console.log(`Calculation Method: ${spellSlotResult.debugInfo.calculationMethod}`);
+          
+          // Demonstrate legacy format compatibility
+          const legacySpellSlots = SpellSlotCalculator.toLegacyFormat(spellSlotResult.spellSlots);
+          console.log('Legacy Format Spell Slots:', legacySpellSlots.filter(slot => slot.slots > 0));
+          
+          // Validate class information
+          const classValidation = SpellSlotCalculator.validateClassInfo(classInfo);
+          console.log('Class Data Validation:', {
+            isValid: classValidation.isValid,
+            issueCount: classValidation.issues.length,
+            warningCount: classValidation.warnings.length
+          });
+          
+          if (classValidation.warnings.length > 0) {
+            console.warn('Class Data Warnings:', classValidation.warnings);
+          }
+          if (classValidation.issues.length > 0) {
+            console.error('Class Data Issues:', classValidation.issues);
+          }
+        }
+        
         console.groupEnd();
       }
       
@@ -545,12 +592,14 @@ export class CharacterConverterFacade {
     </languagelist>
     
     <powergrouplist>
-      <!-- Spells/Powers will be added in Phase 2 -->
+      ${this.generatePowerGroupXML(characterData)}
     </powergrouplist>
     
     <skilllist>
       <!-- Skills will be added in Phase 2 -->
     </skilllist>
+    
+    ${this.generatePowerMetaXML(characterData)}
   </character>
 </root>`;
 
@@ -596,6 +645,198 @@ export class CharacterConverterFacade {
     return characterData.classes.reduce((total: number, cls: any) => {
       return total + (cls.level || 0);
     }, 0) || 1;
+  }
+
+  /**
+   * Generate powergroup XML for spell casting (goes in powergrouplist)
+   */
+  private generatePowerGroupXML(characterData: CharacterData): string {
+    if (!featureFlags.isEnabled('spell_slot_calculator')) {
+      return '<!-- Spell slots disabled by feature flag -->';
+    }
+
+    try {
+      // Extract class information and calculate spell slots
+      const classInfo = this.extractClassInfo(characterData);
+      const spellSlotResult = this.calculateSpellSlots(classInfo);
+      
+      if (!spellSlotResult || !spellSlotResult.spellSlots) {
+        return '<!-- No spell slots calculated -->';
+      }
+
+      const slots = spellSlotResult.spellSlots;
+      
+      // Check if character has warlock levels (pact magic) - check this FIRST
+      const hasWarlock = classInfo.some(c => c.name === 'warlock');
+      
+      // Check if character has any spell slots OR is a warlock (pact magic)
+      const hasAnySlots = Object.values(slots).some((count: number) => count > 0);
+      if (!hasAnySlots && !hasWarlock) {
+        return '<!-- Character has no spell slots -->';
+      }
+      
+      if (hasWarlock) {
+        // Generate pact magic powergroup for warlock
+        return this.generatePactMagicPowerGroupXML(characterData, classInfo);
+      } else {
+        // Generate regular spell powergroups
+        return this.generateRegularSpellPowerGroupXML(slots, spellSlotResult.casterBreakdown);
+      }
+    } catch (error) {
+      console.error('Error generating spell slots XML:', error);
+      return '<!-- Error generating spell slots -->';
+    }
+  }
+
+  /**
+   * Generate regular spell powergroups XML (non-warlock) - goes in powergrouplist
+   */
+  private generateRegularSpellPowerGroupXML(slots: any, casterBreakdown: any): string {
+    const spellLevels = [
+      { key: 'level1', name: '1st Level' },
+      { key: 'level2', name: '2nd Level' },
+      { key: 'level3', name: '3rd Level' },
+      { key: 'level4', name: '4th Level' },
+      { key: 'level5', name: '5th Level' },
+      { key: 'level6', name: '6th Level' },
+      { key: 'level7', name: '7th Level' },
+      { key: 'level8', name: '8th Level' },
+      { key: 'level9', name: '9th Level' }
+    ];
+
+    let xml = '';
+    let groupId = 1;
+
+    spellLevels.forEach(level => {
+      const slotCount = slots[level.key] || 0;
+      if (slotCount > 0) {
+        xml += `      <id-${String(groupId).padStart(5, '0')}>
+        <castertype type="string">memorized</castertype>
+        <name type="string">${level.name} Spells</name>
+        <stat type="string">charisma</stat>
+        <powers>
+          <!-- Spell slots: ${slotCount} -->
+        </powers>
+      </id-${String(groupId).padStart(5, '0')}>
+`;
+        groupId++;
+      }
+    });
+
+    return xml || '<!-- No spell slots available -->';
+  }
+
+  /**
+   * Generate pact magic powergroup XML for warlock - goes in powergrouplist
+   */
+  private generatePactMagicPowerGroupXML(characterData: CharacterData, classInfo: any[]): string {
+    const warlockClass = classInfo.find(c => c.name === 'warlock');
+    if (!warlockClass) {
+      return '<!-- No warlock class found -->';
+    }
+
+    // Warlock pact magic progression (different from regular spell slots)
+    const pactMagicSlots = this.getWarlockPactMagicSlots(warlockClass.level);
+    
+    let xml = `      <id-00001>
+        <castertype type="string">pact</castertype>
+        <name type="string">Pact Magic</name>
+        <stat type="string">charisma</stat>
+        <powers>
+          <!-- Warlock spells -->
+        </powers>
+      </id-00001>
+`;
+
+    return xml;
+  }
+
+  /**
+   * Get warlock pact magic slots (different progression than regular casters)
+   */
+  private getWarlockPactMagicSlots(level: number): any {
+    // Warlock pact magic progression from PHB Table 1-1
+    // Warlocks get pact magic slots, not regular spell slots
+    
+    if (level >= 17) return { level5: 4 };      // 17-20: 4 5th-level pact slots
+    if (level >= 15) return { level5: 3 };      // 15-16: 3 5th-level pact slots  
+    if (level >= 11) return { level5: 2 };      // 11-14: 2 5th-level pact slots
+    if (level >= 9) return { level5: 2 };       // 9-10: 2 5th-level pact slots
+    if (level >= 7) return { level4: 2 };       // 7-8: 2 4th-level pact slots
+    if (level >= 5) return { level3: 2 };       // 5-6: 2 3rd-level pact slots
+    if (level >= 3) return { level2: 2 };       // 3-4: 2 2nd-level pact slots
+    if (level >= 2) return { level1: 2 };       // 2: 2 1st-level pact slots
+    if (level >= 1) return { level1: 1 };       // 1: 1 1st-level pact slot
+    
+    return {};
+  }
+
+  /**
+   * Generate powermeta XML section with spell slot counts
+   */
+  private generatePowerMetaXML(characterData: CharacterData): string {
+    if (!featureFlags.isEnabled('spell_slot_calculator')) {
+      return '<!-- Spell slot meta disabled by feature flag -->';
+    }
+
+    try {
+      // Extract class information and calculate spell slots
+      const classInfo = this.extractClassInfo(characterData);
+      const spellSlotResult = this.calculateSpellSlots(classInfo);
+      
+      if (!spellSlotResult || !spellSlotResult.spellSlots) {
+        return '<!-- No spell slot meta calculated -->';
+      }
+
+      const slots = spellSlotResult.spellSlots;
+      
+      // Check if character has warlock levels (pact magic) - check this FIRST
+      const hasWarlock = classInfo.some(c => c.name === 'warlock');
+      
+      // Check if character has any spell slots OR is a warlock (pact magic)
+      const hasAnySlots = Object.values(slots).some((count: number) => count > 0);
+      if (!hasAnySlots && !hasWarlock) {
+        return '<!-- Character has no spell slot meta -->';
+      }
+      
+      if (hasWarlock) {
+        // Generate pact magic meta for warlock
+        const warlockClass = classInfo.find(c => c.name === 'warlock');
+        if (warlockClass) {
+          const pactMagicSlots = this.getWarlockPactMagicSlots(warlockClass.level);
+          return `    <powermeta>
+      <pactmagicslots1><max type="number">${pactMagicSlots.level1 || 0}</max></pactmagicslots1>
+      <pactmagicslots2><max type="number">${pactMagicSlots.level2 || 0}</max></pactmagicslots2>
+      <pactmagicslots3><max type="number">${pactMagicSlots.level3 || 0}</max></pactmagicslots3>
+      <pactmagicslots4><max type="number">${pactMagicSlots.level4 || 0}</max></pactmagicslots4>
+      <pactmagicslots5><max type="number">${pactMagicSlots.level5 || 0}</max></pactmagicslots5>
+      <pactmagicslots6><max type="number">${pactMagicSlots.level6 || 0}</max></pactmagicslots6>
+      <pactmagicslots7><max type="number">${pactMagicSlots.level7 || 0}</max></pactmagicslots7>
+      <pactmagicslots8><max type="number">${pactMagicSlots.level8 || 0}</max></pactmagicslots8>
+      <pactmagicslots9><max type="number">${pactMagicSlots.level9 || 0}</max></pactmagicslots9>
+    </powermeta>`;
+        }
+      } else {
+        // Generate regular spell slot meta
+        return `    <powermeta>
+      <spellslots1><max type="number">${slots.level1 || 0}</max></spellslots1>
+      <spellslots2><max type="number">${slots.level2 || 0}</max></spellslots2>
+      <spellslots3><max type="number">${slots.level3 || 0}</max></spellslots3>
+      <spellslots4><max type="number">${slots.level4 || 0}</max></spellslots4>
+      <spellslots5><max type="number">${slots.level5 || 0}</max></spellslots5>
+      <spellslots6><max type="number">${slots.level6 || 0}</max></spellslots6>
+      <spellslots7><max type="number">${slots.level7 || 0}</max></spellslots7>
+      <spellslots8><max type="number">${slots.level8 || 0}</max></spellslots8>
+      <spellslots9><max type="number">${slots.level9 || 0}</max></spellslots9>
+    </powermeta>`;
+      }
+      
+      return '<!-- No valid caster type found -->';
+      
+    } catch (error) {
+      console.error('Error generating powermeta XML:', error);
+      return '<!-- Error generating powermeta -->';
+    }
   }
 
   /**
@@ -728,6 +969,80 @@ export class CharacterConverterFacade {
   }
 
   /**
+   * Enable or disable spell slot calculator debugging
+   */
+  enableSpellSlotDebug(enabled: boolean = true): void {
+    SpellSlotCalculator.setDebugMode(enabled);
+    console.log(`🪄 Spell Slot Calculator debug mode ${enabled ? 'enabled' : 'disabled'}`);
+  }
+
+  /**
+   * Extract class information from D&D Beyond character data
+   * Converts D&D Beyond class structure to SpellSlotCalculator format
+   * 
+   * @param characterData - Character data from D&D Beyond
+   * @returns Array of ClassInfo objects for spell slot calculation
+   */
+  extractClassInfo(characterData: CharacterData): ClassInfo[] {
+    if (!characterData.classes || !Array.isArray(characterData.classes)) {
+      return [];
+    }
+
+    return characterData.classes.map((classData: any) => {
+      const className = (classData.definition?.name || 'unknown').toLowerCase();
+      const level = classData.level || 1;
+      const subclass = classData.subclassDefinition?.name?.toLowerCase();
+
+      // Map D&D Beyond class names to our internal format
+      let mappedClassName: any = className;
+      switch (className) {
+        case 'fighter':
+          // Check for Eldritch Knight
+          if (subclass?.includes('eldritch') || subclass?.includes('knight')) {
+            mappedClassName = 'fighter';
+          }
+          break;
+        case 'rogue':
+          // Check for Arcane Trickster
+          if (subclass?.includes('arcane') || subclass?.includes('trickster')) {
+            mappedClassName = 'rogue';
+          }
+          break;
+        default:
+          // Most classes map directly
+          break;
+      }
+
+      // Determine caster type based on class
+      const { type: casterType } = SpellSlotCalculator.getClassCasterInfo(mappedClassName, level, subclass);
+
+      return {
+        name: mappedClassName,
+        level,
+        subclass,
+        casterType
+      } as ClassInfo;
+    });
+  }
+
+  /**
+   * Calculate spell slots using either modern SpellSlotCalculator or legacy method
+   * Based on feature flags for gradual migration
+   * 
+   * @param classInfo - Array of class information
+   * @returns Spell slot calculation result
+   */
+  calculateSpellSlots(classInfo: ClassInfo[]): any {
+    if (featureFlags.isEnabled('spell_slot_calculator')) {
+      return SpellSlotCalculator.calculateSpellSlots(classInfo);
+    } else {
+      // Legacy fallback - would call legacy getSpellSlots function
+      // For now, we'll use the compatibility function
+      return SpellSlotCalculator.calculateSpellSlots(classInfo);
+    }
+  }
+
+  /**
    * Get current feature flag status for debugging
    */
   getFeatureFlagStatus(): Record<string, boolean> {
@@ -741,7 +1056,9 @@ export class CharacterConverterFacade {
       safe_access_service: featureFlags.isEnabled('safe_access_service'),
       ability_constants: featureFlags.isEnabled('ability_constants'),
       ability_score_processor: featureFlags.isEnabled('ability_score_processor'),
-      debug_ability_score_processor: featureFlags.isEnabled('debug_ability_score_processor')
+      debug_ability_score_processor: featureFlags.isEnabled('debug_ability_score_processor'),
+      spell_slot_calculator: featureFlags.isEnabled('spell_slot_calculator'),
+      debug_spell_slot_calculator: featureFlags.isEnabled('debug_spell_slot_calculator')
     };
   }
 }
