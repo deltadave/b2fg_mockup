@@ -595,6 +595,10 @@ export class CharacterConverterFacade {
       ${this.generateSkillsXML(characterData)}
     </skilllist>
     
+    <proficiencylist>
+      ${this.generateProficienciesXML(characterData)}
+    </proficiencylist>
+    
     <traitlist>
       ${this.generateTraitsXML(characterData)}
     </traitlist>
@@ -1186,6 +1190,79 @@ export class CharacterConverterFacade {
       console.log('🎭 Using legacy trait processing (placeholder)');
       return '<!-- Legacy trait processing not yet implemented -->';
     }
+  }
+
+  private generateProficienciesXML(characterData: CharacterData): string {
+    try {
+      console.log('🛠️ Generating proficiencies XML');
+      
+      const proficiencies = new Set<string>();
+      
+      // Extract proficiencies from modifiers
+      if (characterData.modifiers) {
+        Object.values(characterData.modifiers).forEach(modifierArray => {
+          if (Array.isArray(modifierArray)) {
+            modifierArray.forEach(modifier => {
+              if (modifier.type === 'proficiency' && modifier.isGranted) {
+                const profName = modifier.friendlySubtypeName || modifier.subType;
+                
+                // Filter out skills (already handled in skilllist), saving throws, and placeholder proficiencies
+                if (!this.isSkillProficiency(modifier.subType) && 
+                    !this.isSavingThrowProficiency(modifier.subType) &&
+                    !this.isPlaceholderProficiency(profName)) {
+                  proficiencies.add(profName);
+                }
+              }
+            });
+          }
+        });
+      }
+      
+      // Generate XML for proficiencies
+      let xml = '';
+      let index = 1;
+      
+      proficiencies.forEach(proficiency => {
+        const profId = String(index).padStart(5, '0');
+        xml += `      <id-${profId}>
+        <name type="string">${proficiency}</name>
+      </id-${profId}>
+`;
+        index++;
+      });
+      
+      console.log(`🛠️ Generated ${proficiencies.size} proficiencies`);
+      return xml;
+      
+    } catch (error) {
+      console.error('Error generating proficiencies XML:', error);
+      return '<!-- Error generating proficiencies -->';
+    }
+  }
+
+  private isSkillProficiency(subType: string): boolean {
+    const skillProficiencies = [
+      'acrobatics', 'animal-handling', 'arcana', 'athletics', 'deception',
+      'history', 'insight', 'intimidation', 'investigation', 'medicine',
+      'nature', 'perception', 'performance', 'persuasion', 'religion',
+      'sleight-of-hand', 'stealth', 'survival'
+    ];
+    
+    return skillProficiencies.includes(subType);
+  }
+
+  private isSavingThrowProficiency(subType: string): boolean {
+    return subType.includes('saving-throws');
+  }
+
+  private isPlaceholderProficiency(proficiencyName: string): boolean {
+    const placeholderProficiencies = [
+      'Choose a Barbarian Skill',
+      'Choose a Sorcerer Skill Proficiency',
+      'Choose a Sorcerer Skill Proficiency ' // Note the trailing space in the actual data
+    ];
+    
+    return placeholderProficiencies.includes(proficiencyName);
   }
 
   /**

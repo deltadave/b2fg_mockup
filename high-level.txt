@@ -1,0 +1,14 @@
+Beyond to Fantasy Grounds Converter (b2fg) is a web utility that converts D&D Beyond character json to Fantasy Grounds Unity (fgu) character XML
+
+Users enter a character ID for a D&DB character and if the json can be retrieved, the conversion process will take place.
+
+When the XML is complete, the user can download it for import into FGU
+
+The Use flow should be as follows.
+1. The user enters an ID number
+  the id number is validated as being appropriate (ie all numbers)
+2. json for that character is retrieved and stored
+3. character state is constructed from the json
+4. xml is constructed from character state
+5. xml character is saved to the local computer
+
