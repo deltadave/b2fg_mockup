@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Character 126060599</title>
+    <script type="module">
+        import { CharacterConverterFacade } from './src/application/facades/CharacterConverterFacade.js';
+
+        const characterId = '126060599';
+        const facade = new CharacterConverterFacade();
+
+        console.log('Testing character:', characterId);
+        
+        try {
+            const result = await facade.convertCharacter(characterId);
+            if (result.success && result.xml) {
+                console.log('=== GENERATED XML ===');
+                console.log(result.xml);
+                
+                // Check for unencoded ampersands
+                const lines = result.xml.split('\n');
+                lines.forEach((line, index) => {
+                    if (line.includes('&') && !line.includes('&amp;') && !line.includes('&lt;') && !line.includes('&gt;') && !line.includes('&quot;') && !line.includes('&#39;') && !line.includes('&#x3D;') && !line.includes('&#x2F;')) {
+                        console.error(`UNENCODED & FOUND on line ${index + 1}:`, line);
+                    }
+                });
+                
+                // Specifically check line 30
+                if (lines[29]) {
+                    console.log('Line 30:', lines[29]);
+                    if (lines[29].includes('&') && !lines[29].includes('&amp;')) {
+                        console.error('Line 30 contains unencoded &!');
+                    }
+                }
+            } else {
+                console.error('Conversion failed:', result.error);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    </script>
+</head>
+<body>
+    <h1>Debugging Character 126060599</h1>
+    <p>Check the browser console for output</p>
+</body>
+</html>

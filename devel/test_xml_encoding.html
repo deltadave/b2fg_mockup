@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>XML Entity Encoding Test</title>
+</head>
+<body>
+    <script type="module">
+        import { StringSanitizer } from './src/shared/utils/StringSanitizer.js';
+        import { CharacterConverterFacade } from './src/application/facades/CharacterConverterFacade.js';
+
+        // Test XML entity encoding
+        console.log('Testing XML entity encoding...');
+
+        // Test StringSanitizer directly
+        const testStrings = [
+            'Test & Company',
+            'Bob "The Great" Smith',
+            'Level < 5 & HP > 10',
+            "John's & Jane's Adventure",
+            'Attack = 1d8+3 / Round'
+        ];
+
+        console.log('\n=== StringSanitizer.sanitizeForXML Tests ===');
+        testStrings.forEach(str => {
+            const sanitized = StringSanitizer.sanitizeForXML(str);
+            console.log(`Input:  "${str}"`);
+            console.log(`Output: "${sanitized}"`);
+            console.log('---');
+        });
+
+        // Test with mock character data containing special characters
+        const mockCharacterData = {
+            name: 'Bob & Alice',
+            gender: 'Male & Female',
+            deity: 'God of "War" & Peace',
+            age: '25 < 30',
+            appearance: 'Tall & Strong',
+            height: '6\' 2"',
+            weight: '180 lbs & fit',
+            alignment: 'Lawful Good & Neutral'
+        };
+
+        console.log('\n=== XML Generation Test ===');
+        const facade = new CharacterConverterFacade();
+        
+        // Test the sanitization in XML generation
+        const testXML = `
+<character>
+    <name type="string">${facade.sanitizeString(mockCharacterData.name)}</name>
+    <gender type="string">${facade.sanitizeString(mockCharacterData.gender)}</gender>
+    <deity type="string">${facade.sanitizeString(mockCharacterData.deity)}</deity>
+    <age type="string">${facade.sanitizeString(mockCharacterData.age)}</age>
+    <appearance type="string">${facade.sanitizeString(mockCharacterData.appearance)}</appearance>
+    <height type="string">${facade.sanitizeString(mockCharacterData.height)}</height>
+    <weight type="string">${facade.sanitizeString(mockCharacterData.weight)}</weight>
+    <alignment type="string">${facade.sanitizeString(mockCharacterData.alignment)}</alignment>
+</character>`;
+
+        console.log('Generated XML with special characters:');
+        console.log(testXML);
+
+        // Verify ampersands are encoded
+        const hasProperEncoding = testXML.includes('&amp;') && !testXML.includes('& ');
+        console.log(`\n✓ Ampersands properly encoded: ${hasProperEncoding}`);
+        console.log(`✓ Contains &amp;: ${testXML.includes('&amp;')}`);
+        console.log(`✓ No unencoded &: ${!testXML.includes('& ')}`);
+
+    </script>
+</body>
+</html>

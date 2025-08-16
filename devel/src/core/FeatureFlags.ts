@@ -285,6 +285,20 @@ export const defaultFeatureFlags: FeatureFlagConfig = {
       conditions: {
         environment: 'development'
       }
+    },
+    'feature_processor': {
+      key: 'feature_processor',
+      enabled: true,
+      description: 'Use new FeatureProcessor service instead of legacy feature processing',
+      rolloutPercentage: 100
+    },
+    'feature_processor_debug': {
+      key: 'feature_processor_debug',
+      enabled: false,
+      description: 'Enable detailed debugging output for feature processing',
+      conditions: {
+        environment: 'development'
+      }
     }
   }
 };

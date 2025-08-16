@@ -18,6 +18,7 @@ import { SpellSlotCalculator } from '@/domain/character/services/SpellSlotCalcul
 import { type CharacterClass } from '@/domain/character/models/SpellSlots';
 import { InventoryProcessor, type InventoryProcessingOptions } from '@/domain/character/services/InventoryProcessor';
 import { EncumbranceCalculator, type CharacterStrength, type EncumbranceOptions } from '@/domain/character/services/EncumbranceCalculator';
+import { FeatureProcessor } from '@/domain/character/services/FeatureProcessor';
 import { type InventoryItem } from '@/domain/character/models/Inventory';
 
 export interface ConversionProgress {
@@ -43,6 +44,7 @@ export class CharacterConverterFacade {
   private inventoryProcessor: InventoryProcessor;
   private encumbranceCalculator: EncumbranceCalculator;
   private spellSlotCalculator: SpellSlotCalculator;
+  private featureProcessor: FeatureProcessor;
   public onProgress?: (step: string, percentage: number) => void;
 
   constructor() {
@@ -50,6 +52,7 @@ export class CharacterConverterFacade {
     this.inventoryProcessor = new InventoryProcessor();
     this.encumbranceCalculator = new EncumbranceCalculator();
     this.spellSlotCalculator = new SpellSlotCalculator();
+    this.featureProcessor = new FeatureProcessor();
     this.initializeGameConfig();
   }
 
@@ -575,7 +578,7 @@ export class CharacterConverterFacade {
     </featlist>
     
     <featurelist>
-      <!-- Class/Race features will be added in Phase 2 -->
+      ${this.generateFeaturesXML(characterData)}
     </featurelist>
     
     ${this.generateInventoryXML(characterData)}
@@ -1080,6 +1083,66 @@ export class CharacterConverterFacade {
     } catch (error) {
       console.error('Failed to generate inventory XML:', error);
       return '<inventorylist>\n\t\t\t<!-- Inventory generation failed -->\n\t\t</inventorylist>';
+    }
+  }
+
+  /**
+   * Generate Fantasy Grounds XML for character features using FeatureProcessor
+   * 
+   * @param characterData - Character data from D&D Beyond
+   * @returns Fantasy Grounds feature list XML
+   */
+  private generateFeaturesXML(characterData: CharacterData): string {
+    if (featureFlags.isEnabled('feature_processor')) {
+      try {
+        console.log('🎭 Using modern FeatureProcessor service');
+        
+        // Enable debug mode if feature flag is set
+        if (featureFlags.isEnabled('feature_processor_debug')) {
+          FeatureProcessor.setDebugMode(true);
+        }
+        
+        // Process character features
+        const processedFeatures = this.featureProcessor.processCharacterFeatures(characterData);
+        
+        // Generate XML from processed features
+        const featuresXML = this.featureProcessor.generateFeaturesXML(processedFeatures);
+        
+        // Reset debug mode
+        FeatureProcessor.setDebugMode(false);
+        
+        // Show detailed breakdown if debug is enabled
+        if (featureFlags.isEnabled('feature_processor_debug')) {
+          console.log('Feature Processing Breakdown:', processedFeatures.debugInfo.classBreakdown);
+          console.log('Racial Traits Breakdown:', processedFeatures.debugInfo.raceBreakdown);
+          console.log(`Processing Method: ${processedFeatures.debugInfo.processingMethod}`);
+          
+          // Show features grouped by source
+          console.log('Features by Class:', processedFeatures.featuresByClass);
+          console.log('Traits by Race:', processedFeatures.traitsByRace);
+          
+          // Validate feature data
+          const featureValidation = FeatureProcessor.validateCharacterData(characterData);
+          console.log('Feature Data Validation:', {
+            isValid: featureValidation.isValid,
+            errorCount: featureValidation.errors.length
+          });
+          
+          if (featureValidation.errors.length > 0) {
+            console.error('Feature Data Errors:', featureValidation.errors);
+          }
+        }
+        
+        console.log(`🎭 Generated features XML: ${processedFeatures.totalFeatures} total features`);
+        return featuresXML;
+        
+      } catch (error) {
+        console.error('Failed to generate features XML:', error);
+        return '<!-- Feature processing failed -->';
+      }
+    } else {
+      console.log('🎭 Using legacy feature processing (placeholder)');
+      return '<!-- Legacy feature processing not yet implemented -->';
     }
   }
 
