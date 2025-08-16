@@ -430,6 +430,94 @@ describe('FeatureProcessor', () => {
     });
   });
 
+  describe('Feature Exclusion', () => {
+    it('should skip excluded features like Proficiencies, Ability Score Increase, Core Sorcerer Traits, and Metamagic Options', () => {
+      const mockCharacterData = {
+        classes: [{
+          id: 1,
+          level: 4,
+          definition: {
+            id: 1,
+            name: 'Fighter',
+            classFeatures: [
+              {
+                id: 1,
+                name: 'Fighting Style',
+                description: 'Choose a fighting style.',
+                requiredLevel: 1
+              },
+              {
+                id: 2,
+                name: 'Proficiencies',
+                description: 'You gain proficiency with armor and weapons.',
+                requiredLevel: 1
+              },
+              {
+                id: 3,
+                name: 'Ability Score Increase',
+                description: 'Increase your ability scores.',
+                requiredLevel: 4
+              },
+              {
+                id: 4,
+                name: 'Extra Attack',
+                description: 'You can attack twice.',
+                requiredLevel: 5
+              },
+              {
+                id: 5,
+                name: 'Core Sorcerer Traits',
+                description: 'Core traits for sorcerer class.',
+                requiredLevel: 1
+              },
+              {
+                id: 6,
+                name: 'Metamagic Options',
+                description: 'Choose metamagic options.',
+                requiredLevel: 3
+              }
+            ]
+          }
+        }],
+        race: {
+          id: 1,
+          fullName: 'Human',
+          racialTraits: [
+            {
+              id: 5,
+              definition: {
+                id: 5,
+                name: 'Extra Language',
+                description: 'You can speak an additional language.'
+              }
+            },
+            {
+              id: 6,
+              definition: {
+                id: 6,
+                name: 'Skill Proficiencies',
+                description: 'You gain proficiency in skills.'
+              }
+            }
+          ]
+        }
+      };
+
+      const result = processor.processCharacterFeatures(mockCharacterData);
+      
+      // Should only have Fighting Style (excluded: Proficiencies, Ability Score Increase, Core Sorcerer Traits, Metamagic Options)
+      expect(result.classFeatures).toHaveLength(1);
+      expect(result.classFeatures[0].name).toBe('Fighting Style');
+      
+      // Should only have Extra Language (not Skill Proficiencies)
+      expect(result.racialTraits).toHaveLength(1);
+      expect(result.racialTraits[0].name).toBe('Extra Language');
+      
+      // Total should be 2 (1 class feature + 1 racial trait)
+      expect(result.totalFeatures).toBe(2);
+    });
+  });
+
   describe('Debug Mode', () => {
     it('should enable and disable debug mode', () => {
       expect(() => FeatureProcessor.setDebugMode(true)).not.toThrow();

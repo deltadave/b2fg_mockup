@@ -363,6 +363,14 @@ export class FeatureProcessor {
         continue;
       }
       
+      // Skip explicitly excluded features
+      if (this.shouldSkipFeature(featureInfo.name)) {
+        if (FeatureProcessor.debugEnabled) {
+          console.log(`🚫 Skipping excluded feature: ${featureInfo.name}`);
+        }
+        continue;
+      }
+
       // Skip features above character level if filtering is enabled
       if (options.filterByLevel && featureInfo.requiredLevel > classLevel) {
         continue;
@@ -444,6 +452,14 @@ export class FeatureProcessor {
       if (seenTraits && seenTraits.has(traitKey)) {
         if (FeatureProcessor.debugEnabled) {
           console.log(`🔄 Skipping duplicate trait: ${traitInfo.definition.name} (${traitKey})`);
+        }
+        continue;
+      }
+
+      // Skip explicitly excluded traits
+      if (this.shouldSkipTrait(traitInfo.definition.name)) {
+        if (FeatureProcessor.debugEnabled) {
+          console.log(`🚫 Skipping excluded trait: ${traitInfo.definition.name}`);
         }
         continue;
       }
@@ -728,6 +744,48 @@ export class FeatureProcessor {
       groupBySource: true,
       sanitizeText: true
     };
+  }
+
+  /**
+   * Check if a feature should be skipped based on exclusion rules
+   */
+  private shouldSkipFeature(featureName: string): boolean {
+    if (!featureName || typeof featureName !== 'string') {
+      return false;
+    }
+
+    const excludedFeatures = [
+      'Proficiencies',
+      'Ability Score Increase',
+      'Core Sorcerer Traits',
+      'Metamagic Options'
+    ];
+
+    const featureNameLower = featureName.toLowerCase();
+    return excludedFeatures.some(excluded => 
+      featureNameLower.includes(excluded.toLowerCase())
+    );
+  }
+
+  /**
+   * Check if a racial trait should be skipped based on exclusion rules
+   */
+  private shouldSkipTrait(traitName: string): boolean {
+    if (!traitName || typeof traitName !== 'string') {
+      return false;
+    }
+
+    const excludedTraits = [
+      'Proficiencies',
+      'Ability Score Increase',
+      'Core Sorcerer Traits',
+      'Metamagic Options'
+    ];
+
+    const traitNameLower = traitName.toLowerCase();
+    return excludedTraits.some(excluded => 
+      traitNameLower.includes(excluded.toLowerCase())
+    );
   }
 
   /**
