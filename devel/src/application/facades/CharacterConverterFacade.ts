@@ -584,7 +584,7 @@ export class CharacterConverterFacade {
     ${this.generateInventoryXML(characterData)}
     
     <languagelist>
-      <!-- Languages will be added in Phase 2 -->
+      ${this.generateLanguagesXML(characterData)}
     </languagelist>
     
     <powergrouplist>
@@ -592,7 +592,7 @@ export class CharacterConverterFacade {
     </powergrouplist>
     
     <skilllist>
-      <!-- Skills will be added in Phase 2 -->
+      ${this.generateSkillsXML(characterData)}
     </skilllist>
     
     ${this.generatePowerMetaXML(characterData)}
@@ -1270,6 +1270,135 @@ export class CharacterConverterFacade {
     const stat = characterData.stats?.find(s => s.id === abilityId);
     const bonusStat = characterData.bonusStats?.find(s => s.id === abilityId);
     return (stat?.value || 10) + (bonusStat?.value || 0);
+  }
+
+  /**
+   * Generate Fantasy Grounds XML for character skills
+   * 
+   * Based on D&D 5e standard skills with proficiency detection
+   */
+  private generateSkillsXML(characterData: CharacterData): string {
+    // D&D 5e standard skills (from legacy gameConstants.js)
+    const skills = [
+      "acrobatics", "animal_handling", "arcana", "athletics", "deception",
+      "history", "insight", "intimidation", "investigation", "medicine", 
+      "nature", "perception", "performance", "persuasion", "religion", 
+      "sleight_of_hand", "stealth", "survival"
+    ];
+
+    // Corresponding ability scores for each skill
+    const skillsRef = [
+      "dexterity", "wisdom", "intelligence", "strength", "charisma",
+      "intelligence", "wisdom", "charisma", "intelligence", "wisdom",
+      "intelligence", "wisdom", "charisma", "charisma", "intelligence",
+      "dexterity", "dexterity", "wisdom"
+    ];
+
+    let xml = '';
+    
+    skills.forEach((skill, index) => {
+      const skillId = String(index + 1).padStart(5, '0');
+      let skillName = skill;
+      
+      // Format special skill names
+      if (skill.match(/^sleight/)) {
+        skillName = 'Sleight of Hand';
+      } else if (skill.includes('animal')) {
+        skillName = 'Animal Handling';
+      } else {
+        skillName = skill.split('_').map(word => 
+          word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ');
+      }
+
+      // Determine proficiency level
+      let profValue = 0;
+      
+      // Check for proficiency
+      const proficiencies = ObjectSearch.find(characterData, 'type', 'proficiency');
+      if (proficiencies && proficiencies.length > 0) {
+        const hasProf = proficiencies.some((prof: any) => {
+          const skillKey = prof.subType?.replace(/-/g, '_');
+          return skillKey === skill;
+        });
+        if (hasProf) profValue = 1;
+      }
+      
+      // Check for expertise (overrides proficiency)
+      const expertise = ObjectSearch.find(characterData, 'type', 'expertise');
+      if (expertise && expertise.length > 0) {
+        const hasExpertise = expertise.some((exp: any) => {
+          const skillKey = exp.subType?.replace(/-/g, '_');
+          return skillKey === skill;
+        });
+        if (hasExpertise) profValue = 2;
+      }
+      
+      // Check for half proficiency (Jack of All Trades, etc.)
+      const halfProf = ObjectSearch.find(characterData, 'type', 'half-proficiency');
+      if (halfProf && halfProf.length > 0 && profValue === 0) {
+        const hasHalfProf = halfProf.some((half: any) => {
+          const skillKey = half.subType?.replace(/-/g, '_');
+          return skillKey === skill;
+        });
+        if (hasHalfProf) profValue = 3;
+      }
+
+      xml += `      <id-${skillId}>\n`;
+      xml += `        <misc type="number">0</misc>\n`;
+      xml += `        <name type="string">${skillName}</name>\n`;
+      xml += `        <stat type="string">${skillsRef[index]}</stat>\n`;
+      xml += `        <prof type="number">${profValue}</prof>\n`;
+      xml += `      </id-${skillId}>\n`;
+    });
+
+    return xml;
+  }
+
+  /**
+   * Generate Fantasy Grounds XML for character languages
+   * 
+   * Extracts languages from character modifiers and racial traits
+   */
+  private generateLanguagesXML(characterData: CharacterData): string {
+    let xml = '';
+    const languages = new Set<string>(); // Use Set to avoid duplicates
+    
+    // Extract languages from modifiers
+    const languageModifiers = ObjectSearch.find(characterData, 'type', 'language');
+    if (languageModifiers && languageModifiers.length > 0) {
+      languageModifiers.forEach((langMod: any) => {
+        const languageName = langMod.friendlySubtypeName || langMod.subType || 'Unknown Language';
+        languages.add(languageName);
+      });
+    }
+    
+    // Extract languages from racial traits
+    if (characterData.race?.racialTraits) {
+      characterData.race.racialTraits.forEach((trait: any) => {
+        if (trait.definition?.name?.toLowerCase().includes('language')) {
+          // Try to extract language name from description
+          const desc = trait.definition.description || '';
+          const commonLanguages = ['Common', 'Elvish', 'Dwarvish', 'Halfling', 'Orcish', 'Gnomish', 'Giant', 'Draconic'];
+          commonLanguages.forEach(lang => {
+            if (desc.includes(lang)) {
+              languages.add(lang);
+            }
+          });
+        }
+      });
+    }
+
+    // Convert Set to sorted array and generate XML
+    const sortedLanguages = Array.from(languages).sort();
+    sortedLanguages.forEach((language, index) => {
+      const langId = String(index + 1).padStart(5, '0');
+      xml += `      <id-${langId}>\n`;
+      xml += `        <name type="string">${this.sanitizeString(language)}</name>\n`;
+      xml += `      </id-${langId}>\n`;
+    });
+
+    return xml;
   }
 
   /**
