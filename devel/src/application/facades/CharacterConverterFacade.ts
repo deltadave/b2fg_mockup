@@ -549,12 +549,7 @@ export class CharacterConverterFacade {
     
     <!-- Currency -->
     <coins>
-      ${gameConfigService.getCurrencies().map((currency, index) => 
-        `<slot${index + 1}>
-        <amount type="number">0</amount>
-        <name type="string">${this.sanitizeString(currency.name)}</name>
-      </slot${index + 1}>`
-      ).join('\n      ')}
+      ${this.generateCoinsXML(characterData)}
     </coins>
     
     <!-- Defenses -->
@@ -1360,6 +1355,55 @@ export class CharacterConverterFacade {
     } catch (error) {
       console.error('Failed to generate feats XML:', error);
       return '<!-- Feat processing failed -->';
+    }
+  }
+
+  /**
+   * Generate coins XML from character currency data
+   */
+  private generateCoinsXML(characterData: CharacterData): string {
+    try {
+      console.log('💰 Generating coins XML');
+      
+      // Extract currency data from character
+      const currencies = characterData.currencies || {};
+      
+      if (Object.keys(currencies).length === 0) {
+        console.log('💰 No currency data found in character');
+        // Return default structure with zeros
+      }
+
+      // D&D 5e standard currencies in order: PP, GP, EP, SP, CP
+      const currencyOrder = [
+        { key: 'pp', name: 'PP', amount: currencies.pp || 0 },
+        { key: 'gp', name: 'GP', amount: currencies.gp || 0 },
+        { key: 'ep', name: 'EP', amount: currencies.ep || 0 },
+        { key: 'sp', name: 'SP', amount: currencies.sp || 0 },
+        { key: 'cp', name: 'CP', amount: currencies.cp || 0 }
+      ];
+
+      let xml = '';
+      currencyOrder.forEach((currency, index) => {
+        const slotNumber = index + 1;
+        xml += `      <slot${slotNumber}>
+        <amount type="number">${currency.amount}</amount>
+        <name type="string">${currency.name}</name>
+      </slot${slotNumber}>
+`;
+      });
+
+      // Add empty slot6 (like legacy code)
+      xml += `      <slot6>
+        <amount type="number">0</amount>
+      </slot6>
+`;
+
+      console.log(`💰 Generated coins XML:`, currencyOrder.map(c => `${c.name}: ${c.amount}`).join(', '));
+      return xml;
+      
+    } catch (error) {
+      console.error('Failed to generate coins XML:', error);
+      return '<!-- Coin processing failed -->';
     }
   }
 
