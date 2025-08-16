@@ -29,56 +29,8 @@ export interface FeatureProcessingOptions {
   maxLevel: number;
 }
 
-export interface CharacterData {
-  classes: Array<{
-    id: number;
-    level: number;
-    definition: {
-      id: number;
-      name: string;
-      classFeatures?: Array<{
-        id: number;
-        name: string;
-        description: string;
-        requiredLevel: number;
-      }>;
-    };
-    subclassDefinition?: {
-      id: number;
-      name: string;
-      classFeatures?: Array<{
-        id: number;
-        name: string;
-        description: string;
-        requiredLevel: number;
-      }>;
-    };
-  }>;
-  race: {
-    id: number;
-    fullName: string;
-    racialTraits?: Array<{
-      id: number;
-      definition: {
-        id: number;
-        name: string;
-        description: string;
-      };
-    }>;
-    subraceDefinition?: {
-      id: number;
-      name: string;
-      racialTraits?: Array<{
-        id: number;
-        definition: {
-          id: number;
-          name: string;
-          description: string;
-        };
-      }>;
-    };
-  };
-}
+// Import the actual CharacterData interface from CharacterFetcher
+import type { CharacterData } from '@/domain/character/services/CharacterFetcher';
 
 export class FeatureProcessor {
   private static debugEnabled: boolean = false;
@@ -267,15 +219,72 @@ export class FeatureProcessor {
     const seenTraits = new Set<string>(); // Track processed traits to avoid duplicates
 
     if (!characterData.race) {
+      if (FeatureProcessor.debugEnabled) {
+        console.log('No race data found in character');
+      }
       return traits;
     }
 
-    const raceName = characterData.race.fullName || 'Unknown Race';
+    const raceName = characterData.race.fullName || characterData.race.baseName || 'Unknown Race';
 
-    // Process base race traits
-    if (characterData.race.racialTraits) {
+    if (FeatureProcessor.debugEnabled) {
+      console.log(`🔍 Processing racial traits for: ${raceName}`);
+      console.log('🔍 Full race data structure:', JSON.stringify(characterData.race, null, 2));
+      
+      // Check all possible locations for racial traits
+      console.log('🔍 Checking race.racialTraits:', !!characterData.race.racialTraits);
+      console.log('🔍 Checking race.traits:', !!characterData.race.traits);
+      console.log('🔍 Checking race.features:', !!characterData.race.features);
+      console.log('🔍 Checking race.raceTraits:', !!characterData.race.raceTraits);
+      console.log('🔍 Checking race.definition:', !!characterData.race.definition);
+      
+      if (characterData.race.definition) {
+        console.log('🔍 Checking race.definition.racialTraits:', !!characterData.race.definition.racialTraits);
+        console.log('🔍 Checking race.definition.traits:', !!characterData.race.definition.traits);
+      }
+      
+      // Log all top-level properties of race object
+      console.log('🔍 Race object keys:', Object.keys(characterData.race));
+    }
+
+    // Try multiple possible locations for racial traits
+    let racialTraitsArray: any[] | null = null;
+    let source = '';
+
+    // Check race.racialTraits
+    if (characterData.race.racialTraits && Array.isArray(characterData.race.racialTraits)) {
+      racialTraitsArray = characterData.race.racialTraits;
+      source = 'race.racialTraits';
+    }
+    // Check race.traits
+    else if (characterData.race.traits && Array.isArray(characterData.race.traits)) {
+      racialTraitsArray = characterData.race.traits;
+      source = 'race.traits';
+    }
+    // Check race.features
+    else if (characterData.race.features && Array.isArray(characterData.race.features)) {
+      racialTraitsArray = characterData.race.features;
+      source = 'race.features';
+    }
+    // Check race.definition.racialTraits
+    else if (characterData.race.definition?.racialTraits && Array.isArray(characterData.race.definition.racialTraits)) {
+      racialTraitsArray = characterData.race.definition.racialTraits;
+      source = 'race.definition.racialTraits';
+    }
+    // Check race.definition.traits
+    else if (characterData.race.definition?.traits && Array.isArray(characterData.race.definition.traits)) {
+      racialTraitsArray = characterData.race.definition.traits;
+      source = 'race.definition.traits';
+    }
+
+    if (racialTraitsArray && racialTraitsArray.length > 0) {
+      if (FeatureProcessor.debugEnabled) {
+        console.log(`🎯 Found ${racialTraitsArray.length} racial traits in ${source}`);
+        console.log('🎯 Sample trait structure:', JSON.stringify(racialTraitsArray[0], null, 2));
+      }
+      
       const raceTraits = this.extractRacialTraits(
-        characterData.race.racialTraits,
+        racialTraitsArray,
         raceName,
         'race',
         options,
@@ -283,11 +292,19 @@ export class FeatureProcessor {
         seenTraits
       );
       traits.push(...raceTraits);
+    } else {
+      if (FeatureProcessor.debugEnabled) {
+        console.log('❌ No racial traits array found in any expected location');
+      }
     }
 
     // Process subrace traits
-    if (characterData.race.subraceDefinition?.racialTraits) {
+    if (characterData.race.subraceDefinition?.racialTraits && Array.isArray(characterData.race.subraceDefinition.racialTraits)) {
       const subraceName = characterData.race.subraceDefinition.name;
+      if (FeatureProcessor.debugEnabled) {
+        console.log(`Found ${characterData.race.subraceDefinition.racialTraits.length} subrace traits for: ${subraceName}`);
+      }
+      
       const subraceTraits = this.extractRacialTraits(
         characterData.race.subraceDefinition.racialTraits,
         raceName,
@@ -297,6 +314,13 @@ export class FeatureProcessor {
         seenTraits
       );
       traits.push(...subraceTraits);
+    }
+
+    if (FeatureProcessor.debugEnabled) {
+      console.log(`🏁 Final trait count: ${traits.length}`);
+      if (traits.length > 0) {
+        console.log('🏁 Extracted traits:', traits.map(t => t.name));
+      }
     }
 
     return traits;
@@ -419,14 +443,7 @@ export class FeatureProcessor {
    * Extract racial traits from trait array
    */
   private extractRacialTraits(
-    traitData: Array<{
-      id: number;
-      definition: {
-        id: number;
-        name: string;
-        description: string;
-      };
-    }>,
+    traitData: any[],
     raceName: string,
     source: 'race' | 'subrace',
     options: FeatureProcessingOptions,
@@ -436,12 +453,39 @@ export class FeatureProcessor {
     const traits: RacialTrait[] = [];
 
     for (const traitInfo of traitData) {
-      // Create a simple unique key for this trait - use ID as primary deduplication method
-      const traitKey = `id:${traitInfo.id}`;
+      if (FeatureProcessor.debugEnabled) {
+        console.log(`🔍 Raw trait data:`, JSON.stringify(traitInfo, null, 2));
+      }
+
+      // Handle different trait data structures
+      let id: number;
+      let name: string;
+      let description: string;
+
+      // Try different possible structures
+      if (traitInfo.definition) {
+        // Standard structure: {id: number, definition: {id, name, description}}
+        id = traitInfo.id;
+        name = traitInfo.definition.name;
+        description = traitInfo.definition.description;
+      } else if (traitInfo.name) {
+        // Direct structure: {id, name, description}
+        id = traitInfo.id || 0;
+        name = traitInfo.name;
+        description = traitInfo.description || '';
+      } else {
+        if (FeatureProcessor.debugEnabled) {
+          console.log(`🚫 Skipping trait with unrecognized structure:`, traitInfo);
+        }
+        continue;
+      }
+
+      // Create a unique key for this trait
+      const traitKey = id ? `id:${id}` : `name:${name}`;
       
       if (FeatureProcessor.debugEnabled) {
-        console.log(`🔍 Processing trait: ${traitInfo.definition.name}`, {
-          id: traitInfo.id,
+        console.log(`🔍 Processing trait: ${name}`, {
+          id,
           key: traitKey,
           raceName,
           source,
@@ -449,18 +493,18 @@ export class FeatureProcessor {
         });
       }
       
-      // Skip if we've already processed this trait by ID
+      // Skip if we've already processed this trait
       if (seenTraits && seenTraits.has(traitKey)) {
         if (FeatureProcessor.debugEnabled) {
-          console.log(`🔄 Skipping duplicate trait: ${traitInfo.definition.name} (${traitKey})`);
+          console.log(`🔄 Skipping duplicate trait: ${name} (${traitKey})`);
         }
         continue;
       }
 
       // Skip explicitly excluded traits
-      if (this.shouldSkipTrait(traitInfo.definition.name)) {
+      if (this.shouldSkipTrait(name)) {
         if (FeatureProcessor.debugEnabled) {
-          console.log(`🚫 Skipping excluded trait: ${traitInfo.definition.name}`);
+          console.log(`🚫 Skipping excluded trait: ${name}`);
         }
         continue;
       }
@@ -470,13 +514,13 @@ export class FeatureProcessor {
         seenTraits.add(traitKey);
       }
 
-      const traitType = this.determineTraitType(traitInfo.definition.name, raceName);
-      const mechanics = this.extractTraitMechanics(traitInfo.definition.name, traitInfo.definition.description);
+      const traitType = this.determineTraitType(name, raceName);
+      const mechanics = this.extractTraitMechanics(name, description);
 
       const trait: RacialTrait = {
-        id: traitInfo.id,
-        name: traitInfo.definition.name,
-        description: options.includeDescriptions ? traitInfo.definition.description : '',
+        id: id,
+        name: name,
+        description: options.includeDescriptions ? description : '',
         raceName: raceName,
         suraceName: subraceName,
         source: source,
@@ -488,6 +532,9 @@ export class FeatureProcessor {
       const validation = FeatureValidator.validateRacialTrait(trait);
       if (validation.isValid) {
         traits.push(trait);
+        if (FeatureProcessor.debugEnabled) {
+          console.log(`✅ Added trait: ${name}`);
+        }
       } else {
         console.warn(`Invalid racial trait: ${trait.name}`, validation.errors);
       }
@@ -779,6 +826,10 @@ export class FeatureProcessor {
     const excludedTraits = [
       'Proficiencies',
       'Ability Score Increase',
+      'Languages', // Handled in languagelist section
+      'Age',       // Basic character info, not needed as trait
+      'Size',      // Basic character info, not needed as trait  
+      'Speed',     // Basic character info, not needed as trait
       'Core Sorcerer Traits',
       'Metamagic Options'
     ];

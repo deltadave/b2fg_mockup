@@ -294,7 +294,7 @@ export const defaultFeatureFlags: FeatureFlagConfig = {
     },
     'feature_processor_debug': {
       key: 'feature_processor_debug',
-      enabled: false,
+      enabled: true,
       description: 'Enable detailed debugging output for feature processing',
       conditions: {
         environment: 'development'

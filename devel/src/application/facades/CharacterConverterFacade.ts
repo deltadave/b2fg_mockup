@@ -574,7 +574,7 @@ export class CharacterConverterFacade {
     
     <!-- Placeholder sections for Phase 2 -->
     <featlist>
-      <!-- Feats will be added in Phase 2 -->
+      ${this.generateFeatsXML(characterData)}
     </featlist>
     
     <featurelist>
@@ -602,6 +602,10 @@ export class CharacterConverterFacade {
     <traitlist>
       ${this.generateTraitsXML(characterData)}
     </traitlist>
+    
+    <weaponlist>
+      ${this.generateWeaponsXML(characterData)}
+    </weaponlist>
     
     ${this.generatePowerMetaXML(characterData)}
   </character>
@@ -1192,6 +1196,173 @@ export class CharacterConverterFacade {
     }
   }
 
+  /**
+   * Generate weaponlist XML from character inventory data
+   */
+  private generateWeaponsXML(characterData: CharacterData): string {
+    try {
+      console.log('⚔️ Generating weapons XML');
+      
+      if (!featureFlags.isEnabled('inventory_processor')) {
+        console.log('⚔️ Inventory processor disabled by feature flag');
+        return '<!-- Inventory processor disabled -->';
+      }
+
+      // Process inventory to get weapons
+      const inventoryResult = this.inventoryProcessor.processInventory(
+        characterData.inventory || [],
+        {
+          includeZeroQuantityItems: false,
+          respectContainerHierarchy: true,
+          generateDetailedXML: true,
+          sanitizeOutput: true,
+          includeCostInformation: false,
+          markItemsAsIdentified: true
+        }
+      );
+
+      const weapons: Array<{
+        id: number;
+        name: string;
+        properties: string;
+        attackBonus: number;
+        attackStat: string;
+        damage: {
+          dice: string;
+          bonus: number;
+          type: string;
+        };
+        weaponType: number; // 0: Melee, 1: Ranged, 2: Thrown
+        maxAmmo?: number;
+        shortcut: string;
+      }> = [];
+
+      // Extract weapon items from inventory
+      let weaponIndex = 0;
+      for (const item of inventoryResult.nestedStructure.items) {
+        if (this.isWeapon(item)) {
+          const weaponData = this.extractWeaponData(item, weaponIndex);
+          if (weaponData) {
+            weapons.push(weaponData);
+            weaponIndex++;
+            
+            // Handle thrown weapons - they appear twice (melee and ranged)
+            if (this.isThrown(item)) {
+              const thrownData = this.extractThrownWeaponData(item, weaponIndex);
+              if (thrownData) {
+                weapons.push(thrownData);
+                weaponIndex++;
+              }
+            }
+          }
+        }
+      }
+
+      // Add monk unarmed strike if character is a monk
+      const isMonk = this.isCharacterMonk(characterData);
+      if (isMonk) {
+        weapons.push(this.getMonkUnarmedStrike(weaponIndex));
+      }
+
+      // Generate XML
+      let xml = '';
+      weapons.forEach((weapon, index) => {
+        const weaponId = String(index + 1).padStart(5, '0');
+        xml += `      <id-${weaponId}>
+        <attackbonus type="number">${weapon.attackBonus}</attackbonus>
+        <attackstat type="string">${weapon.attackStat}</attackstat>
+        <carried type="number">1</carried>
+        <damagelist>
+          <id-00001>
+            <bonus type="number">${weapon.damage.bonus}</bonus>
+            <dice type="dice">${weapon.damage.dice}</dice>
+            <stat type="string">${weapon.attackStat}</stat>
+            <type type="string">${weapon.damage.type}</type>
+          </id-00001>
+        </damagelist>
+        <handling type="number">0</handling>
+        <isidentified type="number">1</isidentified>
+        <name type="string">${this.sanitizeString(weapon.name)}</name>
+        <properties type="string">${this.sanitizeString(weapon.properties)}</properties>
+        <shortcut type="windowreference">
+          <class>item</class>
+          <recordname>${weapon.shortcut}</recordname>
+        </shortcut>
+        <type type="number">${weapon.weaponType}</type>`;
+        
+        if (weapon.maxAmmo !== undefined) {
+          xml += `
+        <maxammo type="number">${weapon.maxAmmo}</maxammo>`;
+        }
+        
+        xml += `
+      </id-${weaponId}>
+`;
+      });
+
+      console.log(`⚔️ Generated weapons XML: ${weapons.length} weapons`);
+      return xml;
+      
+    } catch (error) {
+      console.error('Failed to generate weapons XML:', error);
+      return '<!-- Weapon processing failed -->';
+    }
+  }
+
+  /**
+   * Generate featlist XML from character feat data
+   */
+  private generateFeatsXML(characterData: CharacterData): string {
+    try {
+      console.log('📜 Generating feats XML');
+      
+      const feats = characterData.feats || [];
+      if (!Array.isArray(feats)) {
+        console.log('📜 No feats array found in character data');
+        return '<!-- No feats data found -->';
+      }
+
+      if (feats.length === 0) {
+        console.log('📜 Character has no feats');
+        return '<!-- Character has no feats -->';
+      }
+
+      let xml = '';
+      feats.forEach((feat, index) => {
+        const featId = String(index + 1).padStart(5, '0');
+        const featName = feat.definition?.name || feat.name || 'Unknown Feat';
+        const featDescription = feat.definition?.description || feat.description || '';
+        
+        xml += `      <id-${featId}>
+        <locked type="number">1</locked>
+        <name type="string">${this.sanitizeString(featName)}</name>
+        <text type="formattedtext">
+          <p>${this.sanitizeString(featDescription)}</p>
+        </text>
+      </id-${featId}>
+`;
+        
+        // Check for special feats that affect character stats (like legacy code)
+        if (featName === "Medium Armor Master") {
+          console.log('📜 Found Medium Armor Master feat');
+        } else if (featName === "Alert") {
+          console.log('📜 Found Alert feat');
+        } else if (featName === "Mobile") {
+          console.log('📜 Found Mobile feat');
+        } else if (featName === "Observant") {
+          console.log('📜 Found Observant feat');
+        }
+      });
+
+      console.log(`📜 Generated feats XML: ${feats.length} feats`);
+      return xml;
+      
+    } catch (error) {
+      console.error('Failed to generate feats XML:', error);
+      return '<!-- Feat processing failed -->';
+    }
+  }
+
   private generateProficienciesXML(characterData: CharacterData): string {
     try {
       console.log('🛠️ Generating proficiencies XML');
@@ -1541,6 +1712,119 @@ export class CharacterConverterFacade {
       encumbrance_calculator: featureFlags.isEnabled('encumbrance_calculator'),
       inventory_processor_debug: featureFlags.isEnabled('inventory_processor_debug'),
       encumbrance_calculator_debug: featureFlags.isEnabled('encumbrance_calculator_debug')
+    };
+  }
+
+  /**
+   * Check if an inventory item is a weapon
+   */
+  private isWeapon(item: InventoryItem): boolean {
+    return !!(item.definition.weaponBehaviors && item.definition.weaponBehaviors.length > 0);
+  }
+
+  /**
+   * Check if a weapon has the "thrown" property
+   */
+  private isThrown(item: InventoryItem): boolean {
+    const properties = item.definition.weaponBehaviors?.[0]?.properties || [];
+    return properties.some(prop => prop.toLowerCase().includes('thrown'));
+  }
+
+  /**
+   * Extract weapon data from inventory item
+   */
+  private extractWeaponData(item: InventoryItem, index: number): any {
+    const behavior = item.definition.weaponBehaviors?.[0];
+    if (!behavior) return null;
+
+    const properties = behavior.properties || [];
+    const isRanged = properties.some(prop => prop.toLowerCase().includes('range'));
+    const isThrown = properties.some(prop => prop.toLowerCase().includes('thrown'));
+
+    // Calculate attack bonus and stat (simplified calculation)
+    const attackStat = this.getWeaponAttackStat(item, isRanged);
+    const attackBonus = 0; // Would need proficiency bonus + ability modifier calculation
+
+    // Extract damage information (simplified)
+    const damage = {
+      dice: '1d6', // Default, would need to extract from item data
+      bonus: 0,
+      type: 'slashing' // Default, would need to extract from item data
+    };
+
+    // Determine weapon type
+    let weaponType = 0; // Melee
+    if (isThrown) {
+      weaponType = 2; // Thrown
+    } else if (isRanged) {
+      weaponType = 1; // Ranged
+    }
+
+    // Generate shortcut reference
+    const inventoryId = String(item.id).padStart(5, '0');
+    const shortcut = `....inventorylist.id-${inventoryId}`;
+
+    return {
+      id: item.id,
+      name: item.definition.name,
+      properties: properties.join(', '),
+      attackBonus: attackBonus,
+      attackStat: attackStat,
+      damage: damage,
+      weaponType: weaponType,
+      shortcut: shortcut
+    };
+  }
+
+  /**
+   * Extract thrown weapon data (appears as melee entry)
+   */
+  private extractThrownWeaponData(item: InventoryItem, index: number): any {
+    const weaponData = this.extractWeaponData(item, index);
+    if (!weaponData) return null;
+
+    // Thrown weapons appear twice - once as ranged (type 2), once as melee (type 0)
+    return {
+      ...weaponData,
+      weaponType: 0 // Melee version of thrown weapon
+    };
+  }
+
+  /**
+   * Determine the attack stat for a weapon
+   */
+  private getWeaponAttackStat(item: InventoryItem, isRanged: boolean): string {
+    // Simple logic - would need to be more sophisticated for finesse weapons
+    return isRanged ? 'dexterity' : 'strength';
+  }
+
+  /**
+   * Check if character is a monk
+   */
+  private isCharacterMonk(characterData: CharacterData): boolean {
+    if (!characterData.classes) return false;
+    return characterData.classes.some(cls => 
+      cls.definition?.name?.toLowerCase() === 'monk'
+    );
+  }
+
+  /**
+   * Generate monk unarmed strike data
+   */
+  private getMonkUnarmedStrike(index: number): any {
+    return {
+      id: 999999, // Special ID for unarmed strike
+      name: 'Unarmed Strike',
+      properties: 'Monk, Unarmed',
+      attackBonus: 0, // Would need proper calculation
+      attackStat: 'dexterity', // Monks use DEX for unarmed strikes
+      damage: {
+        dice: '1d4', // Default monk unarmed damage
+        bonus: 0,
+        type: 'bludgeoning'
+      },
+      weaponType: 0, // Melee
+      shortcut: '' // No inventory reference for unarmed strike
     };
   }
 }
