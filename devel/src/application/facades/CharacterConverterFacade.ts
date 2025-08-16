@@ -613,6 +613,10 @@ export class CharacterConverterFacade {
       ${this.generateWeaponsXML(characterData)}
     </weaponlist>
     
+    <powers>
+      ${this.generateSpellsXML(characterData)}
+    </powers>
+    
     ${this.generatePowerMetaXML(characterData)}
   </character>
 </root>`;
@@ -1402,6 +1406,154 @@ export class CharacterConverterFacade {
     } catch (error) {
       console.error('Failed to generate weapons XML:', error);
       return '<!-- Weapon processing failed -->';
+    }
+  }
+
+  /**
+   * Generate spelllist XML from character spell data
+   */
+  private generateSpellsXML(characterData: CharacterData): string {
+    try {
+      console.log('🪄 Generating spells XML');
+      
+      // Check if character has spells
+      if (!characterData.spells || !characterData.classSpells) {
+        console.log('🪄 No spell data found');
+        return '<!-- No spells found -->';
+      }
+
+      const spells: Array<{
+        id: number;
+        name: string;
+        level: number;
+        school: string;
+        source: string;
+        prepared: boolean;
+        description: string;
+        components: string;
+        castingTime: string;
+        range: string;
+        duration: string;
+        concentration: boolean;
+        ritual: boolean;
+        saveDc?: number;
+        attackRoll?: boolean;
+      }> = [];
+
+      let spellIndex = 0;
+
+      // Process class spells (primary source)
+      if (featureFlags.isEnabled('spelllist_debug')) {
+        console.log(`🪄 Processing ${characterData.classSpells?.length || 0} class spell collections`);
+      }
+      
+      characterData.classSpells?.forEach(classSpellData => {
+        const className = this.getClassNameById(characterData, classSpellData.characterClassId);
+        
+        if (featureFlags.isEnabled('spelllist_debug')) {
+          console.log(`🪄 Processing ${className} spells: ${classSpellData.spells?.length || 0} spells`);
+        }
+        
+        classSpellData.spells?.forEach(spell => {
+          const spellData = this.extractSpellData(spell, className);
+          if (spellData) {
+            if (featureFlags.isEnabled('spelllist_debug')) {
+              console.log(`🪄 Added ${className} spell: ${spellData.name} (Level ${spellData.level})`);
+            }
+            spells.push(spellData);
+            spellIndex++;
+          }
+        });
+      });
+
+      // Process other spell sources
+      if (characterData.spells.class) {
+        characterData.spells.class.forEach(spell => {
+          const spellData = this.extractSpellData(spell, 'Class');
+          if (spellData) {
+            spells.push(spellData);
+            spellIndex++;
+          }
+        });
+      }
+
+      // Add race spells
+      if (characterData.spells.race) {
+        characterData.spells.race.forEach(spell => {
+          const spellData = this.extractSpellData(spell, 'Race');
+          if (spellData) {
+            spells.push(spellData);
+            spellIndex++;
+          }
+        });
+      }
+
+      // Add feat spells
+      if (characterData.spells.feat) {
+        characterData.spells.feat.forEach(spell => {
+          const spellData = this.extractSpellData(spell, 'Feat');
+          if (spellData) {
+            spells.push(spellData);
+            spellIndex++;
+          }
+        });
+      }
+
+      // Add item spells
+      if (characterData.spells.item) {
+        characterData.spells.item.forEach(spell => {
+          const spellData = this.extractSpellData(spell, 'Item');
+          if (spellData) {
+            spells.push(spellData);
+            spellIndex++;
+          }
+        });
+      }
+
+      console.log(`🪄 Found ${spells.length} spells total`);
+
+      // Generate XML in Fantasy Grounds powers format
+      let xml = '';
+      spells.forEach((spell, index) => {
+        const spellId = String(index + 1).padStart(5, '0');
+        xml += `      <id-${spellId}>`;
+
+        // Generate actions first (this is the core of the power)
+        const actions = this.generateSpellActions(spell);
+        if (actions) {
+          xml += `
+        <actions>
+${actions}        </actions>`;
+        }
+        
+        // Add spell metadata
+        xml += `
+        <castingtime type="string">${this.sanitizeString(spell.castingTime)}</castingtime>
+        <components type="string">${this.sanitizeString(spell.components)}</components>
+        <description type="formattedtext">
+          <p>${this.sanitizeString(spell.description)}</p>
+        </description>
+        <duration type="string">${this.sanitizeString(spell.duration)}</duration>
+        <group type="string">Spells</group>
+        <level type="number">${spell.level}</level>
+        <name type="string">${this.sanitizeString(spell.name)}</name>
+        <prepared type="number">${spell.prepared ? 1 : 0}</prepared>
+        <range type="string">${this.sanitizeString(spell.range)}</range>
+        <ritual type="number">${spell.ritual ? 1 : 0}</ritual>
+        <school type="string">${this.sanitizeString(spell.school)}</school>
+        <source type="string">${this.sanitizeString(spell.source)}</source>`;
+        
+        xml += `
+      </id-${spellId}>
+`;
+      });
+
+      console.log(`🪄 Generated spells XML: ${spells.length} spells`);
+      return xml;
+      
+    } catch (error) {
+      console.error('Failed to generate spells XML:', error);
+      return '<!-- Spell processing failed -->';
     }
   }
 
@@ -2270,6 +2422,309 @@ export class CharacterConverterFacade {
     };
     
     return damageTypes[damageTypeId] || 'slashing';
+  }
+
+  /**
+   * Get class name by character class ID
+   */
+  private getClassNameById(characterData: CharacterData, characterClassId: number): string {
+    const characterClass = characterData.classes?.find(cls => cls.id === characterClassId);
+    return characterClass?.definition?.name || 'Unknown';
+  }
+
+  /**
+   * Extract spell data from D&D Beyond spell object
+   */
+  private extractSpellData(spell: any, source: string): any {
+    try {
+      const definition = spell.definition;
+      if (!definition) return null;
+
+      // Extract components
+      const components = this.formatSpellComponents(definition.components || []);
+      
+      // Extract casting time
+      const castingTime = this.formatCastingTime(definition.activation);
+      
+      // Extract range
+      const range = this.formatSpellRange(definition.range);
+      
+      // Extract duration
+      const duration = this.formatSpellDuration(definition.duration);
+      
+      // Extract description (strip HTML)
+      const description = this.stripHTML(definition.description || '');
+
+      return {
+        id: definition.id,
+        name: definition.name,
+        level: definition.level,
+        school: definition.school || 'Divination',
+        source: source,
+        prepared: spell.prepared || false,
+        description: description,
+        components: components,
+        castingTime: castingTime,
+        range: range,
+        duration: duration,
+        concentration: definition.concentration || false,
+        ritual: definition.ritual || false,
+        saveDc: spell.overrideSaveDc || null,
+        attackRoll: definition.requiresAttackRoll || false,
+        requiresSavingThrow: definition.requiresSavingThrow || false,
+        definition: definition // Include full definition for action generation
+      };
+    } catch (error) {
+      console.error('Failed to extract spell data:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Format spell components for display
+   */
+  private formatSpellComponents(components: number[]): string {
+    const componentNames: string[] = [];
+    
+    if (components.includes(1)) componentNames.push('V'); // Verbal
+    if (components.includes(2)) componentNames.push('S'); // Somatic
+    if (components.includes(3)) componentNames.push('M'); // Material
+    
+    return componentNames.join(', ');
+  }
+
+  /**
+   * Format casting time from activation data
+   */
+  private formatCastingTime(activation: any): string {
+    if (!activation) return '1 action';
+    
+    const time = activation.activationTime || 1;
+    const type = activation.activationType;
+    
+    // Map activation types (these are common D&D Beyond values)
+    const typeMap: Record<number, string> = {
+      1: 'action',
+      2: 'bonus action', 
+      3: 'reaction',
+      4: 'minute',
+      5: 'hour',
+      6: 'no action'
+    };
+    
+    const typeName = typeMap[type] || 'action';
+    return time === 1 ? `1 ${typeName}` : `${time} ${typeName}s`;
+  }
+
+  /**
+   * Format spell range from range data
+   */
+  private formatSpellRange(range: any): string {
+    if (!range) return 'Touch';
+    
+    if (range.origin === 'Self') {
+      if (range.aoeType && range.aoeValue) {
+        return `Self (${range.aoeValue}-foot ${range.aoeType.toLowerCase()})`;
+      }
+      return 'Self';
+    }
+    
+    if (range.rangeValue) {
+      return `${range.rangeValue} feet`;
+    }
+    
+    return range.origin || 'Touch';
+  }
+
+  /**
+   * Format spell duration from duration data
+   */
+  private formatSpellDuration(duration: any): string {
+    if (!duration) return 'Instantaneous';
+    
+    const interval = duration.durationInterval || 1;
+    const unit = duration.durationUnit?.toLowerCase() || 'round';
+    const type = duration.durationType;
+    
+    let durationStr = interval === 1 ? `1 ${unit}` : `${interval} ${unit}s`;
+    
+    if (type === 'Concentration') {
+      durationStr = `Concentration, up to ${durationStr}`;
+    }
+    
+    return durationStr;
+  }
+
+  /**
+   * Strip HTML tags from text
+   */
+  private stripHTML(html: string): string {
+    return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+  }
+
+  /**
+   * Generate spell actions for Fantasy Grounds powers format
+   */
+  private generateSpellActions(spell: any): string {
+    let actions = '';
+    let actionOrder = 1;
+
+    // Cast action (always first)
+    actions += `          <id-${String(actionOrder).padStart(5, '0')}>
+            <order type="number">${actionOrder}</order>
+            <type type="string">cast</type>`;
+    
+    // Add save information if spell requires a saving throw
+    if (spell.requiresSavingThrow || spell.saveDc) {
+      actions += `
+            <savemagic type="number">1</savemagic>`;
+      
+      // Try to determine save type from spell data
+      const saveType = this.determineSaveType(spell);
+      if (saveType) {
+        actions += `
+            <savetype type="string">${saveType}</savetype>`;
+      }
+    }
+    
+    actions += `
+          </id-${String(actionOrder).padStart(5, '0')}>
+`;
+    actionOrder++;
+
+    // Damage action if spell deals damage
+    const damageInfo = this.extractSpellDamageInfo(spell);
+    if (damageInfo) {
+      actions += `          <id-${String(actionOrder).padStart(5, '0')}>
+            <damagelist>
+              <id-00001>
+                <bonus type="number">${damageInfo.bonus}</bonus>
+                <dice type="dice">${damageInfo.dice}</dice>
+                <type type="string">${damageInfo.type}</type>
+              </id-00001>
+            </damagelist>
+            <order type="number">${actionOrder}</order>
+            <type type="string">damage</type>
+          </id-${String(actionOrder).padStart(5, '0')}>
+`;
+      actionOrder++;
+    }
+
+    // Healing action if spell provides healing
+    const healingInfo = this.extractSpellHealingInfo(spell);
+    if (healingInfo) {
+      actions += `          <id-${String(actionOrder).padStart(5, '0')}>
+            <order type="number">${actionOrder}</order>
+            <type type="string">heal</type>
+            <heallist>
+              <id-00001>
+                <bonus type="number">${healingInfo.bonus}</bonus>
+                <dice type="dice">${healingInfo.dice}</dice>
+              </id-00001>
+            </heallist>
+          </id-${String(actionOrder).padStart(5, '0')}>
+`;
+      actionOrder++;
+    }
+
+    return actions;
+  }
+
+  /**
+   * Determine save type from spell data
+   */
+  private determineSaveType(spell: any): string | null {
+    const description = spell.description?.toLowerCase() || '';
+    
+    // Look for save types in description
+    if (description.includes('dexterity saving throw')) return 'dexterity';
+    if (description.includes('constitution saving throw')) return 'constitution';
+    if (description.includes('wisdom saving throw')) return 'wisdom';
+    if (description.includes('intelligence saving throw')) return 'intelligence';
+    if (description.includes('charisma saving throw')) return 'charisma';
+    if (description.includes('strength saving throw')) return 'strength';
+    
+    // Check spell definition if available
+    if (spell.definition?.saveDcAbilityId) {
+      const abilityMap: Record<number, string> = {
+        1: 'strength',
+        2: 'dexterity', 
+        3: 'constitution',
+        4: 'intelligence',
+        5: 'wisdom',
+        6: 'charisma'
+      };
+      return abilityMap[spell.definition.saveDcAbilityId] || null;
+    }
+    
+    return null;
+  }
+
+  /**
+   * Extract damage information from spell
+   */
+  private extractSpellDamageInfo(spell: any): { dice: string; bonus: number; type: string } | null {
+    const description = spell.description?.toLowerCase() || '';
+    
+    // Look for damage patterns in description
+    const damagePattern = /(\d+d\d+).*?(acid|cold|fire|lightning|thunder|poison|psychic|radiant|necrotic|force|bludgeoning|piercing|slashing)/i;
+    const match = description.match(damagePattern);
+    
+    if (match) {
+      return {
+        dice: this.formatDiceForFantasyGrounds(match[1]),
+        bonus: 0,
+        type: match[2].toLowerCase()
+      };
+    }
+    
+    // Check spell definition for damage
+    if (spell.definition?.damage) {
+      return {
+        dice: this.formatDiceForFantasyGrounds(spell.definition.damage.diceString || '1d6'),
+        bonus: spell.definition.damage.fixedValue || 0,
+        type: this.getDamageTypeName(spell.definition.damage.damageTypeId) || 'force'
+      };
+    }
+    
+    return null;
+  }
+
+  /**
+   * Extract healing information from spell
+   */
+  private extractSpellHealingInfo(spell: any): { dice: string; bonus: number } | null {
+    const description = spell.description?.toLowerCase() || '';
+    
+    // Look for healing patterns
+    const healPattern = /(\d+d\d+).*?hit points/i;
+    const match = description.match(healPattern);
+    
+    if (match) {
+      return {
+        dice: this.formatDiceForFantasyGrounds(match[1]),
+        bonus: 0
+      };
+    }
+    
+    // Check for healing spells by name
+    const spellName = spell.name?.toLowerCase() || '';
+    if (spellName.includes('cure') || spellName.includes('heal') || spellName.includes('vitality')) {
+      return {
+        dice: this.formatDiceForFantasyGrounds('1d8'),
+        bonus: 0
+      };
+    }
+    
+    return null;
+  }
+
+  /**
+   * Format dice string for Fantasy Grounds (converts "1d6" to "d6")
+   */
+  private formatDiceForFantasyGrounds(diceString: string): string {
+    // Fantasy Grounds uses "d6" format instead of "1d6" for single dice
+    return diceString.replace(/^1d/, 'd');
   }
 }
 

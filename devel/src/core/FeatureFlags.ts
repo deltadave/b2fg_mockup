@@ -307,6 +307,14 @@ export const defaultFeatureFlags: FeatureFlagConfig = {
       conditions: {
         environment: 'development'
       }
+    },
+    'spelllist_debug': {
+      key: 'spelllist_debug',
+      enabled: true,
+      description: 'Enable detailed debugging output for spelllist XML generation',
+      conditions: {
+        environment: 'development'
+      }
     }
   }
 };
