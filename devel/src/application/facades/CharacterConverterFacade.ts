@@ -1215,8 +1215,15 @@ export class CharacterConverterFacade {
       }
 
       // Process inventory to get weapons
+      console.log('⚔️ Character inventory data:', {
+        hasInventory: !!characterData.inventory,
+        inventoryLength: characterData.inventory?.length || 0,
+        inventoryType: Array.isArray(characterData.inventory) ? 'array' : typeof characterData.inventory
+      });
+
       const inventoryResult = this.inventoryProcessor.processInventory(
         characterData.inventory || [],
+        characterData.id,
         {
           includeZeroQuantityItems: false,
           respectContainerHierarchy: true,
@@ -1226,6 +1233,14 @@ export class CharacterConverterFacade {
           markItemsAsIdentified: true
         }
       );
+
+      console.log('⚔️ Inventory processing result:', {
+        hasResult: !!inventoryResult,
+        hasNestedStructure: !!inventoryResult?.nestedStructure,
+        hasRootItems: !!inventoryResult?.nestedStructure?.rootItems,
+        rootItemsType: Array.isArray(inventoryResult?.nestedStructure?.rootItems) ? 'array' : typeof inventoryResult?.nestedStructure?.rootItems,
+        rootItemsLength: inventoryResult?.nestedStructure?.rootItems?.length || 0
+      });
 
       const weapons: Array<{
         id: number;
@@ -1245,8 +1260,37 @@ export class CharacterConverterFacade {
 
       // Extract weapon items from inventory
       let weaponIndex = 0;
-      for (const item of inventoryResult.nestedStructure.items) {
+      
+      // Safety check for inventory result structure
+      if (!inventoryResult || !inventoryResult.nestedStructure || !inventoryResult.nestedStructure.rootItems) {
+        console.log('⚔️ No inventory items found or invalid inventory structure');
+        return '<!-- No inventory items found -->';
+      }
+      
+      const items = inventoryResult.nestedStructure.rootItems;
+      const containers = inventoryResult.nestedStructure.containers;
+      const totalItems = items.length;
+      
+      if (featureFlags.isEnabled('weaponlist_debug')) {
+        console.log(`⚔️ Processing ${totalItems} root items + ${containers.size} containers for weapons`);
+      }
+      
+      // Check root items first
+      for (const item of items) {
+        if (featureFlags.isEnabled('weaponlist_debug')) {
+          console.log(`⚔️ Checking item: ${item.definition.name}`, {
+            filterType: item.definition.filterType,
+            isWeapon: item.definition.filterType === 'Weapon',
+            itemType: item.definition.type,
+            equipped: item.equipped,
+            hasWeaponBehaviors: !!item.definition.weaponBehaviors
+          });
+        }
+        
         if (this.isWeapon(item)) {
+          if (featureFlags.isEnabled('weaponlist_debug')) {
+            console.log(`⚔️ Found weapon: ${item.definition.name}`);
+          }
           const weaponData = this.extractWeaponData(item, weaponIndex);
           if (weaponData) {
             weapons.push(weaponData);
@@ -1264,11 +1308,57 @@ export class CharacterConverterFacade {
         }
       }
 
+      // Check items inside containers
+      if (featureFlags.isEnabled('weaponlist_debug')) {
+        console.log(`⚔️ Checking ${containers.size} containers for weapons`);
+      }
+      
+      containers.forEach((container, containerId) => {
+        if (featureFlags.isEnabled('weaponlist_debug')) {
+          console.log(`⚔️ Checking container: ${container.definition.name} with ${container.contents.length} items`);
+        }
+        
+        for (const item of container.contents) {
+          if (featureFlags.isEnabled('weaponlist_debug')) {
+            console.log(`⚔️ Checking container item: ${item.definition.name}`, {
+              filterType: item.definition.filterType,
+              isWeapon: item.definition.filterType === 'Weapon',
+              containerName: container.definition.name
+            });
+          }
+          
+          if (this.isWeapon(item)) {
+            if (featureFlags.isEnabled('weaponlist_debug')) {
+              console.log(`⚔️ Found weapon in container: ${item.definition.name}`);
+            }
+            const weaponData = this.extractWeaponData(item, weaponIndex);
+            if (weaponData) {
+              weapons.push(weaponData);
+              weaponIndex++;
+              
+              // Handle thrown weapons - they appear twice (melee and ranged)
+              if (this.isThrown(item)) {
+                const thrownData = this.extractThrownWeaponData(item, weaponIndex);
+                if (thrownData) {
+                  weapons.push(thrownData);
+                  weaponIndex++;
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // Link ammunition to weapons that require it
+      this.linkAmmoToWeapons(weapons, inventoryResult.nestedStructure);
+
       // Add monk unarmed strike if character is a monk
       const isMonk = this.isCharacterMonk(characterData);
       if (isMonk) {
         weapons.push(this.getMonkUnarmedStrike(weaponIndex));
       }
+
+      console.log(`⚔️ Final weapons array length: ${weapons.length}`, weapons);
 
       // Generate XML
       let xml = '';
@@ -1817,7 +1907,9 @@ export class CharacterConverterFacade {
       inventory_processor: featureFlags.isEnabled('inventory_processor'),
       encumbrance_calculator: featureFlags.isEnabled('encumbrance_calculator'),
       inventory_processor_debug: featureFlags.isEnabled('inventory_processor_debug'),
-      encumbrance_calculator_debug: featureFlags.isEnabled('encumbrance_calculator_debug')
+      encumbrance_calculator_debug: featureFlags.isEnabled('encumbrance_calculator_debug'),
+      feature_processor_debug: featureFlags.isEnabled('feature_processor_debug'),
+      weaponlist_debug: featureFlags.isEnabled('weaponlist_debug')
     };
   }
 
@@ -1825,7 +1917,8 @@ export class CharacterConverterFacade {
    * Check if an inventory item is a weapon
    */
   private isWeapon(item: InventoryItem): boolean {
-    return !!(item.definition.weaponBehaviors && item.definition.weaponBehaviors.length > 0);
+    // Primary method: Check filterType for "Weapon"
+    return item.definition.filterType === 'Weapon';
   }
 
   /**
@@ -1840,23 +1933,32 @@ export class CharacterConverterFacade {
    * Extract weapon data from inventory item
    */
   private extractWeaponData(item: InventoryItem, index: number): any {
+    if (featureFlags.isEnabled('weaponlist_debug')) {
+      console.log(`⚔️ Extracting weapon data for: ${item.definition.name}`);
+    }
+    
+    // Try to get weapon behavior first, but handle missing weaponBehaviors
     const behavior = item.definition.weaponBehaviors?.[0];
-    if (!behavior) return null;
-
-    const properties = behavior.properties || [];
-    const isRanged = properties.some(prop => prop.toLowerCase().includes('range'));
-    const isThrown = properties.some(prop => prop.toLowerCase().includes('thrown'));
+    const properties = behavior?.properties || [];
+    
+    // If no weaponBehaviors, try to infer properties from other data
+    let weaponProperties = properties;
+    if (weaponProperties.length === 0) {
+      // Try to infer from item name and type
+      weaponProperties = this.inferWeaponProperties(item);
+    }
+    
+    const isRanged = weaponProperties.some(prop => prop.toLowerCase().includes('range')) ||
+                    weaponProperties.some(prop => prop.toLowerCase().includes('ranged')) ||
+                    this.isRangedWeapon(item.definition.name);
+    const isThrown = weaponProperties.some(prop => prop.toLowerCase().includes('thrown'));
 
     // Calculate attack bonus and stat (simplified calculation)
     const attackStat = this.getWeaponAttackStat(item, isRanged);
     const attackBonus = 0; // Would need proficiency bonus + ability modifier calculation
 
-    // Extract damage information (simplified)
-    const damage = {
-      dice: '1d6', // Default, would need to extract from item data
-      bonus: 0,
-      type: 'slashing' // Default, would need to extract from item data
-    };
+    // Extract damage information - try multiple sources
+    const damage = this.extractWeaponDamage(item);
 
     // Determine weapon type
     let weaponType = 0; // Melee
@@ -1870,16 +1972,21 @@ export class CharacterConverterFacade {
     const inventoryId = String(item.id).padStart(5, '0');
     const shortcut = `....inventorylist.id-${inventoryId}`;
 
-    return {
+    const weaponData = {
       id: item.id,
       name: item.definition.name,
-      properties: properties.join(', '),
+      properties: weaponProperties.join(', '),
       attackBonus: attackBonus,
       attackStat: attackStat,
       damage: damage,
       weaponType: weaponType,
       shortcut: shortcut
     };
+    
+    if (featureFlags.isEnabled('weaponlist_debug')) {
+      console.log(`⚔️ Extracted weapon data:`, weaponData);
+    }
+    return weaponData;
   }
 
   /**
@@ -1932,6 +2039,237 @@ export class CharacterConverterFacade {
       weaponType: 0, // Melee
       shortcut: '' // No inventory reference for unarmed strike
     };
+  }
+
+  /**
+   * Link ammunition to weapons that require it
+   */
+  private linkAmmoToWeapons(weapons: any[], nestedStructure: any): void {
+    if (featureFlags.isEnabled('weaponlist_debug')) {
+      console.log(`⚔️ Linking ammunition to ${weapons.length} weapons`);
+    }
+
+    // Find all ammunition items in inventory
+    const ammoItems: any[] = [];
+    
+    // Check root items for ammo
+    nestedStructure.rootItems.forEach((item: any) => {
+      if (this.isAmmunition(item)) {
+        ammoItems.push(item);
+      }
+    });
+    
+    // Check container contents for ammo  
+    nestedStructure.containers.forEach((container: any) => {
+      container.contents.forEach((item: any) => {
+        if (this.isAmmunition(item)) {
+          ammoItems.push(item);
+        }
+      });
+    });
+
+    if (featureFlags.isEnabled('weaponlist_debug')) {
+      console.log(`⚔️ Found ${ammoItems.length} ammunition items:`, ammoItems.map(item => ({
+        name: item.definition.name,
+        quantity: item.quantity,
+        subType: item.definition.subType
+      })));
+    }
+
+    // Link ammo to weapons
+    weapons.forEach((weapon, index) => {
+      // Check if this is a thrown weapon - they use their own quantity as ammo
+      if (weapon.weaponType === 2) { // Thrown weapon type
+        weapon.maxAmmo = this.getThrownWeaponQuantity(weapon, nestedStructure);
+        if (featureFlags.isEnabled('weaponlist_debug')) {
+          console.log(`⚔️ Set thrown weapon ${weapon.name} maxAmmo to ${weapon.maxAmmo} (using item quantity)`);
+        }
+      } else {
+        // For ranged weapons that require separate ammunition
+        const compatibleAmmo = this.findCompatibleAmmo(weapon, ammoItems);
+        if (compatibleAmmo) {
+          weapon.maxAmmo = compatibleAmmo.quantity;
+          if (featureFlags.isEnabled('weaponlist_debug')) {
+            console.log(`⚔️ Linked ${weapon.name} to ${compatibleAmmo.definition.name} (${compatibleAmmo.quantity})`);
+          }
+        }
+      }
+    });
+  }
+
+  /**
+   * Get the quantity of a thrown weapon from inventory
+   */
+  private getThrownWeaponQuantity(weapon: any, nestedStructure: any): number {
+    // Search for the weapon item in inventory to get its quantity
+    const weaponId = weapon.id;
+    
+    // Check root items
+    for (const item of nestedStructure.rootItems) {
+      if (item.id === weaponId) {
+        return item.quantity;
+      }
+    }
+    
+    // Check container contents
+    for (const [containerId, container] of nestedStructure.containers) {
+      for (const item of container.contents) {
+        if (item.id === weaponId) {
+          return item.quantity;
+        }
+      }
+    }
+    
+    // Default to 1 if not found
+    return 1;
+  }
+
+  /**
+   * Check if an item is ammunition
+   */
+  private isAmmunition(item: any): boolean {
+    return item.definition.subType === 'Ammunition' || 
+           (item.definition.isConsumable && item.definition.filterType === 'Other Gear');
+  }
+
+  /**
+   * Find compatible ammunition for a weapon
+   */
+  private findCompatibleAmmo(weapon: any, ammoItems: any[]): any | null {
+    const weaponName = weapon.name.toLowerCase();
+    
+    // Simple mapping of weapons to ammo types
+    for (const ammo of ammoItems) {
+      const ammoName = ammo.definition.name.toLowerCase();
+      
+      // Crossbow -> Bolts
+      if (weaponName.includes('crossbow') && ammoName.includes('bolt')) {
+        return ammo;
+      }
+      
+      // Bow -> Arrows  
+      if (weaponName.includes('bow') && ammoName.includes('arrow')) {
+        return ammo;
+      }
+      
+      // Sling -> Bullets/Stones
+      if (weaponName.includes('sling') && (ammoName.includes('bullet') || ammoName.includes('stone'))) {
+        return ammo;
+      }
+      
+      // Blowgun -> Needles
+      if (weaponName.includes('blowgun') && ammoName.includes('needle')) {
+        return ammo;
+      }
+    }
+    
+    return null;
+  }
+
+  /**
+   * Infer weapon properties from item name and type when weaponBehaviors is missing
+   */
+  private inferWeaponProperties(item: InventoryItem): string[] {
+    const properties: string[] = [];
+    const itemName = item.definition.name?.toLowerCase() || '';
+    
+    // Ranged weapons
+    if (this.isRangedWeapon(itemName)) {
+      properties.push('Ranged');
+    }
+    
+    // Two-handed weapons
+    const twoHandedWeapons = ['greatsword', 'maul', 'pike', 'glaive', 'halberd', 'longbow', 'heavy crossbow'];
+    if (twoHandedWeapons.some(weapon => itemName.includes(weapon))) {
+      properties.push('Two-handed');
+    }
+    
+    // Light weapons
+    const lightWeapons = ['dagger', 'dart', 'javelin', 'light hammer', 'sickle', 'scimitar', 'shortsword', 'handaxe'];
+    if (lightWeapons.some(weapon => itemName.includes(weapon))) {
+      properties.push('Light');
+    }
+    
+    // Finesse weapons
+    const finesseWeapons = ['dagger', 'dart', 'rapier', 'scimitar', 'shortsword', 'whip'];
+    if (finesseWeapons.some(weapon => itemName.includes(weapon))) {
+      properties.push('Finesse');
+    }
+    
+    // Thrown weapons
+    const thrownWeapons = ['dart', 'javelin', 'light hammer', 'handaxe', 'spear', 'trident'];
+    if (thrownWeapons.some(weapon => itemName.includes(weapon))) {
+      properties.push('Thrown');
+    }
+    
+    return properties;
+  }
+
+  /**
+   * Check if a weapon is ranged based on its name
+   */
+  private isRangedWeapon(itemName: string): boolean {
+    const rangedWeapons = ['bow', 'crossbow', 'dart', 'javelin', 'sling', 'blowgun'];
+    return rangedWeapons.some(weapon => itemName.toLowerCase().includes(weapon));
+  }
+
+  /**
+   * Extract weapon damage information from multiple possible sources
+   */
+  private extractWeaponDamage(item: InventoryItem): { dice: string; bonus: number; type: string } {
+    // Try weaponBehaviors first
+    const behavior = item.definition.weaponBehaviors?.[0];
+    if (behavior?.damage) {
+      return {
+        dice: behavior.damage.diceString || '1d6',
+        bonus: behavior.damage.fixedValue || 0,
+        type: behavior.damage.damageTypeId ? this.getDamageTypeName(behavior.damage.damageTypeId) : 'slashing'
+      };
+    }
+    
+    // Try item definition damage
+    if (item.definition.damage) {
+      return {
+        dice: item.definition.damage.diceString || '1d6',
+        bonus: item.definition.damage.fixedValue || 0,
+        type: item.definition.damage.damageTypeId ? this.getDamageTypeName(item.definition.damage.damageTypeId) : 'slashing'
+      };
+    }
+    
+    // Default based on weapon name
+    const itemName = item.definition.name?.toLowerCase() || '';
+    if (itemName.includes('dagger')) return { dice: '1d4', bonus: 0, type: 'piercing' };
+    if (itemName.includes('shortsword')) return { dice: '1d6', bonus: 0, type: 'piercing' };
+    if (itemName.includes('longsword')) return { dice: '1d8', bonus: 0, type: 'slashing' };
+    if (itemName.includes('greatsword')) return { dice: '2d6', bonus: 0, type: 'slashing' };
+    if (itemName.includes('mace')) return { dice: '1d6', bonus: 0, type: 'bludgeoning' };
+    if (itemName.includes('warhammer')) return { dice: '1d8', bonus: 0, type: 'bludgeoning' };
+    
+    // Default
+    return { dice: '1d6', bonus: 0, type: 'slashing' };
+  }
+
+  /**
+   * Get damage type name from damage type ID
+   */
+  private getDamageTypeName(damageTypeId: number): string {
+    const damageTypes: Record<number, string> = {
+      1: 'bludgeoning',
+      2: 'piercing', 
+      3: 'slashing',
+      4: 'necrotic',
+      5: 'acid',
+      6: 'cold',
+      7: 'fire',
+      8: 'lightning',
+      9: 'thunder',
+      10: 'poison',
+      11: 'psychic',
+      12: 'radiant',
+      13: 'force'
+    };
+    
+    return damageTypes[damageTypeId] || 'slashing';
   }
 }
 

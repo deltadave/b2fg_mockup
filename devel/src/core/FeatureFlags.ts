@@ -272,7 +272,7 @@ export const defaultFeatureFlags: FeatureFlagConfig = {
     },
     'inventory_processor_debug': {
       key: 'inventory_processor_debug',
-      enabled: false,
+      enabled: true,
       description: 'Enable detailed debugging output for inventory processing',
       conditions: {
         environment: 'development'
@@ -294,8 +294,16 @@ export const defaultFeatureFlags: FeatureFlagConfig = {
     },
     'feature_processor_debug': {
       key: 'feature_processor_debug',
-      enabled: true,
+      enabled: false,
       description: 'Enable detailed debugging output for feature processing',
+      conditions: {
+        environment: 'development'
+      }
+    },
+    'weaponlist_debug': {
+      key: 'weaponlist_debug',
+      enabled: true,
+      description: 'Enable detailed debugging output for weaponlist XML generation',
       conditions: {
         environment: 'development'
       }
