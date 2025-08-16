@@ -1512,6 +1512,21 @@ export class CharacterConverterFacade {
 
       console.log(`🪄 Found ${spells.length} spells total`);
 
+      // Add class features and racial traits as powers
+      const features = this.extractActivePowers(characterData);
+      
+      if (featureFlags.isEnabled('spelllist_debug')) {
+        console.log(`🪄 Found ${features.length} active features/traits to add as powers`);
+        features.forEach(feature => {
+          console.log(`🪄 Feature found: ${feature.name} (${feature.source})`);
+        });
+      }
+      
+      features.forEach(feature => spells.push(feature));
+      
+      console.log(`🪄 Found ${features.length} active features/traits to add as powers`);
+      console.log(`🪄 Total powers (spells + features): ${spells.length}`);
+
       // Generate XML in Fantasy Grounds powers format
       let xml = '';
       spells.forEach((spell, index) => {
@@ -1526,8 +1541,24 @@ export class CharacterConverterFacade {
 ${actions}        </actions>`;
         }
         
-        // Add spell metadata
-        xml += `
+        // Add metadata - different for spells vs features
+        if (spell.powerType === 'feature') {
+          // Feature metadata
+          xml += `
+        <cast type="number">0</cast>
+        <description type="formattedtext">
+          <p>${this.sanitizeString(spell.description)}</p>
+        </description>
+        <group type="string">${this.sanitizeString(spell.group)}</group>
+        <level type="number">${spell.level}</level>
+        <locked type="number">1</locked>
+        <name type="string">${this.sanitizeString(spell.name)}</name>
+        <prepared type="number">${spell.prepared}</prepared>
+        <ritual type="number">${spell.ritual ? 1 : 0}</ritual>
+        <source type="string">${this.sanitizeString(spell.source)}</source>`;
+        } else {
+          // Spell metadata
+          xml += `
         <castingtime type="string">${this.sanitizeString(spell.castingTime)}</castingtime>
         <components type="string">${this.sanitizeString(spell.components)}</components>
         <description type="formattedtext">
@@ -1542,6 +1573,7 @@ ${actions}        </actions>`;
         <ritual type="number">${spell.ritual ? 1 : 0}</ritual>
         <school type="string">${this.sanitizeString(spell.school)}</school>
         <source type="string">${this.sanitizeString(spell.source)}</source>`;
+        }
         
         xml += `
       </id-${spellId}>
@@ -2569,33 +2601,40 @@ ${actions}        </actions>`;
     let actions = '';
     let actionOrder = 1;
 
-    // Cast action (always first)
-    actions += `          <id-${String(actionOrder).padStart(5, '0')}>
+    // Check if this is a feature or spell
+    const isFeature = spell.powerType === 'feature';
+
+    if (isFeature) {
+      // Generate feature-specific action (effect type)
+      actions += this.generateFeatureAction(spell, actionOrder);
+    } else {
+      // Cast action (always first for spells)
+      actions += `          <id-${String(actionOrder).padStart(5, '0')}>
             <order type="number">${actionOrder}</order>
             <type type="string">cast</type>`;
     
-    // Add save information if spell requires a saving throw
-    if (spell.requiresSavingThrow || spell.saveDc) {
-      actions += `
-            <savemagic type="number">1</savemagic>`;
-      
-      // Try to determine save type from spell data
-      const saveType = this.determineSaveType(spell);
-      if (saveType) {
+      // Add save information if spell requires a saving throw
+      if (spell.requiresSavingThrow || spell.saveDc) {
         actions += `
+            <savemagic type="number">1</savemagic>`;
+        
+        // Try to determine save type from spell data
+        const saveType = this.determineSaveType(spell);
+        if (saveType) {
+          actions += `
             <savetype type="string">${saveType}</savetype>`;
+        }
       }
-    }
-    
-    actions += `
+      
+      actions += `
           </id-${String(actionOrder).padStart(5, '0')}>
 `;
-    actionOrder++;
+      actionOrder++;
 
-    // Damage action if spell deals damage
-    const damageInfo = this.extractSpellDamageInfo(spell);
-    if (damageInfo) {
-      actions += `          <id-${String(actionOrder).padStart(5, '0')}>
+      // Damage action if spell deals damage
+      const damageInfo = this.extractSpellDamageInfo(spell);
+      if (damageInfo) {
+        actions += `          <id-${String(actionOrder).padStart(5, '0')}>
             <damagelist>
               <id-00001>
                 <bonus type="number">${damageInfo.bonus}</bonus>
@@ -2607,13 +2646,13 @@ ${actions}        </actions>`;
             <type type="string">damage</type>
           </id-${String(actionOrder).padStart(5, '0')}>
 `;
-      actionOrder++;
-    }
+        actionOrder++;
+      }
 
-    // Healing action if spell provides healing
-    const healingInfo = this.extractSpellHealingInfo(spell);
-    if (healingInfo) {
-      actions += `          <id-${String(actionOrder).padStart(5, '0')}>
+      // Healing action if spell provides healing
+      const healingInfo = this.extractSpellHealingInfo(spell);
+      if (healingInfo) {
+        actions += `          <id-${String(actionOrder).padStart(5, '0')}>
             <order type="number">${actionOrder}</order>
             <type type="string">heal</type>
             <heallist>
@@ -2624,10 +2663,51 @@ ${actions}        </actions>`;
             </heallist>
           </id-${String(actionOrder).padStart(5, '0')}>
 `;
-      actionOrder++;
+        actionOrder++;
+      }
     }
 
     return actions;
+  }
+
+  /**
+   * Generate feature-specific action for powers like Rage
+   */
+  private generateFeatureAction(feature: any, actionOrder: number): string {
+    const featureName = feature.name?.toLowerCase() || '';
+    
+    // Generate effect action for features like Rage
+    let action = `          <id-${String(actionOrder).padStart(5, '0')}>`;
+    
+    // Add duration for features that have it
+    if (feature.duration && feature.duration !== 'Instantaneous') {
+      if (feature.duration.includes('minute')) {
+        const minutes = feature.duration.match(/(\d+)/)?.[1] || '1';
+        action += `
+            <durmod type="number">${minutes}</durmod>
+            <durunit type="string">minute</durunit>`;
+      }
+    }
+    
+    // Generate feature-specific label based on feature type
+    let label = '';
+    if (featureName.includes('rage')) {
+      label = 'Rage; ADVCHK: strength; ADVSAV: strength; DMG: 2, melee; RESIST: bludgeoning, piercing, slashing';
+    } else if (featureName.includes('stone\'s endurance')) {
+      label = 'Stone\'s Endurance; Reduce damage by 1d12 + CON modifier';
+    } else {
+      label = feature.name;
+    }
+    
+    action += `
+            <label type="string">${label}</label>
+            <order type="number">${actionOrder}</order>
+            <targeting type="string">self</targeting>
+            <type type="string">effect</type>
+          </id-${String(actionOrder).padStart(5, '0')}>
+`;
+
+    return action;
   }
 
   /**
@@ -2725,6 +2805,387 @@ ${actions}        </actions>`;
   private formatDiceForFantasyGrounds(diceString: string): string {
     // Fantasy Grounds uses "d6" format instead of "1d6" for single dice
     return diceString.replace(/^1d/, 'd');
+  }
+
+  /**
+   * Extract active powers from class features and racial traits
+   */
+  private extractActivePowers(characterData: CharacterData): any[] {
+    const powers: any[] = [];
+
+    if (featureFlags.isEnabled('spelllist_debug')) {
+      console.log('🪄 Extracting active class features and racial traits as powers');
+      console.log('🪄 Character classes:', characterData.classes?.length || 0);
+      console.log('🪄 Character race:', characterData.race?.fullName);
+    }
+
+    // Extract class features with active abilities
+    characterData.classes?.forEach(characterClass => {
+      const className = characterClass.definition?.name || 'Unknown';
+      
+      // Check class features
+      if (featureFlags.isEnabled('spelllist_debug')) {
+        console.log(`🪄 Checking ${className}: ${characterClass.classFeatures?.length || 0} class features`);
+      }
+      
+      characterClass.classFeatures?.forEach(feature => {
+        if (featureFlags.isEnabled('spelllist_debug')) {
+          console.log(`🪄 Checking class feature: ${feature.definition?.name} - isActivePower: ${this.isActivePower(feature)}`);
+          
+          if (feature.definition?.name?.toLowerCase().includes('rage')) {
+            console.log(`🪄 Raw Rage feature data:`, feature);
+            console.log(`🪄 Rage feature.levelScales:`, feature.levelScales);
+          }
+        }
+        
+        if (this.isActivePower(feature)) {
+          const powerData = this.extractFeaturePowerData(feature, className, characterData);
+          if (powerData) {
+            powers.push(powerData);
+            if (featureFlags.isEnabled('spelllist_debug')) {
+              console.log(`🪄 Added ${className} feature: ${powerData.name}`);
+            }
+          } else {
+            if (featureFlags.isEnabled('spelllist_debug')) {
+              console.log(`🪄 Failed to extract power data for: ${feature.definition?.name}`);
+            }
+          }
+        }
+      });
+
+      // Check subclass features
+      characterClass.subclassFeatures?.forEach(feature => {
+        if (this.isActivePower(feature)) {
+          const subclassName = feature.definition?.name || className;
+          const powerData = this.extractFeaturePowerData(feature, `${className} (${subclassName})`, characterData);
+          if (powerData) {
+            powers.push(powerData);
+            if (featureFlags.isEnabled('spelllist_debug')) {
+              console.log(`🪄 Added ${className} subclass feature: ${powerData.name}`);
+            }
+          }
+        }
+      });
+    });
+
+    // Extract racial traits with active abilities  
+    characterData.race?.racialTraits?.forEach(trait => {
+      if (this.isActivePower(trait)) {
+        const powerData = this.extractFeaturePowerData(trait, `${characterData.race?.fullName || 'Racial'} Traits`, characterData);
+        if (powerData) {
+          powers.push(powerData);
+          if (featureFlags.isEnabled('spelllist_debug')) {
+            console.log(`🪄 Added racial trait: ${powerData.name}`);
+          }
+        }
+      }
+    });
+
+    return powers;
+  }
+
+  /**
+   * Check if a feature should be treated as an active power
+   */
+  private isActivePower(feature: any): boolean {
+    if (!feature?.definition) return false;
+
+    // Features with limited uses are usually active powers
+    if (feature.limitedUse) return true;
+
+    // Check for specific power-like features by name
+    const name = feature.definition.name?.toLowerCase() || '';
+    const activePowerNames = [
+      'rage', 'reckless attack', 'stone\'s endurance', 'form of the beast',
+      'action surge', 'second wind', 'bardic inspiration', 'channel divinity',
+      'wild shape', 'lay on hands', 'divine smite', 'sneak attack'
+    ];
+
+    return activePowerNames.some(powerName => name.includes(powerName));
+  }
+
+  /**
+   * Extract power data from a class feature or racial trait
+   */
+  private extractFeaturePowerData(feature: any, source: string, characterData: CharacterData): any {
+    try {
+      const definition = feature.definition;
+      if (!definition) return null;
+
+      // Extract description (strip HTML but preserve structure)
+      const description = this.stripHTML(definition.description || '');
+
+      // Determine uses and reset type
+      let usesMax = 0;
+      let resetType = 'long rest';
+      let actionType = 'action';
+
+      if (feature.limitedUse) {
+        usesMax = feature.limitedUse.maxUses || 1;
+        // resetType: 1 = short rest, 2 = long rest
+        resetType = feature.limitedUse.resetType === 1 ? 'short rest' : 'long rest';
+        
+        // actionType: 3 seems to be bonus action/reaction
+        if (feature.limitedUse.actionType === 3) {
+          actionType = this.determineActionTypeFromDescription(description);
+        }
+        
+        if (featureFlags.isEnabled('spelllist_debug') && definition.name?.toLowerCase().includes('rage')) {
+          console.log(`🪄 Rage limitedUse data:`, feature.limitedUse);
+        }
+      }
+
+      // Handle level scaling for features that scale with character level
+      usesMax = this.calculateScaledFeatureUses(feature, characterData, usesMax);
+      
+      if (featureFlags.isEnabled('spelllist_debug') && definition.name?.toLowerCase().includes('rage')) {
+        console.log(`🪄 Final Rage debug:`, {
+          featureName: definition.name,
+          characterLevel: this.getCharacterLevelForFeature(feature, characterData),
+          originalMaxUses: feature.limitedUse?.maxUses || 0,
+          finalUsesMax: usesMax,
+          hasLevelScales: !!feature.levelScales,
+          levelScalesData: feature.levelScales
+        });
+      }
+
+      return {
+        id: definition.id,
+        name: definition.name,
+        level: 0, // Features don't have spell levels
+        school: '', // Not applicable for features
+        source: source,
+        prepared: usesMax, // Use prepared field for max uses
+        description: description,
+        components: '', // Not applicable for features
+        castingTime: actionType,
+        range: this.determineRangeFromDescription(description),
+        duration: this.determineDurationFromDescription(description),
+        concentration: false, // Features typically don't use concentration
+        ritual: false, // Features are not rituals
+        group: source, // Group by source (class name, racial traits, etc.)
+        powerType: 'feature', // Mark as feature vs spell
+        resetType: resetType,
+        definition: definition // Include for action generation
+      };
+    } catch (error) {
+      console.error('Failed to extract feature power data:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Determine action type from feature description
+   */
+  private determineActionTypeFromDescription(description: string): string {
+    const desc = description.toLowerCase();
+    
+    if (desc.includes('bonus action')) return 'bonus action';
+    if (desc.includes('reaction')) return 'reaction';
+    if (desc.includes('no action')) return 'no action';
+    
+    return 'action';
+  }
+
+  /**
+   * Determine range from feature description
+   */
+  private determineRangeFromDescription(description: string): string {
+    const desc = description.toLowerCase();
+    
+    if (desc.includes('self') || desc.includes('yourself')) return 'Self';
+    if (desc.includes('touch')) return 'Touch';
+    
+    // Look for specific ranges
+    const rangePattern = /(\d+)\s*feet/i;
+    const match = desc.match(rangePattern);
+    if (match) return `${match[1]} feet`;
+    
+    return 'Self';
+  }
+
+  /**
+   * Determine duration from feature description
+   */
+  private determineDurationFromDescription(description: string): string {
+    const desc = description.toLowerCase();
+    
+    if (desc.includes('1 minute')) return '1 minute';
+    if (desc.includes('10 minutes')) return '10 minutes';
+    if (desc.includes('1 hour')) return '1 hour';
+    if (desc.includes('until')) return 'Until condition met';
+    if (desc.includes('instantaneous')) return 'Instantaneous';
+    
+    return 'Instantaneous';
+  }
+
+  /**
+   * Calculate scaled feature uses based on character level and levelScales
+   */
+  private calculateScaledFeatureUses(feature: any, characterData: CharacterData, defaultUses: number): number {
+    // Find the character's level in the class that has this feature
+    const characterLevel = this.getCharacterLevelForFeature(feature, characterData);
+    
+    // Find the class that contains this feature to get its levelScales
+    const levelScales = this.findClassFeatureLevelScales(feature, characterData);
+    
+    if (!levelScales || !Array.isArray(levelScales)) {
+      if (featureFlags.isEnabled('spelllist_debug')) {
+        console.log(`🪄 No level scales found for ${feature.definition?.name}, using default: ${defaultUses}`);
+      }
+      return defaultUses;
+    }
+
+    if (featureFlags.isEnabled('spelllist_debug')) {
+      console.log(`🪄 Calculating scaled uses for ${feature.definition?.name}: character level ${characterLevel}`);
+      console.log(`🪄 Level scales available:`, levelScales);
+    }
+
+    // Look for usage-related levelScales first (prefer non-damage scaling)
+    // Some features may have multiple levelScales for different aspects (damage vs usage count)
+    const usageLevelScales = levelScales.filter(scale => 
+      scale.description && 
+      !scale.description.toLowerCase().includes('damage') &&
+      !scale.description.toLowerCase().includes('+')
+    );
+    
+    // If we have usage-specific levelScales, use those; otherwise use all levelScales
+    const applicableLevelScales = usageLevelScales.length > 0 ? usageLevelScales : levelScales;
+    
+    if (featureFlags.isEnabled('spelllist_debug') && usageLevelScales.length > 0) {
+      console.log(`🪄 Found ${usageLevelScales.length} usage-specific level scales (filtering out damage scaling)`);
+    }
+
+    // Find the appropriate level scale entry
+    // Sort level scales by level to ensure we get the highest applicable level
+    const sortedLevelScales = applicableLevelScales.sort((a, b) => a.level - b.level);
+    let applicableUses = defaultUses;
+    
+    for (const levelScale of sortedLevelScales) {
+      // If character level is at or above this scale level, use its value
+      if (characterLevel >= levelScale.level && levelScale.fixedValue !== undefined && levelScale.fixedValue !== null) {
+        applicableUses = levelScale.fixedValue;
+        
+        if (featureFlags.isEnabled('spelllist_debug')) {
+          console.log(`🪄 Applied level scale at level ${levelScale.level}: ${applicableUses} uses (${levelScale.description || 'no description'})`);
+        }
+      } else if (featureFlags.isEnabled('spelllist_debug')) {
+        if (characterLevel < levelScale.level) {
+          console.log(`🪄 Skipping level ${levelScale.level} (character level ${characterLevel} too low)`);
+        } else if (levelScale.fixedValue === undefined || levelScale.fixedValue === null) {
+          console.log(`🪄 Skipping level ${levelScale.level} (no fixedValue: ${levelScale.fixedValue})`);
+        }
+      }
+    }
+
+    if (featureFlags.isEnabled('spelllist_debug')) {
+      console.log(`🪄 Final scaled uses for ${feature.definition?.name}: ${applicableUses}`);
+    }
+
+    return applicableUses;
+  }
+
+  /**
+   * Find levelScales for a feature from the class that contains it
+   */
+  private findClassFeatureLevelScales(feature: any, characterData: CharacterData): any[] | null {
+    if (!feature.definition?.id) {
+      return null;
+    }
+
+    // Search through each class to find the one containing this feature
+    for (const characterClass of characterData.classes || []) {
+      // Check if this class has the feature in its classFeatures
+      const hasClassFeature = characterClass.classFeatures?.some(cf => cf.definition?.id === feature.definition.id);
+      
+      // Check if this class has the feature in its subclassFeatures  
+      const hasSubclassFeature = characterClass.subclassFeatures?.some(sf => sf.definition?.id === feature.definition.id);
+      
+      if (hasClassFeature || hasSubclassFeature) {
+        if (featureFlags.isEnabled('spelllist_debug')) {
+          console.log(`🪄 Found class ${characterClass.definition?.name} containing feature ${feature.definition.name}`);
+        }
+        
+        // Found the class! Now look for levelScales in its classFeatures
+        for (const classFeature of characterClass.classFeatures || []) {
+          if (classFeature.definition?.id === feature.definition.id) {
+            if (featureFlags.isEnabled('spelllist_debug')) {
+              console.log(`🪄 Examining class feature ${classFeature.definition?.name}:`, {
+                hasLevelScales: !!classFeature.levelScales,
+                levelScalesLength: classFeature.levelScales?.length || 0,
+                levelScales: classFeature.levelScales,
+                hasDefinitionLevelScales: !!classFeature.definition?.levelScales,
+                definitionLevelScales: classFeature.definition?.levelScales
+              });
+            }
+            
+            // Check for levelScales on the feature instance
+            if (classFeature.levelScales && classFeature.levelScales.length > 0) {
+              return classFeature.levelScales;
+            }
+            
+            // Check for levelScales on the feature definition
+            if (classFeature.definition?.levelScales && classFeature.definition.levelScales.length > 0) {
+              return classFeature.definition.levelScales;
+            }
+          }
+        }
+        
+        // Also check subclass features for levelScales
+        for (const subclassFeature of characterClass.subclassFeatures || []) {
+          if (subclassFeature.definition?.id === feature.definition.id) {
+            if (featureFlags.isEnabled('spelllist_debug')) {
+              console.log(`🪄 Examining subclass feature ${subclassFeature.definition?.name}:`, {
+                hasLevelScales: !!subclassFeature.levelScales,
+                levelScales: subclassFeature.levelScales,
+                hasDefinitionLevelScales: !!subclassFeature.definition?.levelScales,
+                definitionLevelScales: subclassFeature.definition?.levelScales
+              });
+            }
+            
+            if (subclassFeature.levelScales && subclassFeature.levelScales.length > 0) {
+              return subclassFeature.levelScales;
+            }
+            
+            if (subclassFeature.definition?.levelScales && subclassFeature.definition.levelScales.length > 0) {
+              return subclassFeature.definition.levelScales;
+            }
+          }
+        }
+        
+        // Found the class but no levelScales in this specific feature
+        if (featureFlags.isEnabled('spelllist_debug')) {
+          console.log(`🪄 Found class for ${feature.definition.name} but no levelScales found anywhere`);
+        }
+        return null;
+      }
+    }
+
+    if (featureFlags.isEnabled('spelllist_debug')) {
+      console.log(`🪄 Could not find class containing feature ${feature.definition.name}`);
+    }
+    return null;
+  }
+
+  /**
+   * Get character level for the class that has this feature
+   */
+  private getCharacterLevelForFeature(feature: any, characterData: CharacterData): number {
+    // Try to find which class this feature belongs to
+    for (const characterClass of characterData.classes || []) {
+      // Check class features
+      if (characterClass.classFeatures?.some(cf => cf.definition?.id === feature.definition?.id)) {
+        return characterClass.level || 1;
+      }
+      
+      // Check subclass features
+      if (characterClass.subclassFeatures?.some(sf => sf.definition?.id === feature.definition?.id)) {
+        return characterClass.level || 1;
+      }
+    }
+
+    // If not found in classes, might be racial - use total character level
+    return characterData.classes?.reduce((total, cls) => total + (cls.level || 0), 0) || 1;
   }
 }
 
