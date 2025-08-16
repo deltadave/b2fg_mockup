@@ -329,13 +329,18 @@ describe('FeatureProcessor', () => {
         }
       };
 
-      const xml = processor.generateFeaturesXML(mockFeatures);
+      const featuresXML = processor.generateFeaturesXML(mockFeatures);
+      const traitsXML = processor.generateTraitsXML(mockFeatures);
       
-      expect(xml).toContain('<name type="string">Test Feature</name>');
-      expect(xml).toContain('<name type="string">Test Trait</name>');
-      expect(xml).toContain('<source type="string">fighter</source>');
-      expect(xml).toContain('<source type="string">human</source>');
-      expect(xml).toContain('<locked type="number">1</locked>');
+      // Test class features XML
+      expect(featuresXML).toContain('<name type="string">Test Feature</name>');
+      expect(featuresXML).toContain('<source type="string">fighter</source>');
+      expect(featuresXML).toContain('<locked type="number">1</locked>');
+      
+      // Test racial traits XML  
+      expect(traitsXML).toContain('<name type="string">Test Trait</name>');
+      expect(traitsXML).toContain('<source type="string">human</source>');
+      expect(traitsXML).toContain('<locked type="number">1</locked>');
     });
   });
 

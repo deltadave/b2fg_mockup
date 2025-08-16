@@ -3,6 +3,7 @@
     "allow": [
       "Bash(git commit:*)"
     ],
-    "deny": []
+    "deny": [],
+    "defaultMode": "acceptEdits"
   }
 }

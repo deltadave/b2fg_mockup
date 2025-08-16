@@ -595,6 +595,10 @@ export class CharacterConverterFacade {
       ${this.generateSkillsXML(characterData)}
     </skilllist>
     
+    <traitlist>
+      ${this.generateTraitsXML(characterData)}
+    </traitlist>
+    
     ${this.generatePowerMetaXML(characterData)}
   </character>
 </root>`;
@@ -1095,7 +1099,7 @@ export class CharacterConverterFacade {
   private generateFeaturesXML(characterData: CharacterData): string {
     if (featureFlags.isEnabled('feature_processor')) {
       try {
-        console.log('🎭 Using modern FeatureProcessor service');
+        console.log('🎭 Using modern FeatureProcessor service for class features');
         
         // Enable debug mode if feature flag is set
         if (featureFlags.isEnabled('feature_processor_debug')) {
@@ -1113,8 +1117,7 @@ export class CharacterConverterFacade {
         
         // Show detailed breakdown if debug is enabled
         if (featureFlags.isEnabled('feature_processor_debug')) {
-          console.log('Feature Processing Breakdown:', processedFeatures.debugInfo.classBreakdown);
-          console.log('Racial Traits Breakdown:', processedFeatures.debugInfo.raceBreakdown);
+          console.log('Class Features Breakdown:', processedFeatures.debugInfo.classBreakdown);
           console.log(`Processing Method: ${processedFeatures.debugInfo.processingMethod}`);
           
           // Show features grouped by source
@@ -1143,6 +1146,45 @@ export class CharacterConverterFacade {
     } else {
       console.log('🎭 Using legacy feature processing (placeholder)');
       return '<!-- Legacy feature processing not yet implemented -->';
+    }
+  }
+
+  private generateTraitsXML(characterData: CharacterData): string {
+    if (featureFlags.isEnabled('feature_processor')) {
+      try {
+        console.log('🎭 Using modern FeatureProcessor service for racial traits');
+        
+        // Enable debug mode if feature flag is set
+        if (featureFlags.isEnabled('feature_processor_debug')) {
+          FeatureProcessor.setDebugMode(true);
+        }
+        
+        // Process character features
+        const processedFeatures = this.featureProcessor.processCharacterFeatures(characterData);
+        
+        // Generate XML from processed traits
+        const traitsXML = this.featureProcessor.generateTraitsXML(processedFeatures);
+        
+        // Reset debug mode
+        FeatureProcessor.setDebugMode(false);
+        
+        // Show detailed breakdown if debug is enabled
+        if (featureFlags.isEnabled('feature_processor_debug')) {
+          console.log('Racial Traits Breakdown:', processedFeatures.debugInfo.raceBreakdown);
+          console.log(`Processing Method: ${processedFeatures.debugInfo.processingMethod}`);
+          console.log('Traits by Race:', processedFeatures.traitsByRace);
+        }
+        
+        console.log(`🎭 Generated traits XML: ${processedFeatures.debugInfo.raceBreakdown.traitCount} total traits`);
+        return traitsXML;
+        
+      } catch (error) {
+        console.error('Failed to generate traits XML:', error);
+        return '<!-- Trait processing failed -->';
+      }
+    } else {
+      console.log('🎭 Using legacy trait processing (placeholder)');
+      return '<!-- Legacy trait processing not yet implemented -->';
     }
   }
 

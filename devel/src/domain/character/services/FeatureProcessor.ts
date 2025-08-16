@@ -303,22 +303,23 @@ export class FeatureProcessor {
   }
 
   /**
-   * Generate Fantasy Grounds XML for features
+   * Generate Fantasy Grounds XML for features (class features only)
    */
   generateFeaturesXML(features: ProcessedFeatures, options: FeatureXMLOptions = this.getDefaultXMLOptions()): string {
-    let xml = '';
-
-    // Generate class features XML
     if (features.classFeatures.length > 0) {
-      xml += this.generateClassFeaturesXML(features.classFeatures, options);
+      return this.generateClassFeaturesXML(features.classFeatures, options);
     }
+    return '';
+  }
 
-    // Generate racial traits XML
+  /**
+   * Generate Fantasy Grounds XML for racial traits (for traitlist section)
+   */
+  generateTraitsXML(features: ProcessedFeatures, options: FeatureXMLOptions = this.getDefaultXMLOptions()): string {
     if (features.racialTraits.length > 0) {
-      xml += this.generateRacialTraitsXML(features.racialTraits, options);
+      return this.generateRacialTraitsXML(features.racialTraits, options);
     }
-
-    return xml;
+    return '';
   }
 
   /**
