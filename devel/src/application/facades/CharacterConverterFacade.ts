@@ -344,6 +344,17 @@ export class CharacterConverterFacade {
       
       this.reportProgress('Parsing character data', 50);
 
+      // Debug: Log personality traits information
+      if (featureFlags.isEnabled('debug_character_data')) {
+        const traits = characterData.traits || {};
+        console.log('🎭 Personality Traits:', {
+          personalityTraits: traits.personalityTraits ? `${traits.personalityTraits.substring(0, 50)}...` : 'None',
+          ideals: traits.ideals ? `${traits.ideals.substring(0, 50)}...` : 'None',
+          bonds: traits.bonds ? `${traits.bonds.substring(0, 50)}...` : 'None',
+          flaws: traits.flaws ? `${traits.flaws.substring(0, 50)}...` : 'None'
+        });
+      }
+
       // Step 2: Parse character data (legacy for now)
       const parseStart = performance.now();
       const xml = await this.parseCharacterToXML(characterData);
@@ -503,10 +514,10 @@ export class CharacterConverterFacade {
     <weight type="string">${this.sanitizeString(characterData.weight ? characterData.weight.toString() : '')}</weight>
     <size type="string">${gameConfigService.getDefaultSize()}</size>
     <alignment type="string">${this.sanitizeString(gameConfigService.getAlignmentName(characterData.alignmentId))}</alignment>
-    <bonds type="string"></bonds>
-    <flaws type="string"></flaws>
-    <ideals type="string"></ideals>
-    <personalitytraits type="string"></personalitytraits>
+    <bonds type="string">${this.sanitizeString(characterData.traits?.bonds || '')}</bonds>
+    <flaws type="string">${this.sanitizeString(characterData.traits?.flaws || '')}</flaws>
+    <ideals type="string">${this.sanitizeString(characterData.traits?.ideals || '')}</ideals>
+    <personalitytraits type="string">${this.sanitizeString(characterData.traits?.personalityTraits || '')}</personalitytraits>
     <race type="string">${this.sanitizeString(characterData.race?.fullName || 'Unknown')}</race>
     <racelink type="windowreference">
       <class>reference_race</class>
@@ -519,7 +530,7 @@ export class CharacterConverterFacade {
     </backgroundlink>
     <level type="number">${totalLevel}</level>
     <profbonus type="number">${proficiencyBonus}</profbonus>
-    <notes type="string">${this.sanitizeString(`Character converted from D&D Beyond (ID: ${characterId}) using Modern Converter v2.0`)}</notes>
+    <notes type="string">${this.generateNotesText(characterData, characterId)}</notes>
     <perception type="number">0</perception>
     <perceptionmodifier type="number">0</perceptionmodifier>
     <exp type="number">${characterData.currentXp || 0}</exp>
@@ -1404,6 +1415,57 @@ export class CharacterConverterFacade {
     } catch (error) {
       console.error('Failed to generate coins XML:', error);
       return '<!-- Coin processing failed -->';
+    }
+  }
+
+  /**
+   * Generate character notes text from D&D Beyond notes data
+   */
+  private generateNotesText(characterData: CharacterData, characterId: string): string {
+    try {
+      console.log('📝 Generating character notes');
+      
+      let allNotes = '';
+      
+      // Add character ID header (like legacy code)
+      allNotes += `D&D Beyond Character ID: ${characterId}\\n`;
+      
+      // Process character notes if they exist
+      if (characterData.notes && typeof characterData.notes === 'object') {
+        const noteEntries = Object.entries(characterData.notes);
+        
+        if (noteEntries.length > 0) {
+          console.log(`📝 Found ${noteEntries.length} note categories`);
+          
+          noteEntries.forEach(([key, value]) => {
+            if (value !== null && value !== undefined && value !== '') {
+              // Capitalize first letter of the key (like legacy code)
+              const capitalizedKey = key.charAt(0).toUpperCase() + key.substring(1);
+              
+              // Clean and format the value
+              const cleanValue = this.sanitizeString(value).trim();
+              
+              allNotes += `${capitalizedKey}: ${cleanValue}\\n`;
+              
+              console.log(`📝 Added note: ${capitalizedKey} (${cleanValue.length} chars)`);
+            }
+          });
+        } else {
+          console.log('📝 Notes object exists but is empty');
+        }
+      } else {
+        console.log('📝 No notes found in character data');
+      }
+      
+      // Remove any trailing newlines and return
+      const finalNotes = allNotes.replace(/\\n$/, '');
+      console.log(`📝 Generated notes text (${finalNotes.length} chars total)`);
+      
+      return this.sanitizeString(finalNotes);
+      
+    } catch (error) {
+      console.error('Failed to generate notes text:', error);
+      return this.sanitizeString(`Character converted from D&D Beyond (ID: ${characterId}) using Modern Converter v2.0`);
     }
   }
 
