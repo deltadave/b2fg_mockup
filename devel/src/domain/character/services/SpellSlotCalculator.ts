@@ -1,445 +1,523 @@
 /**
  * SpellSlotCalculator Service
  * 
- * Modern replacement for legacy getSpellSlots() function from spellSlots.js.
- * Handles D&D 5e spell slot calculations for single and multiclass characters
- * across all spellcasting classes including full casters, half casters, and 
- * third casters (Artificer).
+ * Calculates D&D 5e spell slots for single class and multiclass characters.
+ * Handles full casters, half casters, third casters, and Pact Magic.
+ * Includes XML generation for Fantasy Grounds integration.
  * 
- * Migrated from legacy spellSlots.js (811 lines)
+ * Migrated from legacy getSpellSlots() function in spellSlots.js (810 lines)
  */
 
-export type SpellcasterType = 'full' | 'half' | 'third' | 'pact' | 'none';
-export type ClassName = 'bard' | 'cleric' | 'druid' | 'sorcerer' | 'wizard' | 'warlock' | 
-                       'paladin' | 'ranger' | 'artificer' | 'fighter' | 'rogue';
+import {
+  CharacterClass,
+  SpellcastingProgression,
+  SpellSlotsByLevel,
+  SpellSlotCalculationResult,
+  FULL_CASTER_SPELL_SLOTS,
+  HALF_CASTER_SPELL_SLOTS,
+  THIRD_CASTER_SPELL_SLOTS,
+  PACT_MAGIC_PROGRESSION,
+  CLASS_CASTER_TYPES,
+  SPELLCASTING_SUBCLASSES,
+  CasterLevel,
+  SpellSlotCount
+} from '@/domain/character/models/SpellSlots';
+import { featureFlags } from '@/core/FeatureFlags';
 
-export interface ClassInfo {
-  name: ClassName;
-  level: number;
-  subclass?: string;
-  casterType: SpellcasterType;
+export interface SpellSlotCalculationOptions {
+  includeDebugInfo: boolean;
+  strictMulticlassRules: boolean;
+  handleSpelllessRanger: boolean;
+  includePactMagicInMainSlots: boolean;
 }
 
-export interface SpellSlots {
-  level1: number;
-  level2: number;
-  level3: number;
-  level4: number;
-  level5: number;
-  level6: number;
-  level7: number;
-  level8: number;
-  level9: number;
-}
-
-export interface CasterLevelBreakdown {
-  fullCasterLevels: number;
-  halfCasterLevels: number;
-  thirdCasterLevels: number;
-  totalCasterLevel: number;
-  casterClassCount: number;
-  isMulticlass: boolean;
-}
-
-export interface SpellSlotCalculationResult {
-  spellSlots: SpellSlots;
-  casterBreakdown: CasterLevelBreakdown;
-  debugInfo: {
-    classContributions: Array<{
-      className: string;
-      level: number;
-      casterType: SpellcasterType;
-      contribution: number;
-    }>;
-    calculationMethod: 'single-class' | 'multiclass';
-    totalCasterLevel: number;
-  };
+export interface SpellSlotXMLResult {
+  spellSlotsXML: string;
+  pactMagicXML: string;
+  combinedXML: string;
 }
 
 export class SpellSlotCalculator {
-  /**
-   * Enable or disable detailed debugging output
-   */
   private static debugEnabled: boolean = false;
-  
+
   /**
-   * Set debug mode for detailed console output
+   * Enable or disable debug mode for SpellSlotCalculator
    */
   static setDebugMode(enabled: boolean): void {
     this.debugEnabled = enabled;
   }
 
   /**
-   * Full caster spell slot table (Bard, Cleric, Druid, Sorcerer, Wizard)
+   * Calculate spell slots for a character with their class levels
+   * 
+   * @param classes - Array of character classes with levels
+   * @param options - Calculation options
+   * @returns Complete spell slot calculation result
    */
-  private static readonly FULL_CASTER_SLOTS: Record<number, SpellSlots> = {
-    0: { level1: 0, level2: 0, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    1: { level1: 2, level2: 0, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    2: { level1: 3, level2: 0, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    3: { level1: 4, level2: 2, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    4: { level1: 4, level2: 3, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    5: { level1: 4, level2: 3, level3: 2, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    6: { level1: 4, level2: 3, level3: 3, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    7: { level1: 4, level2: 3, level3: 3, level4: 1, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    8: { level1: 4, level2: 3, level3: 3, level4: 2, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    9: { level1: 4, level2: 3, level3: 3, level4: 3, level5: 1, level6: 0, level7: 0, level8: 0, level9: 0 },
-    10: { level1: 4, level2: 3, level3: 3, level4: 3, level5: 2, level6: 0, level7: 0, level8: 0, level9: 0 },
-    11: { level1: 4, level2: 3, level3: 3, level4: 3, level5: 2, level6: 1, level7: 0, level8: 0, level9: 0 },
-    12: { level1: 4, level2: 3, level3: 3, level4: 3, level5: 2, level6: 1, level7: 0, level8: 0, level9: 0 },
-    13: { level1: 4, level2: 3, level3: 3, level4: 3, level5: 2, level6: 1, level7: 1, level8: 0, level9: 0 },
-    14: { level1: 4, level2: 3, level3: 3, level4: 3, level5: 2, level6: 1, level7: 1, level8: 0, level9: 0 },
-    15: { level1: 4, level2: 3, level3: 3, level4: 3, level5: 2, level6: 1, level7: 1, level8: 1, level9: 0 },
-    16: { level1: 4, level2: 3, level3: 3, level4: 3, level5: 2, level6: 1, level7: 1, level8: 1, level9: 0 },
-    17: { level1: 4, level2: 3, level3: 3, level4: 3, level5: 2, level6: 1, level7: 1, level8: 1, level9: 1 },
-    18: { level1: 4, level2: 3, level3: 3, level4: 3, level5: 3, level6: 1, level7: 1, level8: 1, level9: 1 },
-    19: { level1: 4, level2: 3, level3: 3, level4: 3, level5: 3, level6: 2, level7: 1, level8: 1, level9: 1 },
-    20: { level1: 4, level2: 3, level3: 3, level4: 3, level5: 3, level6: 2, level7: 2, level8: 1, level9: 1 }
-  };
-
-  /**
-   * Half caster spell slot table (Paladin, Ranger)
-   */
-  private static readonly HALF_CASTER_SLOTS: Record<number, SpellSlots> = {
-    0: { level1: 0, level2: 0, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    1: { level1: 0, level2: 0, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    2: { level1: 2, level2: 0, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    3: { level1: 3, level2: 0, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    4: { level1: 3, level2: 0, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    5: { level1: 4, level2: 2, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    6: { level1: 4, level2: 2, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    7: { level1: 4, level2: 3, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    8: { level1: 4, level2: 3, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    9: { level1: 4, level2: 3, level3: 2, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    10: { level1: 4, level2: 3, level3: 2, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    11: { level1: 4, level2: 3, level3: 3, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    12: { level1: 4, level2: 3, level3: 3, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    13: { level1: 4, level2: 3, level3: 3, level4: 1, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    14: { level1: 4, level2: 3, level3: 3, level4: 1, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    15: { level1: 4, level2: 3, level3: 3, level4: 2, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    16: { level1: 4, level2: 3, level3: 3, level4: 2, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    17: { level1: 4, level2: 3, level3: 3, level4: 3, level5: 1, level6: 0, level7: 0, level8: 0, level9: 0 },
-    18: { level1: 4, level2: 3, level3: 3, level4: 3, level5: 1, level6: 0, level7: 0, level8: 0, level9: 0 },
-    19: { level1: 4, level2: 3, level3: 3, level4: 3, level5: 2, level6: 0, level7: 0, level8: 0, level9: 0 },
-    20: { level1: 4, level2: 3, level3: 3, level4: 3, level5: 2, level6: 0, level7: 0, level8: 0, level9: 0 }
-  };
-
-  /**
-   * Third caster spell slot table (Eldritch Knight Fighter, Arcane Trickster Rogue, Artificer)
-   */
-  private static readonly THIRD_CASTER_SLOTS: Record<number, SpellSlots> = {
-    0: { level1: 0, level2: 0, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    1: { level1: 0, level2: 0, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    2: { level1: 0, level2: 0, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    3: { level1: 2, level2: 0, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    4: { level1: 3, level2: 0, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    5: { level1: 3, level2: 0, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    6: { level1: 3, level2: 0, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    7: { level1: 4, level2: 2, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    8: { level1: 4, level2: 2, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    9: { level1: 4, level2: 2, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    10: { level1: 4, level2: 3, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    11: { level1: 4, level2: 3, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    12: { level1: 4, level2: 3, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    13: { level1: 4, level2: 3, level3: 2, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    14: { level1: 4, level2: 3, level3: 2, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    15: { level1: 4, level2: 3, level3: 2, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    16: { level1: 4, level2: 3, level3: 3, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    17: { level1: 4, level2: 3, level3: 3, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    18: { level1: 4, level2: 3, level3: 3, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    19: { level1: 4, level2: 3, level3: 3, level4: 1, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    20: { level1: 4, level2: 3, level3: 3, level4: 1, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 }
-  };
-
-  /**
-   * Artificer has unique spell slot progression
-   */
-  private static readonly ARTIFICER_SLOTS: Record<number, SpellSlots> = {
-    0: { level1: 0, level2: 0, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    1: { level1: 2, level2: 0, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    2: { level1: 2, level2: 0, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    3: { level1: 3, level2: 0, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    4: { level1: 3, level2: 0, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    5: { level1: 4, level2: 2, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    6: { level1: 4, level2: 2, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    7: { level1: 4, level2: 3, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    8: { level1: 4, level2: 3, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    9: { level1: 4, level2: 3, level3: 2, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    10: { level1: 4, level2: 3, level3: 2, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    11: { level1: 4, level2: 3, level3: 3, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    12: { level1: 4, level2: 3, level3: 3, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    13: { level1: 4, level2: 3, level3: 3, level4: 1, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    14: { level1: 4, level2: 3, level3: 3, level4: 1, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    15: { level1: 4, level2: 3, level3: 3, level4: 2, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    16: { level1: 4, level2: 3, level3: 3, level4: 2, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 },
-    17: { level1: 4, level2: 3, level3: 3, level4: 3, level5: 1, level6: 0, level7: 0, level8: 0, level9: 0 },
-    18: { level1: 4, level2: 3, level3: 3, level4: 3, level5: 1, level6: 0, level7: 0, level8: 0, level9: 0 },
-    19: { level1: 4, level2: 3, level3: 3, level4: 3, level5: 2, level6: 0, level7: 0, level8: 0, level9: 0 },
-    20: { level1: 4, level2: 3, level3: 3, level4: 3, level5: 2, level6: 0, level7: 0, level8: 0, level9: 0 }
-  };
-
-  /**
-   * Determine spellcaster type and level contribution for multiclassing
-   */
-  static getClassCasterInfo(className: ClassName, level: number, subclass?: string): { type: SpellcasterType; contribution: number } {
-    switch (className) {
-      case 'bard':
-      case 'cleric':
-      case 'druid':
-      case 'sorcerer':
-      case 'wizard':
-        return { type: 'full', contribution: level };
-
-      case 'paladin':
-      case 'ranger':
-        // Special handling for spellless ranger
-        if (className === 'ranger' && subclass === 'spellless') {
-          return { type: 'none', contribution: 0 };
-        }
-        return { type: 'half', contribution: Math.floor(level / 2) };
-
-      case 'artificer':
-        return { type: 'half', contribution: Math.floor(level / 2) };
-
-      case 'fighter':
-        if (subclass === 'eldritch_knight') {
-          return { type: 'third', contribution: Math.floor(level / 3) };
-        }
-        return { type: 'none', contribution: 0 };
-
-      case 'rogue':
-        if (subclass === 'arcane_trickster') {
-          return { type: 'third', contribution: Math.floor(level / 3) };
-        }
-        return { type: 'none', contribution: 0 };
-
-      case 'warlock':
-        // Warlocks use Pact Magic, handled separately
-        return { type: 'pact', contribution: 0 };
-
-      default:
-        return { type: 'none', contribution: 0 };
-    }
-  }
-
-  /**
-   * Calculate caster level breakdown for multiclassing
-   */
-  static calculateCasterLevels(classes: ClassInfo[]): CasterLevelBreakdown {
-    let fullCasterLevels = 0;
-    let halfCasterLevels = 0;
-    let thirdCasterLevels = 0;
-    let casterClassCount = 0;
-
-    for (const classInfo of classes) {
-      const { type, contribution } = this.getClassCasterInfo(classInfo.name, classInfo.level, classInfo.subclass);
-      
-      if (type !== 'none' && type !== 'pact' && contribution > 0) {
-        casterClassCount++;
-        
-        switch (type) {
-          case 'full':
-            fullCasterLevels += contribution;
-            break;
-          case 'half':
-            halfCasterLevels += contribution;
-            break;
-          case 'third':
-            thirdCasterLevels += contribution;
-            break;
-        }
-      }
-    }
-
-    const totalCasterLevel = fullCasterLevels + halfCasterLevels + thirdCasterLevels;
-    const isMulticlass = casterClassCount > 1;
-
-    return {
-      fullCasterLevels,
-      halfCasterLevels,
-      thirdCasterLevels,
-      totalCasterLevel,
-      casterClassCount,
-      isMulticlass
-    };
-  }
-
-  /**
-   * Get spell slots for a single class
-   */
-  static getSingleClassSpellSlots(className: ClassName, level: number, subclass?: string): SpellSlots {
-    const { type } = this.getClassCasterInfo(className, level, subclass);
-    const emptySlots: SpellSlots = { level1: 0, level2: 0, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 };
-
-    switch (type) {
-      case 'full':
-        return this.FULL_CASTER_SLOTS[Math.min(level, 20)] ?? emptySlots;
-
-      case 'half':
-        if (className === 'artificer') {
-          return this.ARTIFICER_SLOTS[Math.min(level, 20)] ?? emptySlots;
-        }
-        return this.HALF_CASTER_SLOTS[Math.min(level, 20)] ?? emptySlots;
-
-      case 'third':
-        return this.THIRD_CASTER_SLOTS[Math.min(level, 20)] ?? emptySlots;
-
-      case 'pact':
-        // Warlock Pact Magic handled separately
-        return emptySlots;
-
-      default:
-        return emptySlots;
-    }
-  }
-
-  /**
-   * Get multiclass spell slots based on total caster level
-   */
-  static getMulticlassSpellSlots(totalCasterLevel: number): SpellSlots {
-    const emptySlots: SpellSlots = { level1: 0, level2: 0, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 };
-    return this.FULL_CASTER_SLOTS[Math.min(totalCasterLevel, 20)] ?? emptySlots;
-  }
-
-  /**
-   * Main spell slot calculation function
-   * Modern replacement for legacy getSpellSlots() function
-   */
-  static calculateSpellSlots(classes: ClassInfo[]): SpellSlotCalculationResult {
-    if (this.debugEnabled) {
-      console.group('🪄 Spell Slot Calculation');
-      console.log('Classes:', classes);
-    }
-
-    const casterBreakdown = this.calculateCasterLevels(classes);
-    const debugInfo = {
-      classContributions: [] as Array<{ className: string; level: number; casterType: SpellcasterType; contribution: number }>,
-      calculationMethod: 'single-class' as 'single-class' | 'multiclass',
-      totalCasterLevel: casterBreakdown.totalCasterLevel
-    };
-
-    // Build debug info
-    for (const classInfo of classes) {
-      const { type, contribution } = this.getClassCasterInfo(classInfo.name, classInfo.level, classInfo.subclass);
-      debugInfo.classContributions.push({
-        className: classInfo.name,
-        level: classInfo.level,
-        casterType: type,
-        contribution
+  calculateSpellSlots(
+    classes: CharacterClass[],
+    options: SpellSlotCalculationOptions = this.getDefaultOptions()
+  ): SpellSlotCalculationResult {
+    
+    if (SpellSlotCalculator.debugEnabled || featureFlags.isEnabled('spell_slot_calculator_debug')) {
+      console.log('🔮 SpellSlotCalculator: Calculating spell slots', {
+        classCount: classes.length,
+        classes: classes.map(c => `${c.classDefinition.name}${c.level}`),
+        options
       });
     }
 
-    let spellSlots: SpellSlots;
+    // Analyze spellcasting progression for each class
+    const progressions = this.analyzeSpellcastingClasses(classes, options);
+    
+    // Determine calculation method
+    const casterClasses = progressions.filter(p => p.casterType !== 'none');
+    const hasPactMagic = casterClasses.some(p => p.isPactMagic);
+    const hasRegularCasting = casterClasses.some(p => !p.isPactMagic && p.casterType !== 'none');
+    
+    let calculationMethod: SpellSlotCalculationResult['debugInfo']['calculationMethod'];
+    let spellSlots: SpellSlotsByLevel;
+    let pactMagicSlots: SpellSlotsByLevel;
+    let multiclassCasterLevel: number;
 
-    if (casterBreakdown.isMulticlass) {
-      // Multiclass spellcasting: use combined caster level
-      debugInfo.calculationMethod = 'multiclass';
-      spellSlots = this.getMulticlassSpellSlots(casterBreakdown.totalCasterLevel);
-      
-      if (this.debugEnabled) {
-        console.log(`Multiclass calculation: ${casterBreakdown.totalCasterLevel} total caster levels`);
-        console.log(`Full: ${casterBreakdown.fullCasterLevels}, Half: ${casterBreakdown.halfCasterLevels}, Third: ${casterBreakdown.thirdCasterLevels}`);
-      }
-    } else if (casterBreakdown.casterClassCount === 1) {
-      // Single caster class: use class-specific table
-      debugInfo.calculationMethod = 'single-class';
-      const casterClass = classes.find(c => {
-        const { type } = this.getClassCasterInfo(c.name, c.level, c.subclass);
-        return type !== 'none' && type !== 'pact';
-      });
-      
-      if (casterClass) {
-        spellSlots = this.getSingleClassSpellSlots(casterClass.name, casterClass.level, casterClass.subclass);
-        
-        if (this.debugEnabled) {
-          console.log(`Single class calculation: ${casterClass.name} level ${casterClass.level}`);
-        }
-      } else {
-        spellSlots = { level1: 0, level2: 0, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 };
-      }
+    if (hasPactMagic && !hasRegularCasting) {
+      // Pure warlock
+      calculationMethod = 'pact_magic_only';
+      spellSlots = this.getEmptySpellSlots();
+      pactMagicSlots = this.calculatePactMagicSlots(progressions);
+      multiclassCasterLevel = 0;
+    } else if (casterClasses.length === 1) {
+      // Single class caster
+      calculationMethod = 'single_class';
+      spellSlots = this.calculateSingleClassSpellSlots(casterClasses[0]);
+      pactMagicSlots = this.getEmptySpellSlots();
+      multiclassCasterLevel = casterClasses[0].casterLevel;
+    } else if (casterClasses.length > 1) {
+      // Multiclass caster
+      calculationMethod = 'multiclass';
+      const multiclassResult = this.calculateMulticlassSpellSlots(progressions, options);
+      spellSlots = multiclassResult.regularSpellSlots;
+      pactMagicSlots = multiclassResult.pactMagicSlots;
+      multiclassCasterLevel = multiclassResult.totalCasterLevel;
     } else {
-      // No caster classes
-      spellSlots = { level1: 0, level2: 0, level3: 0, level4: 0, level5: 0, level6: 0, level7: 0, level8: 0, level9: 0 };
-      
-      if (this.debugEnabled) {
-        console.log('No spellcasting classes found');
-      }
+      // Non-caster
+      calculationMethod = 'single_class';
+      spellSlots = this.getEmptySpellSlots();
+      pactMagicSlots = this.getEmptySpellSlots();
+      multiclassCasterLevel = 0;
     }
 
-    if (this.debugEnabled) {
-      console.log('Final spell slots:', spellSlots);
-      console.groupEnd();
+    const result: SpellSlotCalculationResult = {
+      spellSlots,
+      pactMagicSlots,
+      multiclassCasterLevel,
+      totalCasterClasses: casterClasses.length,
+      debugInfo: {
+        classBreakdown: progressions,
+        calculationMethod,
+        casterLevelCalculation: this.buildCasterLevelCalculation(progressions)
+      }
+    };
+
+    if (SpellSlotCalculator.debugEnabled || featureFlags.isEnabled('spell_slot_calculator_debug')) {
+      console.log('🔮 SpellSlotCalculator: Result', {
+        method: calculationMethod,
+        multiclassCasterLevel,
+        totalCasterClasses: casterClasses.length,
+        spellSlots: this.summarizeSpellSlots(spellSlots),
+        pactMagic: this.summarizeSpellSlots(pactMagicSlots)
+      });
     }
+
+    return result;
+  }
+
+  /**
+   * Generate Fantasy Grounds XML for spell slots
+   * 
+   * @param result - Spell slot calculation result
+   * @returns XML strings for spell slots
+   */
+  generateSpellSlotsXML(result: SpellSlotCalculationResult): SpellSlotXMLResult {
+    const spellSlotsXML = this.generateRegularSpellSlotsXML(result.spellSlots);
+    const pactMagicXML = this.generatePactMagicSlotsXML(result.pactMagicSlots);
+    const combinedXML = this.combineSpellSlotXML(spellSlotsXML, pactMagicXML);
 
     return {
-      spellSlots,
-      casterBreakdown,
-      debugInfo
+      spellSlotsXML,
+      pactMagicXML,
+      combinedXML
     };
   }
 
   /**
-   * Convert spell slots to legacy global variable format
-   * For compatibility with existing characterParser.js usage
+   * Analyze spellcasting for each class
    */
-  static toLegacyFormat(spellSlots: SpellSlots): Array<{ level: number; slots: number }> {
-    return [
-      { level: 1, slots: spellSlots.level1 },
-      { level: 2, slots: spellSlots.level2 },
-      { level: 3, slots: spellSlots.level3 },
-      { level: 4, slots: spellSlots.level4 },
-      { level: 5, slots: spellSlots.level5 },
-      { level: 6, slots: spellSlots.level6 },
-      { level: 7, slots: spellSlots.level7 },
-      { level: 8, slots: spellSlots.level8 },
-      { level: 9, slots: spellSlots.level9 }
-    ];
+  private analyzeSpellcastingClasses(
+    classes: CharacterClass[], 
+    options: SpellSlotCalculationOptions
+  ): SpellcastingProgression[] {
+    return classes.map(classInfo => {
+      const className = classInfo.classDefinition.name.toLowerCase();
+      const baseCasterType = CLASS_CASTER_TYPES[className] || 'none';
+      
+      // Handle subclass spellcasting requirements
+      let casterType = baseCasterType;
+      if (baseCasterType === 'third' || baseCasterType === 'none') {
+        const hasSpellcastingSubclass = this.checkSpellcastingSubclass(classInfo);
+        if (!hasSpellcastingSubclass) {
+          casterType = 'none';
+        }
+      }
+
+      // Handle spellless ranger variant
+      if (className === 'ranger' && options.handleSpelllessRanger) {
+        const subclassName = classInfo.subclassDefinition?.name.toLowerCase().replace(/\s+/g, '_');
+        if (subclassName === 'spellless' || subclassName === 'beast_master_spellless') {
+          casterType = 'none';
+        }
+      }
+
+      const casterLevel = this.calculateClassCasterLevel(classInfo, casterType);
+      const isPactMagic = className === 'warlock';
+
+      return {
+        className,
+        casterType,
+        casterLevel,
+        spellSlots: this.getSpellSlotsForProgression(casterType, classInfo.level, className),
+        isPactMagic,
+        spellcastingAbility: this.getSpellcastingAbility(className),
+        actualClassLevel: classInfo.level // Store the actual class level for reference
+      };
+    });
   }
 
   /**
-   * Validate class information for spell slot calculation
+   * Check if a class/subclass combination grants spellcasting
    */
-  static validateClassInfo(classes: ClassInfo[]): {
-    isValid: boolean;
-    issues: string[];
-    warnings: string[];
-  } {
-    const issues: string[] = [];
-    const warnings: string[] = [];
-
-    if (!classes || !Array.isArray(classes)) {
-      issues.push('Classes data is null or not an array');
-      return { isValid: false, issues, warnings };
+  private checkSpellcastingSubclass(classInfo: CharacterClass): boolean {
+    const className = classInfo.classDefinition.name.toLowerCase();
+    const subclassName = classInfo.subclassDefinition?.name.toLowerCase().replace(/\s+/g, '_');
+    
+    if (!subclassName) {
+      return false;
     }
 
-    for (let i = 0; i < classes.length; i++) {
-      const classInfo = classes[i];
-      
-      if (!classInfo?.name) {
-        warnings.push(`Class ${i + 1} is missing name`);
-      }
-      
-      if (!classInfo || typeof classInfo.level !== 'number' || classInfo.level < 1 || classInfo.level > 20) {
-        warnings.push(`Class ${i + 1} (${classInfo?.name || 'unknown'}) has invalid level: ${classInfo?.level}`);
-      }
-
-      // Check for subclass requirements
-      if (classInfo?.name === 'fighter' && !classInfo.subclass) {
-        warnings.push(`Fighter class is missing subclass - assuming non-spellcaster`);
-      }
-      
-      if (classInfo?.name === 'rogue' && !classInfo.subclass) {
-        warnings.push(`Rogue class is missing subclass - assuming non-spellcaster`);
-      }
-      
-      if (classInfo?.name === 'ranger' && !classInfo.subclass) {
-        warnings.push(`Ranger class is missing subclass - assuming standard ranger`);
-      }
+    const validSubclasses = SPELLCASTING_SUBCLASSES[className];
+    if (!validSubclasses) {
+      return false;
     }
+
+    return validSubclasses.length === 0 || validSubclasses.includes(subclassName);
+  }
+
+  /**
+   * Calculate effective caster level for a class
+   */
+  private calculateClassCasterLevel(classInfo: CharacterClass, casterType: string): number {
+    switch (casterType) {
+      case 'full':
+        return classInfo.level;
+      case 'half':
+        return Math.floor(classInfo.level / 2);
+      case 'third':
+        return Math.floor(classInfo.level / 3);
+      case 'pact':
+        return 0; // Pact magic doesn't contribute to multiclass caster level
+      default:
+        return 0;
+    }
+  }
+
+  /**
+   * Get spell slots for a specific progression type and level
+   */
+  private getSpellSlotsForProgression(casterType: string, level: number, className: string): SpellSlotsByLevel {
+    if (casterType === 'none') {
+      return this.getEmptySpellSlots();
+    }
+
+    switch (casterType) {
+      case 'full':
+        return FULL_CASTER_SPELL_SLOTS[level] || this.getEmptySpellSlots();
+      case 'half':
+        return HALF_CASTER_SPELL_SLOTS[level] || this.getEmptySpellSlots();
+      case 'third':
+        // Special handling for different third caster starting levels
+        if (className === 'artificer') {
+          return THIRD_CASTER_SPELL_SLOTS[level] || this.getEmptySpellSlots();
+        } else {
+          // EK/AT start spellcasting at 3rd level
+          if (level < 3) {
+            return this.getEmptySpellSlots();
+          }
+          return THIRD_CASTER_SPELL_SLOTS[level] || this.getEmptySpellSlots();
+        }
+      case 'pact':
+        return this.convertPactMagicToSpellSlots(level);
+      default:
+        return this.getEmptySpellSlots();
+    }
+  }
+
+  /**
+   * Calculate spell slots for single class characters
+   */
+  private calculateSingleClassSpellSlots(progression: SpellcastingProgression): SpellSlotsByLevel {
+    return progression.spellSlots;
+  }
+
+  /**
+   * Calculate spell slots for multiclass characters
+   */
+  private calculateMulticlassSpellSlots(
+    progressions: SpellcastingProgression[],
+    options: SpellSlotCalculationOptions
+  ): { regularSpellSlots: SpellSlotsByLevel; pactMagicSlots: SpellSlotsByLevel; totalCasterLevel: number } {
+    
+    const regularCasters = progressions.filter(p => !p.isPactMagic && p.casterType !== 'none');
+    const pactCasters = progressions.filter(p => p.isPactMagic);
+    
+    // Calculate total multiclass caster level (excluding warlock)
+    const totalCasterLevel = regularCasters.reduce((total, progression) => {
+      return total + progression.casterLevel;
+    }, 0);
+    
+    // Get regular spell slots from multiclass table
+    const regularSpellSlots = FULL_CASTER_SPELL_SLOTS[totalCasterLevel] || this.getEmptySpellSlots();
+    
+    // Calculate pact magic separately
+    const pactMagicSlots = pactCasters.length > 0 
+      ? this.calculatePactMagicSlots(pactCasters)
+      : this.getEmptySpellSlots();
 
     return {
-      isValid: issues.length === 0,
-      issues,
-      warnings
+      regularSpellSlots,
+      pactMagicSlots,
+      totalCasterLevel
+    };
+  }
+
+  /**
+   * Calculate Pact Magic spell slots for warlocks
+   */
+  private calculatePactMagicSlots(progressions: SpellcastingProgression[]): SpellSlotsByLevel {
+    const warlockProgression = progressions.find(p => p.className === 'warlock');
+    if (!warlockProgression || !warlockProgression.actualClassLevel) {
+      return this.getEmptySpellSlots();
+    }
+
+    // Use the actual warlock class level to get pact magic slots
+    return this.convertPactMagicToSpellSlots(warlockProgression.actualClassLevel);
+  }
+
+  /**
+   * Convert warlock level to Pact Magic spell slots
+   */
+  private convertPactMagicToSpellSlots(warlockLevel: number): SpellSlotsByLevel {
+    const pactProgression = PACT_MAGIC_PROGRESSION[warlockLevel];
+    if (!pactProgression) {
+      return this.getEmptySpellSlots();
+    }
+
+    const spellSlots = this.getEmptySpellSlots();
+    spellSlots[pactProgression.slotLevel as keyof SpellSlotsByLevel] = pactProgression.slotCount;
+    
+    return spellSlots;
+  }
+
+  /**
+   * Generate XML for regular spell slots
+   */
+  private generateRegularSpellSlotsXML(spellSlots: SpellSlotsByLevel): string {
+    let xml = '';
+    
+    for (let level = 1; level <= 9; level++) {
+      const slotCount = spellSlots[level as keyof SpellSlotsByLevel];
+      xml += `\t\t\t<spellslots${level}>\n`;
+      xml += `\t\t\t\t<max type=\"number\">${slotCount}</max>\n`;
+      xml += `\t\t\t</spellslots${level}>\n`;
+    }
+    
+    return xml;
+  }
+
+  /**
+   * Generate XML for Pact Magic spell slots
+   */
+  private generatePactMagicSlotsXML(pactSlots: SpellSlotsByLevel): string {
+    let xml = '';
+    
+    for (let level = 1; level <= 9; level++) {
+      const slotCount = pactSlots[level as keyof SpellSlotsByLevel];
+      xml += `\t\t\t<pactmagicslots${level}>\n`;
+      xml += `\t\t\t\t<max type=\"number\">${slotCount}</max>\n`;
+      xml += `\t\t\t</pactmagicslots${level}>\n`;
+    }
+    
+    return xml;
+  }
+
+  /**
+   * Combine regular and pact magic XML
+   */
+  private combineSpellSlotXML(regularXML: string, pactMagicXML: string): string {
+    let combinedXML = '\t\t<powermeta>\n';
+    combinedXML += pactMagicXML;
+    combinedXML += regularXML;
+    combinedXML += '\t\t</powermeta>';
+    return combinedXML;
+  }
+
+  /**
+   * Get spellcasting ability for a class
+   */
+  private getSpellcastingAbility(className: string): 'INT' | 'WIS' | 'CHA' | undefined {
+    const abilityMap: Record<string, 'INT' | 'WIS' | 'CHA'> = {
+      'wizard': 'INT',
+      'artificer': 'INT',
+      'fighter': 'INT', // Eldritch Knight
+      'rogue': 'INT', // Arcane Trickster
+      'cleric': 'WIS',
+      'druid': 'WIS',
+      'ranger': 'WIS',
+      'bard': 'CHA',
+      'sorcerer': 'CHA',
+      'warlock': 'CHA',
+      'paladin': 'CHA'
+    };
+    
+    return abilityMap[className];
+  }
+
+  /**
+   * Build caster level calculation breakdown
+   */
+  private buildCasterLevelCalculation(progressions: SpellcastingProgression[]): Array<{
+    className: string;
+    level: number;
+    casterType: string;
+    contributesToCasterLevel: number;
+  }> {
+    return progressions.map(progression => ({
+      className: progression.className,
+      level: progression.casterLevel,
+      casterType: progression.casterType,
+      contributesToCasterLevel: progression.isPactMagic ? 0 : progression.casterLevel
+    }));
+  }
+
+  /**
+   * Get empty spell slots structure
+   */
+  private getEmptySpellSlots(): SpellSlotsByLevel {
+    return { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 };
+  }
+
+  /**
+   * Summarize spell slots for logging
+   */
+  private summarizeSpellSlots(slots: SpellSlotsByLevel): string {
+    const nonZeroSlots = Object.entries(slots)
+      .filter(([_, count]) => count > 0)
+      .map(([level, count]) => `${level}:${count}`)
+      .join(', ');
+    return nonZeroSlots || 'none';
+  }
+
+  /**
+   * Get default calculation options
+   */
+  private getDefaultOptions(): SpellSlotCalculationOptions {
+    return {
+      includeDebugInfo: true,
+      strictMulticlassRules: true,
+      handleSpelllessRanger: true,
+      includePactMagicInMainSlots: false
+    };
+  }
+
+  /**
+   * Validate character class data
+   */
+  static validateClassData(classes: CharacterClass[]): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+    
+    classes.forEach((classInfo, index) => {
+      if (!classInfo.classDefinition?.name) {
+        errors.push(`Class at index ${index} missing name`);
+      }
+      
+      if (typeof classInfo.level !== 'number' || classInfo.level < 1 || classInfo.level > 20) {
+        errors.push(`Class ${classInfo.classDefinition?.name || index} has invalid level: ${classInfo.level}`);
+      }
+    });
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  }
+
+  /**
+   * Get spell slot information for a specific class and level
+   * Used for direct spell slot queries
+   */
+  static getSpellSlotsForClass(className: string, level: number, subclassName?: string): SpellSlotsByLevel {
+    const calculator = new SpellSlotCalculator();
+    const mockClass: CharacterClass = {
+      id: 1,
+      level,
+      classDefinition: {
+        id: 1,
+        name: className,
+        canCastSpells: true
+      },
+      subclassDefinition: subclassName ? {
+        id: 1,
+        name: subclassName
+      } : undefined
+    };
+
+    const result = calculator.calculateSpellSlots([mockClass]);
+    return result.spellSlots;
+  }
+
+  /**
+   * Convert spell slots to legacy format (for backward compatibility)
+   */
+  static toLegacyFormat(spellSlots: SpellSlotsByLevel): Array<{ level: number; slots: number }> {
+    return Object.entries(spellSlots).map(([level, count]) => ({
+      level: parseInt(level),
+      slots: count
+    }));
+  }
+
+  /**
+   * Validate class info (for backward compatibility)
+   */
+  static validateClassInfo(classInfo: any): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+    
+    if (!classInfo || typeof classInfo !== 'object') {
+      errors.push('Class info must be an object');
+      return { isValid: false, errors };
+    }
+    
+    if (!Array.isArray(classInfo)) {
+      // Single class object validation
+      if (!classInfo.classDefinition?.name) {
+        errors.push('Class definition name is required');
+      }
+      if (typeof classInfo.level !== 'number' || classInfo.level < 1 || classInfo.level > 20) {
+        errors.push('Class level must be between 1 and 20');
+      }
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
     };
   }
 }
