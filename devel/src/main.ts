@@ -19,7 +19,7 @@ import { SpellSlotCalculator } from '@/domain/character/services/SpellSlotCalcul
 // Initialize Alpine.js stores and components
 import './presentation/alpineStores';
 import './presentation/components/characterConverter';
-import './presentation/components/featureStatus';
+import './presentation/components/modernizationStatus';
 import './presentation/components/featureFlagAdmin';
 
 console.log('D&D Beyond to Fantasy Grounds Converter v2.0 - Development Build');

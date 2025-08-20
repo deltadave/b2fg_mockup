@@ -23,7 +23,7 @@ $(function(){
             //url: `https://api.allorigins.win/raw?url=${URL}`,
             //url: `https://cors-anywhere.herokuapp.com/${URL}`,
             //url: `https://tranquil-waters-66085.herokuapp.com/${URL}`,
-            url: `https://uakari-indigo.fly.dev/${URL}`,
+            url: URL,
             dataType: "json",
             contentType: "application/json",
             data: formdata,

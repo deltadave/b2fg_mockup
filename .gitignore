@@ -25,6 +25,10 @@ _ReSharper*/
 #cmake build directories
 cmake-build*/
 
+#claude files
+.claude/
+CLAUDE.md
+
 #Ignore some codeblocks files
 .vscode/
 *.layout

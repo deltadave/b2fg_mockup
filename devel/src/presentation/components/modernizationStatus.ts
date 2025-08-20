@@ -6,14 +6,17 @@ interface Feature {
   description: string;
 }
 
-interface FeatureStatusData {
+interface ModernizationStatusData {
+  showStatus: boolean;
   features: Feature[];
   getOverallProgress(): number;
   getStatusColor(status: string): string;
   getStatusIcon(status: string): string;
 }
 
-Alpine.data('featureStatus', (): FeatureStatusData => ({
+Alpine.data('modernizationStatus', (): ModernizationStatusData => ({
+  showStatus: false,
+  
   features: [
     {
       name: 'Build System',
@@ -94,3 +97,16 @@ Alpine.data('featureStatus', (): FeatureStatusData => ({
     }
   }
 }));
+
+// Add keyboard shortcut listener for Ctrl+Shift+M
+document.addEventListener('keydown', (event) => {
+  if (event.ctrlKey && event.shiftKey && event.key === 'M') {
+    event.preventDefault();
+    // Get the Alpine data for modernizationStatus and toggle it
+    const element = document.querySelector('[x-data*="modernizationStatus"]');
+    if (element) {
+      const alpineData = Alpine.$data(element) as ModernizationStatusData;
+      alpineData.showStatus = !alpineData.showStatus;
+    }
+  }
+});
