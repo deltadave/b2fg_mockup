@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Page Verification</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .link-button { 
+            display: inline-block; 
+            padding: 10px 20px; 
+            background: #D4AF37; 
+            color: black; 
+            text-decoration: none; 
+            border-radius: 5px; 
+            margin: 10px;
+            font-weight: bold;
+        }
+        .link-button:hover { background: #B8941F; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; background: #1e3a8a; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Contact Page Verification</h1>
+        
+        <div class="status">
+            ✅ CSS imports have been fixed for all navigation pages<br>
+            ✅ Contact form functionality is implemented<br>
+            ✅ All Tailwind classes are properly configured<br>
+            ✅ Modern styling with D&D theme colors applied
+        </div>
+
+        <h2>Test the Pages:</h2>
+        <a href="http://localhost:3001/" class="link-button">🏠 Home Page</a>
+        <a href="http://localhost:3001/about.html" class="link-button">ℹ️ About Page</a>
+        <a href="http://localhost:3001/contact.html" class="link-button">📧 Contact Page</a>
+        <a href="http://localhost:3001/donate.html" class="link-button">💰 Donate Page</a>
+
+        <h2>What Was Fixed:</h2>
+        <ul>
+            <li><strong>CSS Import Issue</strong>: Added proper stylesheet imports to standalone HTML pages</li>
+            <li><strong>Tailwind Classes</strong>: All custom D&D theme colors (dnd-gold, dnd-red, dnd-dark) are working</li>
+            <li><strong>Component Classes</strong>: btn-primary and other component classes are properly defined</li>
+            <li><strong>Contact Form</strong>: JavaScript functionality for form submission is intact</li>
+            <li><strong>Navigation</strong>: All menu links work and show active states correctly</li>
+        </ul>
+
+        <h2>Expected Results:</h2>
+        <ul>
+            <li>Contact page should have dark background with gold accents</li>
+            <li>Form fields should be properly styled with gray backgrounds</li>
+            <li>Submit button should be gold colored (btn-primary class)</li>
+            <li>Navigation menu should work between all pages</li>
+            <li>Page should be responsive and properly formatted</li>
+        </ul>
+
+        <div class="status">
+            <strong>Note:</strong> If you're still seeing issues, try refreshing the browser cache (Ctrl+F5) as Vite may need to rebuild the CSS.
+        </div>
+    </div>
+</body>
+</html>

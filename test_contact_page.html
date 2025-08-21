@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Page Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1a1a1a; color: white; }
+        .test-result { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #065f46; }
+        .error { background: #7f1d1d; }
+        .info { background: #1e3a8a; }
+    </style>
+</head>
+<body>
+    <h1>Contact Page Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        const results = document.getElementById('results');
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = message;
+            results.appendChild(div);
+        }
+        
+        async function testContactPage() {
+            addResult('Testing contact page...', 'info');
+            
+            try {
+                // Test if page loads
+                const response = await fetch('http://localhost:3001/contact.html');
+                if (response.ok) {
+                    addResult('✅ Contact page loads successfully', 'success');
+                    
+                    const html = await response.text();
+                    
+                    // Test for key elements
+                    const tests = [
+                        { name: 'Form element', test: html.includes('<form id="serverless-form"') },
+                        { name: 'Name input', test: html.includes('name="name"') },
+                        { name: 'Email input', test: html.includes('name="email"') },
+                        { name: 'Message textarea', test: html.includes('name="message"') },
+                        { name: 'Submit button', test: html.includes('id="submit"') },
+                        { name: 'CSS classes', test: html.includes('bg-dnd-dark') },
+                        { name: 'JavaScript', test: html.includes('addEventListener') },
+                        { name: 'API endpoint', test: html.includes('769g9o5uuf.execute-api.us-west-2.amazonaws.com') }
+                    ];
+                    
+                    tests.forEach(test => {
+                        if (test.test) {
+                            addResult(`✅ ${test.name} found`, 'success');
+                        } else {
+                            addResult(`❌ ${test.name} missing`, 'error');
+                        }
+                    });
+                    
+                    const passedTests = tests.filter(t => t.test).length;
+                    addResult(`Overall: ${passedTests}/${tests.length} tests passed`, passedTests === tests.length ? 'success' : 'error');
+                    
+                } else {
+                    addResult(`❌ Contact page failed to load (${response.status})`, 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Test failed: ${error.message}`, 'error');
+            }
+        }
+        
+        testContactPage();
+    </script>
+</body>
+</html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Modern Conversion in Browser</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .test-container {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .warning { color: #fbbf24; }
+        input, button {
+            padding: 10px;
+            margin: 5px;
+            font-size: 16px;
+        }
+        #output {
+            background: #111;
+            padding: 15px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .preview {
+            background: #333;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Modern Character Conversion Test</h1>
+    
+    <div class="test-container">
+        <h3>Test Configuration</h3>
+        <label>Character ID: </label>
+        <input type="text" id="characterId" value="27203070" />
+        <button onclick="testDirectAPI()">Test API Only</button>
+        <button onclick="testFullConversion()">Test Full Conversion</button>
+        <button onclick="openDevSite()">Open Dev Site</button>
+    </div>
+
+    <div class="test-container">
+        <h3>Test Results</h3>
+        <div id="output">Ready to test...</div>
+    </div>
+
+    <script>
+        let output = document.getElementById('output');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            output.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+            console.log(message);
+        }
+
+        async function testDirectAPI() {
+            const characterId = document.getElementById('characterId').value;
+            log(`Testing direct API access for character ${characterId}...`);
+            
+            try {
+                const response = await fetch(`https://uakari-indigo.fly.dev/https://character-service.dndbeyond.com/character/v5/character/${characterId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                        'Origin': 'https://www.dndbeyond.com',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                const characterData = data.success ? data.data : data;
+                
+                if (characterData && characterData.id && characterData.name) {
+                    log(`API Success: ${characterData.name} (${characterData.race?.fullName || 'Unknown race'})`, 'success');
+                    log(`Classes: ${characterData.classes?.map(c => `${c.definition?.name} ${c.level}`).join(', ') || 'None'}`);
+                    log(`Data size: ${JSON.stringify(data).length.toLocaleString()} characters`);
+                } else {
+                    log('API returned invalid character data', 'error');
+                }
+
+            } catch (error) {
+                log(`API Test Failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testFullConversion() {
+            const characterId = document.getElementById('characterId').value;
+            log(`Testing full conversion for character ${characterId}...`);
+            log('Opening development site in new window for manual test...');
+            
+            // Open the dev site
+            const devWindow = window.open('http://localhost:3001/', '_blank');
+            
+            // Instructions
+            log('Manual testing instructions:', 'warning');
+            log('1. Development site should open in new window');
+            log('2. Enter character ID: ' + characterId);
+            log('3. Click "Convert Character" button');
+            log('4. Watch for progress and results');
+            log('5. If successful, you should see XML download option');
+            
+            // Wait a bit and try to communicate with the dev window
+            setTimeout(() => {
+                if (devWindow && !devWindow.closed) {
+                    log('Dev site opened successfully. Test manually and report back here.', 'success');
+                } else {
+                    log('Failed to open dev site. Check if localhost:3001 is running.', 'error');
+                }
+            }, 2000);
+        }
+
+        function openDevSite() {
+            log('Opening development site...');
+            window.open('http://localhost:3001/', '_blank');
+        }
+
+        // Auto-run API test on load
+        window.addEventListener('load', () => {
+            log('Browser conversion test loaded');
+            log('Ready to test character conversion API and full pipeline');
+            
+            // Test if we can access the dev server
+            fetch('http://localhost:3001/')
+                .then(response => {
+                    if (response.ok) {
+                        log('Dev server detected at localhost:3001', 'success');
+                    } else {
+                        log('Dev server not responding correctly', 'warning');
+                    }
+                })
+                .catch(error => {
+                    log('Dev server not accessible. Make sure "npm run dev" is running.', 'error');
+                });
+        });
+    </script>
+</body>
+</html>
