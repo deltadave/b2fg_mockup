@@ -29,6 +29,12 @@ cmake-build*/
 .claude/
 CLAUDE.md
 
+#project and design documentation
+design-documentation/
+project-documentation/
+high-level.txt
+tech-stack-pref.md
+
 #Ignore some codeblocks files
 .vscode/
 *.layout
