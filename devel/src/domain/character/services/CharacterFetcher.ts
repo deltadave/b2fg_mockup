@@ -118,7 +118,15 @@ export class CharacterFetcher {
         }
 
         // Parse JSON response
-        const apiResponse = await response.json();
+        let apiResponse;
+        try {
+          apiResponse = await response.json();
+        } catch (jsonError) {
+          return { 
+            success: false, 
+            error: `JSON parsing error: ${(jsonError as Error).message}` 
+          };
+        }
 
         // Handle proxy wrapper format: {success: true, data: {...}}
         let characterData: CharacterData;

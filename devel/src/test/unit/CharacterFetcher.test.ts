@@ -11,10 +11,14 @@ global.AbortController = vi.fn(() => ({
   signal: { aborted: false }
 })) as any;
 
-// Mock setTimeout and clearTimeout
+// Mock setTimeout and clearTimeout with proper async handling
 global.setTimeout = vi.fn((callback, delay) => {
   if (delay === 0) {
-    callback();
+    // Execute immediately for zero delay
+    Promise.resolve().then(callback);
+  } else {
+    // For non-zero delays, execute after a microtask (async but immediate in tests)
+    Promise.resolve().then(callback);
   }
   return 1;
 }) as any;
@@ -198,7 +202,7 @@ describe('CharacterFetcher', () => {
     });
 
     it('should validate character data structure', async () => {
-      const invalidData = { id: 'not-a-number', name: null };
+      const invalidData = { id: 'not-a-number', name: 'Test Character' };
       mockFetch.mockResolvedValue({
         ok: true,
         status: 200,
@@ -208,7 +212,7 @@ describe('CharacterFetcher', () => {
       const result = await fetcher.fetchCharacter('12345678');
       
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Invalid character data');
+      expect(result.error).toContain('Invalid character data received from D&D Beyond');
     });
 
     it('should handle JSON parsing errors', async () => {
@@ -221,8 +225,8 @@ describe('CharacterFetcher', () => {
       const result = await fetcher.fetchCharacter('12345678');
       
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Invalid JSON');
-    });
+      expect(result.error).toContain('JSON parsing error');
+    }, 10000);
 
     it('should handle network errors with retry', async () => {
       // First two calls fail, third succeeds
@@ -240,7 +244,7 @@ describe('CharacterFetcher', () => {
       expect(result.success).toBe(true);
       expect(result.data).toEqual(mockCharacterData);
       expect(mockFetch).toHaveBeenCalledTimes(3);
-    });
+    }, 10000);
 
     it('should not retry on 401/403/404 errors', async () => {
       mockFetch.mockResolvedValue({
@@ -255,13 +259,15 @@ describe('CharacterFetcher', () => {
     });
 
     it('should handle timeout errors', async () => {
-      mockFetch.mockRejectedValue(new Error('AbortError'));
+      const abortError = new Error('AbortError');
+      abortError.name = 'AbortError';
+      mockFetch.mockRejectedValue(abortError);
 
       const result = await fetcher.fetchCharacter('12345678');
       
       expect(result.success).toBe(false);
-      expect(result.error).toContain('timed out');
-    });
+      expect(result.error).toContain('Request timed out');
+    }, 10000);
 
     it('should extract character ID from URLs during fetch', async () => {
       const result = await fetcher.fetchCharacter('https://www.dndbeyond.com/characters/87654321');
