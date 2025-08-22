@@ -300,9 +300,12 @@ Alpine.data('enhancedCharacterConverter', (): EnhancedCharacterConverterData => 
       return;
     }
     
-    // Trigger simple format selector by dispatching event
+    // Trigger simple format selector and provide character data
     window.dispatchEvent(new CustomEvent('showFormatSelector'));
-    console.log('📋 Simple format selector triggered');
+    window.dispatchEvent(new CustomEvent('characterDataLoaded', {
+      detail: { characterData: this.characterData }
+    }));
+    console.log('📋 Simple format selector triggered with character data:', this.characterData?.name);
   },
 
   hideFormatSelector() {

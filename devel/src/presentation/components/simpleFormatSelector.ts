@@ -5,6 +5,8 @@
  */
 
 import Alpine from 'alpinejs';
+import { formatRegistry } from '../../domain/export/registry/FormatRegistry';
+import type { FormatInfo } from '../../domain/export/interfaces/OutputFormatter';
 
 export interface SimpleFormat {
   id: string;
@@ -14,6 +16,7 @@ export interface SimpleFormat {
   compatibility: 'excellent' | 'good' | 'fair' | 'poor';
   available: boolean;
   message?: string;
+  formatInfo?: FormatInfo;
 }
 
 export interface SimpleFormatSelectorData {
@@ -37,49 +40,54 @@ export interface SimpleFormatSelectorData {
   getCompatibilityMessage(level: string): string;
 }
 
-// Simple format definitions
+// Get formats from registry with fallback compatibility assessment
 function getAvailableFormats(): SimpleFormat[] {
-  return [
-    {
-      id: 'fantasy-grounds',
-      name: 'Fantasy Grounds',
-      description: 'Unity & Classic compatible XML format',
-      icon: '🏰',
-      compatibility: 'excellent',
-      available: true,
-      message: 'Fully supported with complete feature set'
-    },
-    {
-      id: 'foundry-vtt',
-      name: 'Foundry VTT',
-      description: 'JSON format for Foundry Virtual Tabletop',
-      icon: '⚒️',
-      compatibility: 'good',
-      available: true,
-      message: 'Most features supported, some manual setup required'
-    },
-    {
-      id: 'roll20',
-      name: 'Roll20',
-      description: 'JSON character sheet import',
-      icon: '🎲',
-      compatibility: 'fair',
-      available: true,
-      message: 'Basic character data supported'
-    },
-    {
-      id: 'json-export',
-      name: 'Generic JSON',
-      description: 'Raw character data in JSON format',
-      icon: '📄',
-      compatibility: 'excellent',
-      available: true,
-      message: 'Complete character data export'
+  const supportedFormats = formatRegistry.getSupportedFormats();
+  
+  const formats: SimpleFormat[] = supportedFormats.map(formatInfo => {
+    // Map format IDs to compatibility levels (default assessment)
+    let compatibility: 'excellent' | 'good' | 'fair' | 'poor' = 'good';
+    let message = 'Standard compatibility';
+    
+    switch (formatInfo.format) {
+      case 'foundry-vtt-json':
+        compatibility = 'good';
+        message = 'Most features supported, some manual setup may be required';
+        break;
+      default:
+        compatibility = 'good';
+        message = 'Compatible with standard character features';
+        break;
     }
-  ];
+    
+    return {
+      id: formatInfo.format,
+      name: formatInfo.name,
+      description: formatInfo.description,
+      icon: formatInfo.icon,
+      compatibility,
+      available: true,
+      message,
+      formatInfo
+    };
+  });
+  
+  // Add Fantasy Grounds as a special case since it's our primary format
+  // but handled outside the registry system
+  formats.unshift({
+    id: 'fantasy-grounds-xml',
+    name: 'Fantasy Grounds',
+    description: 'Unity & Classic compatible XML format (primary)',
+    icon: '🏰',
+    compatibility: 'excellent',
+    available: true,
+    message: 'Fully supported with complete feature set - our primary output format'
+  });
+  
+  return formats;
 }
 
-// Simple format analysis based on character data
+// Character compatibility analysis using FormatRegistry when available
 function analyzeCharacterCompatibility(characterData: any, formats: SimpleFormat[]): SimpleFormat[] {
   if (!characterData) return formats;
 
@@ -88,39 +96,53 @@ function analyzeCharacterCompatibility(characterData: any, formats: SimpleFormat
     let message = format.message;
     let available = format.available;
 
-    // Basic analysis based on character complexity
-    const totalLevel = characterData.classes?.reduce((total: number, cls: any) => total + (cls.level || 0), 0) || 1;
-    const hasSpells = characterData.spells && characterData.spells.length > 0;
-    const hasMulticlass = characterData.classes && characterData.classes.length > 1;
+    // For registry-managed formats, use the registry's compatibility analysis
+    if (format.formatInfo) {
+      try {
+        // Create ProcessedCharacterData for registry analysis
+        const processedData = {
+          characterData,
+          // Add minimal processed data structure
+          abilities: characterData.stats || {},
+          totalLevel: characterData.classes?.reduce((total: number, cls: any) => total + (cls.level || 0), 0) || 1
+        };
+        
+        const compatibilityMap = formatRegistry.getFormatCompatibility(processedData as any);
+        const registryCompatibility = compatibilityMap.get(format.id);
+        
+        if (registryCompatibility) {
+          compatibility = registryCompatibility.recommendation;
+          if (registryCompatibility.warnings.length > 0) {
+            message = registryCompatibility.warnings[0]; // Show first warning
+          }
+        }
+      } catch (error) {
+        console.warn(`Failed to analyze compatibility for ${format.id}:`, error);
+        // Fall back to basic analysis below
+      }
+    }
 
-    switch (format.id) {
-      case 'fantasy-grounds':
-        // Always excellent for Fantasy Grounds (our native format)
-        break;
-        
-      case 'foundry-vtt':
-        if (hasSpells && totalLevel > 10) {
-          compatibility = 'good';
-          message = 'High-level spellcaster - may need manual spell setup';
-        } else if (hasMulticlass) {
-          compatibility = 'good';
-          message = 'Multiclass character - verify class features';
-        }
-        break;
-        
-      case 'roll20':
-        if (totalLevel > 15) {
-          compatibility = 'fair';
-          message = 'High-level features may need manual entry';
-        } else if (hasSpells) {
-          compatibility = 'fair';
-          message = 'Spells require manual setup in Roll20';
-        }
-        break;
-        
-      case 'json-export':
-        // Always excellent for raw data export
-        break;
+    // Fallback to basic analysis for non-registry formats or on error
+    if (!format.formatInfo || compatibility === format.compatibility) {
+      const totalLevel = characterData.classes?.reduce((total: number, cls: any) => total + (cls.level || 0), 0) || 1;
+      const hasSpells = characterData.spells && characterData.spells.length > 0;
+      const hasMulticlass = characterData.classes && characterData.classes.length > 1;
+
+      switch (format.id) {
+        case 'fantasy-grounds-xml':
+          // Always excellent for Fantasy Grounds (our native format)
+          break;
+          
+        case 'foundry-vtt-json':
+          if (hasSpells && totalLevel > 10) {
+            compatibility = 'good';
+            message = 'High-level spellcaster - may need manual spell setup';
+          } else if (hasMulticlass) {
+            compatibility = 'good';
+            message = 'Multiclass character - verify class features';
+          }
+          break;
+      }
     }
 
     return {
@@ -136,7 +158,7 @@ function analyzeCharacterCompatibility(characterData: any, formats: SimpleFormat
 Alpine.data('simpleFormatSelector', (): SimpleFormatSelectorData => ({
   characterData: null,
   availableFormats: getAvailableFormats(),
-  selectedFormats: ['fantasy-grounds'], // Default to Fantasy Grounds
+  selectedFormats: ['fantasy-grounds-xml'], // Default to Fantasy Grounds
   isAnalyzing: false,
   showFormatModal: false,
   conversionResults: {},
@@ -158,6 +180,9 @@ Alpine.data('simpleFormatSelector', (): SimpleFormatSelectorData => ({
   },
 
   analyzeFormats(characterData: any) {
+    console.log('📊 analyzeFormats called with character data:', characterData?.name, characterData?.id);
+    console.log('📊 Character data keys:', Object.keys(characterData || {}));
+    
     this.characterData = characterData;
     this.isAnalyzing = true;
     
@@ -168,8 +193,10 @@ Alpine.data('simpleFormatSelector', (): SimpleFormatSelectorData => ({
       
       console.log('📊 Format compatibility analysis complete:', {
         character: characterData.name,
-        formats: this.availableFormats.length
+        formats: this.availableFormats.length,
+        availableFormatIds: this.availableFormats.map(f => f.id)
       });
+      console.log('📊 Character data stored:', !!this.characterData);
     }, 300);
   },
 
@@ -204,19 +231,80 @@ Alpine.data('simpleFormatSelector', (): SimpleFormatSelectorData => ({
       return;
     }
 
+    if (!this.characterData) {
+      console.error('❌ No character data available for conversion');
+      const notifications = Alpine.store('notifications');
+      notifications.addError('No character data available for conversion');
+      return;
+    }
+
     const notifications = Alpine.store('notifications');
     
     try {
       console.log('🔄 Converting to selected formats:', this.selectedFormats);
+      console.log('📊 Character data available:', !!this.characterData);
+      console.log('📊 Character data preview:', this.characterData?.name, this.characterData?.id);
       
-      for (const formatId of this.selectedFormats) {
-        const format = this.availableFormats.find(f => f.id === formatId);
-        if (!format) continue;
-
-        console.log(`📦 Converting to ${format.name}...`);
+      // Get the CharacterConverterFacade for actual conversions
+      console.log('📦 Importing CharacterConverterFacade...');
+      const { CharacterConverterFacade } = await import('../../application/facades/CharacterConverterFacade');
+      console.log('✅ CharacterConverterFacade imported');
+      
+      console.log('🏭 Creating converter instance...');
+      const converter = new CharacterConverterFacade();
+      console.log('✅ Converter created');
+      
+      const registryFormats = this.selectedFormats.filter(id => id !== 'fantasy-grounds-xml');
+      const includeFantasyGrounds = this.selectedFormats.includes('fantasy-grounds-xml');
+      
+      console.log('📋 Registry formats to process:', registryFormats);
+      console.log('🏰 Include Fantasy Grounds:', includeFantasyGrounds);
+      
+      // Convert using registry formats if any selected
+      if (registryFormats.length > 0) {
+        console.log('🔄 Starting multi-format conversion for:', registryFormats);
         
-        // Simulate conversion process
-        await this.simulateConversion(formatId, format);
+        try {
+          const results = await converter.generateMultiFormatOutput(
+            this.characterData, 
+            registryFormats
+          );
+          
+          console.log('📊 Multi-format conversion completed, results:', results.size);
+          
+          // Store results for download
+          for (const [formatId, result] of results) {
+            console.log(`📄 Processing result for ${formatId}:`, result.success);
+            
+            if (result.success && result.output) {
+              const format = this.availableFormats.find(f => f.id === formatId);
+              if (format) {
+                this.conversionResults[formatId] = {
+                  data: result.output,
+                  filename: result.filename || `${this.getCharacterFilename()}.${this.getFormatExtension(formatId)}`,
+                  format: format
+                };
+                console.log(`✅ Successfully stored result for ${formatId}`);
+              } else {
+                console.warn(`⚠️ Format definition not found for ${formatId}`);
+              }
+            } else {
+              console.error(`❌ Failed to convert to ${formatId}:`, result.errors);
+              notifications.addError(`Failed to convert to ${formatId}`);
+            }
+          }
+        } catch (conversionError) {
+          console.error('💥 Multi-format conversion threw error:', conversionError);
+          throw conversionError;
+        }
+      }
+      
+      // Handle Fantasy Grounds XML separately (uses existing system)
+      if (includeFantasyGrounds) {
+        const format = this.availableFormats.find(f => f.id === 'fantasy-grounds-xml');
+        if (format) {
+          await this.simulateConversion('fantasy-grounds-xml', format);
+        }
       }
 
       notifications.addSuccess(`Successfully converted to ${this.selectedFormats.length} format(s)!`);
@@ -228,75 +316,20 @@ Alpine.data('simpleFormatSelector', (): SimpleFormatSelectorData => ({
   },
 
   async simulateConversion(formatId: string, format: SimpleFormat) {
+    // This is only used for Fantasy Grounds XML now (legacy system)
+    if (formatId !== 'fantasy-grounds-xml') {
+      console.warn('simulateConversion should only be used for Fantasy Grounds XML');
+      return;
+    }
+    
     // Simulate conversion delay
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    // For now, we'll use the existing Fantasy Grounds XML for all formats
-    // In a real implementation, this would call specific format adapters
+    // Use the existing Fantasy Grounds XML system
     const conversionResults = Alpine.store('conversionResults');
     
-    let convertedData = '';
-    let filename = '';
-    
-    switch (formatId) {
-      case 'fantasy-grounds':
-        convertedData = conversionResults.result || '<character>No data</character>';
-        // Use the filename from conversionResults which was set with the correct naming convention
-        filename = conversionResults.filename || `${(this.characterData?.name || 'character').replace(/[^a-zA-Z0-9_-]/g, '_')}_unknown.xml`;
-        break;
-        
-      case 'foundry-vtt':
-        // Simple JSON conversion for demo
-        convertedData = JSON.stringify({
-          name: this.characterData?.name || 'Unknown',
-          type: 'character',
-          system: 'dnd5e',
-          data: this.characterData
-        }, null, 2);
-        // Extract character name and ID from conversionResults filename if available
-        {
-          const baseFilename = conversionResults.filename ? 
-            conversionResults.filename.replace('.xml', '') : 
-            `${(this.characterData?.name || 'character').replace(/[^a-zA-Z0-9_-]/g, '_')}_unknown`;
-          filename = `${baseFilename}.json`;
-        }
-        break;
-        
-      case 'roll20':
-        // Simple JSON conversion for demo
-        convertedData = JSON.stringify({
-          name: this.characterData?.name || 'Unknown',
-          avatar: '',
-          bio: '',
-          gmnotes: '',
-          archived: false,
-          tags: [],
-          controlledby: '',
-          _displayname: this.characterData?.name || 'Unknown'
-        }, null, 2);
-        // Extract character name and ID from conversionResults filename if available
-        {
-          const baseFilename = conversionResults.filename ? 
-            conversionResults.filename.replace('.xml', '') : 
-            `${(this.characterData?.name || 'character').replace(/[^a-zA-Z0-9_-]/g, '_')}_unknown`;
-          filename = `${baseFilename}.json`;
-        }
-        break;
-        
-      case 'json-export':
-        convertedData = JSON.stringify(this.characterData, null, 2);
-        // Extract character name and ID from conversionResults filename if available
-        {
-          const baseFilename = conversionResults.filename ? 
-            conversionResults.filename.replace('.xml', '') : 
-            `${(this.characterData?.name || 'character').replace(/[^a-zA-Z0-9_-]/g, '_')}_unknown`;
-          filename = `${baseFilename}.json`;
-        }
-        break;
-        
-      default:
-        throw new Error(`Unknown format: ${formatId}`);
-    }
+    const convertedData = conversionResults.result || '<character>No data</character>';
+    const filename = conversionResults.filename || `${this.getCharacterFilename()}.xml`;
     
     this.conversionResults[formatId] = {
       data: convertedData,
@@ -362,6 +395,27 @@ Alpine.data('simpleFormatSelector', (): SimpleFormatSelectorData => ({
       case 'fair': return 'Basic compatibility';
       case 'poor': return 'Limited compatibility';
       default: return 'Unknown compatibility';
+    }
+  },
+  
+  getCharacterFilename(): string {
+    if (!this.characterData) return 'character_unknown';
+    
+    const name = (this.characterData.name || 'character').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const id = this.characterData.id || 'unknown';
+    return `${name}_${id}`;
+  },
+  
+  getFormatExtension(formatId: string): string {
+    const format = this.availableFormats.find(f => f.id === formatId);
+    if (format?.formatInfo) {
+      return format.formatInfo.fileExtension.replace('.', '');
+    }
+    
+    // Fallback extensions
+    switch (formatId) {
+      case 'fantasy-grounds-xml': return 'xml';
+      default: return 'json';
     }
   }
 }));

@@ -20,6 +20,8 @@ import { InventoryProcessor, type InventoryProcessingOptions } from '@/domain/ch
 import { EncumbranceCalculator, type CharacterStrength, type EncumbranceOptions } from '@/domain/character/services/EncumbranceCalculator';
 import { FeatureProcessor } from '@/domain/character/services/FeatureProcessor';
 import { type InventoryItem } from '@/domain/character/models/Inventory';
+import { formatRegistry, type FormatCompatibilityInfo } from '@/domain/export/registry/FormatRegistry';
+import type { ProcessedCharacterData, FormatOptions, FormatResult, FormatInfo } from '@/domain/export/interfaces/OutputFormatter';
 
 export interface ConversionProgress {
   step: string;
@@ -2113,6 +2115,116 @@ ${actions}        </actions>`;
     });
 
     return xml;
+  }
+
+  /**
+   * Generate output in multiple formats
+   */
+  async generateMultiFormatOutput(
+    characterData: CharacterData, 
+    formats: string[], 
+    options?: FormatOptions
+  ): Promise<Map<string, FormatResult>> {
+    console.log(`🔄 Generating multi-format output for character: ${characterData.name}`);
+    console.log(`📋 Requested formats: ${formats.join(', ')}`);
+    
+    // Prepare processed character data that all formatters can use
+    const processedData: ProcessedCharacterData = await this.prepareProcessedCharacterData(characterData);
+    
+    const results = new Map<string, FormatResult>();
+    
+    for (const format of formats) {
+      try {
+        console.log(`🔄 Generating ${format} output...`);
+        const result = await formatRegistry.generateOutput(format, processedData, options);
+        results.set(format, result);
+        
+        if (result.success) {
+          console.log(`✅ Successfully generated ${format} output`);
+        } else {
+          console.error(`❌ Failed to generate ${format} output:`, result.errors);
+        }
+      } catch (error) {
+        console.error(`💥 Error generating ${format} output:`, error);
+        results.set(format, {
+          success: false,
+          errors: [{
+            type: 'generation_error',
+            message: error instanceof Error ? error.message : 'Unknown error occurred'
+          }]
+        });
+      }
+    }
+    
+    return results;
+  }
+
+  /**
+   * Generate output in a specific format using the format registry
+   */
+  async generateFormatOutput(
+    characterData: CharacterData,
+    format: string,
+    options?: FormatOptions
+  ): Promise<FormatResult> {
+    console.log(`🔄 Generating ${format} output for character: ${characterData.name}`);
+    
+    // Prepare processed character data
+    const processedData = await this.prepareProcessedCharacterData(characterData);
+    
+    // Generate output using the format registry
+    return formatRegistry.generateOutput(format, processedData, options);
+  }
+
+  /**
+   * Prepare processed character data that can be reused by all formatters
+   * Simplified version that creates minimal processed data structure
+   */
+  private async prepareProcessedCharacterData(characterData: CharacterData): Promise<ProcessedCharacterData> {
+    // Calculate basic values
+    const totalLevel = characterData.classes?.reduce((total, cls) => total + (cls.level || 0), 0) || 1;
+    const proficiencyBonus = Math.ceil(totalLevel / 4) + 1;
+
+    // Create minimal processed data structure
+    return {
+      characterData,
+      totalLevel,
+      proficiencyBonus,
+      // Add basic data mapping from character
+      abilities: characterData.stats || null,
+      spellSlots: null, // TODO: Add spell slot calculation when needed
+      inventory: null,  // TODO: Add inventory processing when needed
+      features: null    // TODO: Add feature processing when needed
+    };
+  }
+
+  /**
+   * Get format compatibility information for a character
+   */
+  async getFormatCompatibility(characterData: CharacterData): Promise<Map<string, FormatCompatibilityInfo>> {
+    const processedData = await this.prepareProcessedCharacterData(characterData);
+    return formatRegistry.getFormatCompatibility(processedData);
+  }
+
+  /**
+   * Get available output formats
+   */
+  getAvailableFormats(): FormatInfo[] {
+    return formatRegistry.getSupportedFormats();
+  }
+
+  /**
+   * Check if a format is supported
+   */
+  isFormatSupported(format: string): boolean {
+    return formatRegistry.isFormatSupported(format);
+  }
+
+  /**
+   * Get default options for a specific format
+   */
+  getFormatDefaultOptions(format: string): FormatOptions {
+    return formatRegistry.getDefaultOptions(format);
   }
 
   /**
