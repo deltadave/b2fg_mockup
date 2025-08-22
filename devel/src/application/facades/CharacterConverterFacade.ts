@@ -387,6 +387,49 @@ export class CharacterConverterFacade {
   }
 
   /**
+   * Convert character data directly to Fantasy Grounds XML
+   * Used when character data is already available (e.g., from file upload)
+   */
+  async convertCharacterData(characterData: CharacterData): Promise<ConversionResult> {
+    const performanceStart = performance.now();
+    
+    try {
+      console.log('Converting character data directly:', characterData.name);
+      this.reportProgress('Initializing conversion', 10);
+
+      // Initialize game configuration
+      await this.initializeGameConfig();
+      this.reportProgress('Parsing character data', 50);
+
+      // Step 2: Parse character data to XML
+      const parseStart = performance.now();
+      const xml = await this.parseCharacterToXML(characterData);
+      const parseTime = performance.now() - parseStart;
+
+      this.reportProgress('Conversion complete', 100);
+
+      const totalTime = performance.now() - performanceStart;
+
+      return {
+        success: true,
+        xml,
+        characterData,
+        performance: {
+          fetchTime: 0, // No fetching since data was provided
+          parseTime,
+          totalTime
+        }
+      };
+    } catch (error) {
+      console.error('Character data conversion error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown conversion error'
+      };
+    }
+  }
+
+  /**
    * Fetch character data using either new or legacy method based on feature flags
    */
   private async fetchCharacterData(characterId: string): Promise<FetchResult> {
@@ -563,16 +606,17 @@ export class CharacterConverterFacade {
       ${this.generateCoinsXML(characterData)}
     </coins>
     
+    <!-- Hit Points -->
+    <hp>
+      <total type="number">${this.calculateHP(characterData)}</total>
+      <wounds type="number">0</wounds>
+      <temporary type="number">0</temporary>
+    </hp>
+
     <!-- Defenses -->
     <defenses>
       <ac>
-        <armor type="number">0</armor>
-        <misc type="number">0</misc>
-        <prof type="number">0</prof>
-        <shield type="number">0</shield>
-        <stat2 type="string">dexterity</stat2>
-        <temporary type="number">0</temporary>
-        <total type="number">${gameConfigService.getBaseArmorClass()}</total>
+        ${this.generateACComponents(characterData)}
       </ac>
     </defenses>
     
@@ -3186,6 +3230,165 @@ ${actions}        </actions>`;
 
     // If not found in classes, might be racial - use total character level
     return characterData.classes?.reduce((total, cls) => total + (cls.level || 0), 0) || 1;
+  }
+
+  /**
+   * Calculate Hit Points for the character
+   * Based on baseHitPoints + (Constitution modifier × total level)
+   */
+  private calculateHP(characterData: CharacterData): number {
+    const baseHP = characterData.baseHitPoints || 0;
+    const totalLevel = this.calculateTotalLevel(characterData);
+    const constitutionModifier = this.getConstitutionModifier(characterData);
+    
+    return baseHP + (constitutionModifier * totalLevel);
+  }
+
+  /**
+   * Calculate Armor Class for the character
+   * Takes into account Unarmored Defense for Barbarians and Monks
+   */
+  private calculateAC(characterData: CharacterData): number {
+    console.log('🛡️ Calculating AC for character:', characterData.name);
+    
+    // Debug: Log character classes
+    const classes = characterData.classes?.map(cls => cls.definition?.name) || [];
+    console.log('🏛️ Character classes:', classes);
+    
+    // Check for Unarmored Defense (Barbarian): 10 + DEX mod + CON mod
+    const hasBarbUnarmoredDefense = characterData.classes?.some((cls: any) => 
+      cls.definition?.name?.toLowerCase() === 'barbarian'
+    );
+    
+    // Check for Unarmored Defense (Monk): 10 + DEX mod + WIS mod
+    const hasMonkUnarmoredDefense = characterData.classes?.some((cls: any) => 
+      cls.definition?.name?.toLowerCase() === 'monk'
+    );
+    
+    console.log('🛡️ Unarmored Defense checks:', {
+      barbarian: hasBarbUnarmoredDefense,
+      monk: hasMonkUnarmoredDefense
+    });
+    
+    if (hasBarbUnarmoredDefense) {
+      try {
+        const abilities = this.getAbilityScores(characterData);
+        console.log('⚡ Barbarian ability scores:', abilities);
+        
+        const dexModifier = Math.floor((abilities.dexterity - 10) / 2);
+        const conModifier = Math.floor((abilities.constitution - 10) / 2);
+        const calculatedAC = 10 + dexModifier + conModifier;
+        
+        console.log(`🛡️ Barbarian Unarmored Defense: 10 + ${dexModifier} (DEX) + ${conModifier} (CON) = ${calculatedAC}`);
+        return calculatedAC;
+      } catch (error) {
+        console.error('Error calculating Barbarian Unarmored Defense AC:', error);
+      }
+    }
+    
+    if (hasMonkUnarmoredDefense) {
+      try {
+        const abilities = this.getAbilityScores(characterData);
+        console.log('⚡ Monk ability scores:', abilities);
+        
+        const dexModifier = Math.floor((abilities.dexterity - 10) / 2);
+        const wisModifier = Math.floor((abilities.wisdom - 10) / 2);
+        const calculatedAC = 10 + dexModifier + wisModifier;
+        
+        console.log(`🛡️ Monk Unarmored Defense: 10 + ${dexModifier} (DEX) + ${wisModifier} (WIS) = ${calculatedAC}`);
+        return calculatedAC;
+      } catch (error) {
+        console.error('Error calculating Monk Unarmored Defense AC:', error);
+      }
+    }
+    
+    // Fallback to character data AC or base AC
+    const fallbackAC = characterData.armorClass || gameConfigService.getBaseArmorClass();
+    console.log('🛡️ Using fallback AC:', fallbackAC, '(from characterData.armorClass:', characterData.armorClass, ')');
+    
+    return fallbackAC;
+  }
+
+  /**
+   * Get Constitution modifier for HP calculation
+   */
+  private getConstitutionModifier(characterData: CharacterData): number {
+    try {
+      const abilities = this.getAbilityScores(characterData);
+      return Math.floor((abilities.constitution - 10) / 2);
+    } catch (error) {
+      console.error('Error calculating Constitution modifier:', error);
+      return 0;
+    }
+  }
+
+  /**
+   * Generate AC components for Fantasy Grounds XML
+   * Properly distributes AC calculation into Fantasy Grounds fields
+   */
+  private generateACComponents(characterData: CharacterData): string {
+    console.log('🛡️ Generating AC components for Fantasy Grounds');
+    
+    // Check for Unarmored Defense classes
+    const hasBarbUnarmoredDefense = characterData.classes?.some((cls: any) => 
+      cls.definition?.name?.toLowerCase() === 'barbarian'
+    );
+    
+    const hasMonkUnarmoredDefense = characterData.classes?.some((cls: any) => 
+      cls.definition?.name?.toLowerCase() === 'monk'
+    );
+    
+    const abilities = this.getAbilityScores(characterData);
+    const dexModifier = Math.floor((abilities.dexterity - 10) / 2);
+    
+    if (hasBarbUnarmoredDefense) {
+      const conModifier = Math.floor((abilities.constitution - 10) / 2);
+      const totalAC = 10 + dexModifier + conModifier;
+      
+      console.log(`🛡️ Barbarian Unarmored Defense: 10 + DEX ${dexModifier} + CON ${conModifier} = ${totalAC}`);
+      console.log('🛡️ Using Fantasy Grounds format: armor=0, stat2=constitution, total=' + totalAC);
+      
+      return `
+        <armor type="number">0</armor>
+        <disstealth type="number">0</disstealth>
+        <misc type="number">0</misc>
+        <prof type="number">0</prof>
+        <shield type="number">0</shield>
+        <stat2 type="string">constitution</stat2>
+        <temporary type="number">0</temporary>
+        <total type="number">${totalAC}</total>`;
+    }
+    
+    if (hasMonkUnarmoredDefense) {
+      const wisModifier = Math.floor((abilities.wisdom - 10) / 2);
+      const totalAC = 10 + dexModifier + wisModifier;
+      
+      console.log(`🛡️ Monk AC Components: Base 10 + DEX ${dexModifier} + WIS ${wisModifier} = ${totalAC}`);
+      
+      return `
+        <armor type="number">10</armor>
+        <misc type="number">${wisModifier}</misc>
+        <prof type="number">0</prof>
+        <shield type="number">0</shield>
+        <stat type="number">${dexModifier}</stat>
+        <stat2 type="string">dexterity</stat2>
+        <temporary type="number">0</temporary>
+        <total type="number">${totalAC}</total>`;
+    }
+    
+    // Fallback for non-Unarmored Defense characters
+    const fallbackAC = characterData.armorClass || gameConfigService.getBaseArmorClass();
+    console.log('🛡️ Standard AC Components, total:', fallbackAC);
+    
+    return `
+        <armor type="number">${Math.max(0, fallbackAC - dexModifier)}</armor>
+        <misc type="number">0</misc>
+        <prof type="number">0</prof>
+        <shield type="number">0</shield>
+        <stat type="number">${dexModifier}</stat>
+        <stat2 type="string">dexterity</stat2>
+        <temporary type="number">0</temporary>
+        <total type="number">${fallbackAC}</total>`;
   }
 }
 

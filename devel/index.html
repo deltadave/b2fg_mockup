@@ -138,6 +138,126 @@
                         </p>
                     </div>
                     
+                    <!-- OR Divider -->
+                    <div class="flex items-center my-6">
+                        <div class="flex-1 border-t border-gray-600"></div>
+                        <span class="mx-4 text-gray-400 text-sm font-medium">OR</span>
+                        <div class="flex-1 border-t border-gray-600"></div>
+                    </div>
+                    
+                    <!-- File Upload Section -->
+                    <div x-data="fileUploader" class="bg-gray-700 rounded-lg p-4">
+                        <div class="flex items-center justify-between mb-4">
+                            <label class="block text-sm font-medium text-gray-300">
+                                <i class="fas fa-upload mr-2"></i>
+                                Upload Character File
+                            </label>
+                            <button @click="showHelp()" 
+                                    class="text-gray-400 hover:text-white text-sm">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- Drop Zone -->
+                        <div 
+                            @dragover="handleDragOver($event)"
+                            @dragenter="handleDragEnter($event)"
+                            @dragleave="handleDragLeave($event)"
+                            @drop="handleDrop($event)"
+                            :class="{
+                                'border-dnd-gold bg-dnd-gold bg-opacity-10': isDragging,
+                                'border-gray-500 hover:border-gray-400': !isDragging
+                            }"
+                            class="border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200">
+                            
+                            <!-- File input (hidden) -->
+                            <input type="file" 
+                                   x-ref="fileInput"
+                                   @change="handleFileSelect($event)"
+                                   accept=".json,.xml"
+                                   class="hidden"
+                                   :disabled="isProcessing">
+                            
+                            <!-- Drop zone content -->
+                            <div x-show="!selectedFile" class="cursor-pointer" @click="$refs.fileInput.click()">
+                                <div class="text-4xl mb-4" x-text="isDragging ? '📂' : '📁'"></div>
+                                <p class="text-lg font-medium mb-2" 
+                                   x-text="isDragging ? 'Drop your file here' : 'Drag & drop your character file'"></p>
+                                <p class="text-gray-400 text-sm mb-4">
+                                    Supports D&D Beyond JSON and Fantasy Grounds XML files (max 5MB)
+                                </p>
+                                <button type="button" class="btn-secondary">
+                                    <i class="fas fa-folder-open mr-2"></i>
+                                    Choose File
+                                </button>
+                            </div>
+                            
+                            <!-- Selected file display -->
+                            <div x-show="selectedFile" class="text-left">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center">
+                                        <span x-text="getFileIcon(fileType)" class="text-2xl mr-3"></span>
+                                        <div>
+                                            <p class="font-medium" x-text="fileName"></p>
+                                            <p class="text-sm text-gray-400" x-text="fileSize + ' • ' + (fileType || 'Unknown type')"></p>
+                                        </div>
+                                    </div>
+                                    <button @click.stop="clearFile()" 
+                                            :disabled="isProcessing"
+                                            class="text-red-400 hover:text-red-300 disabled:opacity-50">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Processing progress -->
+                                <div x-show="isProcessing" class="mt-4">
+                                    <div class="flex justify-between text-sm mb-2">
+                                        <span x-text="currentStep"></span>
+                                        <span x-text="uploadProgress + '%'"></span>
+                                    </div>
+                                    <div class="w-full bg-gray-600 rounded-full h-2">
+                                        <div class="bg-dnd-gold h-2 rounded-full transition-all duration-300" 
+                                             :style="`width: ${uploadProgress}%`"></div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Processing result -->
+                                <div x-show="processResult" class="mt-4 p-3 rounded-lg"
+                                     :class="{
+                                         'bg-green-900 border border-green-600': processResult?.success,
+                                         'bg-red-900 border border-red-600': processResult && !processResult.success
+                                     }">
+                                    <div class="flex items-center justify-between">
+                                        <span x-text="processResult?.success ? '✅ File processed successfully!' : '❌ Processing failed'"></span>
+                                        <div x-show="processResult?.success" class="flex gap-2">
+                                            <button @click="downloadProcessedFile()" 
+                                                    class="text-sm bg-green-800 hover:bg-green-700 px-3 py-1 rounded">
+                                                <i class="fas fa-download mr-1"></i>
+                                                Download
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Validation details -->
+                                    <div x-show="processResult && (!processResult.success || (processResult.errors?.length > 0 || processResult.warnings?.length > 0))"
+                                         class="mt-2 space-y-1">
+                                        <template x-for="error in processResult?.errors || []">
+                                            <p class="text-sm text-red-200" x-text="'• ' + error"></p>
+                                        </template>
+                                        <template x-for="warning in processResult?.warnings || []">
+                                            <p class="text-sm text-yellow-200" x-text="'• ' + warning"></p>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <p class="text-xs text-gray-400 mt-2 text-center">
+                            <i class="fas fa-shield-alt mr-1"></i>
+                            Files are processed locally with comprehensive security validation
+                        </p>
+                    </div>
+                    
                     <!-- Progress Bar -->
                     <div x-show="isConverting" class="space-y-2">
                         <div class="flex justify-between text-sm">
