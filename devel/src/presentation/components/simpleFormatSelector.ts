@@ -241,7 +241,8 @@ Alpine.data('simpleFormatSelector', (): SimpleFormatSelectorData => ({
     switch (formatId) {
       case 'fantasy-grounds':
         convertedData = conversionResults.result || '<character>No data</character>';
-        filename = `${this.characterData?.name || 'character'}_FG.xml`;
+        // Use the filename from conversionResults which was set with the correct naming convention
+        filename = conversionResults.filename || `${(this.characterData?.name || 'character').replace(/[^a-zA-Z0-9_-]/g, '_')}_unknown.xml`;
         break;
         
       case 'foundry-vtt':
@@ -252,7 +253,13 @@ Alpine.data('simpleFormatSelector', (): SimpleFormatSelectorData => ({
           system: 'dnd5e',
           data: this.characterData
         }, null, 2);
-        filename = `${this.characterData?.name || 'character'}_Foundry.json`;
+        // Extract character name and ID from conversionResults filename if available
+        {
+          const baseFilename = conversionResults.filename ? 
+            conversionResults.filename.replace('.xml', '') : 
+            `${(this.characterData?.name || 'character').replace(/[^a-zA-Z0-9_-]/g, '_')}_unknown`;
+          filename = `${baseFilename}.json`;
+        }
         break;
         
       case 'roll20':
@@ -267,12 +274,24 @@ Alpine.data('simpleFormatSelector', (): SimpleFormatSelectorData => ({
           controlledby: '',
           _displayname: this.characterData?.name || 'Unknown'
         }, null, 2);
-        filename = `${this.characterData?.name || 'character'}_Roll20.json`;
+        // Extract character name and ID from conversionResults filename if available
+        {
+          const baseFilename = conversionResults.filename ? 
+            conversionResults.filename.replace('.xml', '') : 
+            `${(this.characterData?.name || 'character').replace(/[^a-zA-Z0-9_-]/g, '_')}_unknown`;
+          filename = `${baseFilename}.json`;
+        }
         break;
         
       case 'json-export':
         convertedData = JSON.stringify(this.characterData, null, 2);
-        filename = `${this.characterData?.name || 'character'}_Export.json`;
+        // Extract character name and ID from conversionResults filename if available
+        {
+          const baseFilename = conversionResults.filename ? 
+            conversionResults.filename.replace('.xml', '') : 
+            `${(this.characterData?.name || 'character').replace(/[^a-zA-Z0-9_-]/g, '_')}_unknown`;
+          filename = `${baseFilename}.json`;
+        }
         break;
         
       default:

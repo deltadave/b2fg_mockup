@@ -83,6 +83,46 @@ Alpine.data('enhancedCharacterConverter', (): EnhancedCharacterConverterData => 
     window.addEventListener('featureFlagsChanged', () => {
       this.updateFeatureFlags();
     });
+
+    // Listen for character data loaded from file upload or regular conversion
+    window.addEventListener('characterDataLoaded', (event: any) => {
+      if (event.detail && event.detail.characterData) {
+        console.log('🎯 Enhanced converter: Character data loaded');
+        this.onCharacterDataLoaded(event.detail.characterData);
+        
+        // Update state for file uploads
+        if (event.detail.xml) {
+          // Set a special file identifier that won't interfere with validation
+          this.characterId = `file_${event.detail.characterData.id || Date.now()}`;
+          this.isValidId = true;
+          this.isConverting = false;
+          this.progress = 100;
+          this.currentStep = 'File conversion complete!';
+          
+          // Store character data so format selector works
+          this.characterData = event.detail.characterData;
+          
+          // Ensure conversion results store is properly updated
+          const conversionResults = Alpine.store('conversionResults');
+          const characterId = event.detail.characterData.id || 'unknown';
+          conversionResults.setResult(event.detail.xml, event.detail.characterName || event.detail.characterData.name, characterId);
+
+          // Trigger format analysis if multi-format is enabled
+          if (this.enableMultiFormat) {
+            setTimeout(() => {
+              this.triggerFormatAnalysis();
+            }, 100);
+          }
+
+          console.log('📁 Enhanced converter state updated after file upload:', {
+            characterId: this.characterId,
+            hasCharacterData: !!this.characterData,
+            hasResult: conversionResults.hasResult,
+            enableMultiFormat: this.enableMultiFormat
+          });
+        }
+      }
+    });
     
     console.log('🎯 Enhanced Character Converter initialized');
     console.log('Multi-format support:', this.enableMultiFormat ? 'enabled' : 'disabled');
@@ -108,9 +148,10 @@ Alpine.data('enhancedCharacterConverter', (): EnhancedCharacterConverterData => 
       return;
     }
     
-    // Check for direct character ID (numeric)
+    // Check for direct character ID (numeric) or file upload identifier
     const idPattern = /^\d+$/;
-    this.isValidId = idPattern.test(trimmedId);
+    const filePattern = /^file_/;
+    this.isValidId = idPattern.test(trimmedId) || filePattern.test(trimmedId);
     
     if (!this.isValidId) {
       const notifications = Alpine.store('notifications');
@@ -128,6 +169,15 @@ Alpine.data('enhancedCharacterConverter', (): EnhancedCharacterConverterData => 
     this.validateCharacterId();
     if (!this.isValidId) return;
     
+    const sanitizedId = this.characterId.trim();
+    
+    // Check if this is a file upload ID - if so, character is already converted
+    if (sanitizedId.startsWith('file_')) {
+      const notifications = Alpine.store('notifications');
+      notifications.addInfo('Character from file is already converted! Use the download button or choose export formats.');
+      return;
+    }
+    
     // Clear any existing results
     const conversionResults = Alpine.store('conversionResults');
     conversionResults.clearResult();
@@ -142,7 +192,6 @@ Alpine.data('enhancedCharacterConverter', (): EnhancedCharacterConverterData => 
       this.progress = 10;
       await this.delay(200);
       
-      const sanitizedId = this.characterId.trim();
       console.log('Converting character:', sanitizedId);
       
       // Check if debug mode is enabled
@@ -179,7 +228,8 @@ Alpine.data('enhancedCharacterConverter', (): EnhancedCharacterConverterData => 
       
       // Store result (maintain backward compatibility)
       const characterName = result.characterData?.name || 'Unknown Character';
-      conversionResults.setResult(result.xml!, characterName);
+      const characterId = result.characterData?.id || this.characterId;
+      conversionResults.setResult(result.xml!, characterName, characterId);
       
       const notifications = Alpine.store('notifications');
       const isDebugMode = (window as any).featureFlags?.isEnabled('debug_character_data');

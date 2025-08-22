@@ -345,7 +345,9 @@ Alpine.data('formatSelector', (): FormatSelectorData => ({
     
     // Mock download functionality
     const characterName = this.characterData?.name || 'character';
-    const filename = `${characterName}_${formatId}.${format.metadata.fileExtension}`;
+    const characterId = this.characterData?.id || 'unknown';
+    const sanitizedName = characterName.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const filename = `${sanitizedName}_${characterId}.${format.metadata.fileExtension}`;
     
     console.log(`⬇️ Downloading ${format.metadata.name} file: ${filename}`);
     

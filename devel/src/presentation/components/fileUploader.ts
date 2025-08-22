@@ -37,9 +37,9 @@ export interface FileUploaderData {
   formatFileSize(bytes: number): string;
   getFileIcon(type: string): string;
   getValidationIcon(isValid: boolean): string;
-  downloadProcessedFile(): void;
   showHelp(): void;
   delay(ms: number): Promise<void>;
+  $dispatch?: (event: string, detail: any) => void;
 }
 
 // Alpine.js file uploader component
@@ -158,32 +158,88 @@ Alpine.data('fileUploader', (): FileUploaderData => ({
       const notifications = Alpine.store('notifications');
       
       if (result.success && result.characterData) {
-        // Success - dispatch character data event
-        const characterDataEvent = new CustomEvent('characterDataLoaded', {
-          detail: {
-            characterData: result.characterData,
-            sourceType: result.sourceType,
-            filename: result.filename,
-            fromFile: true
+        // Step 6: Convert to Fantasy Grounds XML automatically (like character ID input)
+        this.currentStep = 'Converting to Fantasy Grounds XML...';
+        this.uploadProgress = 90;
+        await this.delay(200);
+
+        try {
+          const facade = (window as any).characterConverterFacade;
+          if (!facade) {
+            throw new Error('CharacterConverterFacade not available');
           }
-        });
-        document.dispatchEvent(characterDataEvent);
 
-        // Store in conversion results for download
-        const conversionResults = Alpine.store('conversionResults');
-        if (result.sourceType === 'fantasy-grounds-xml') {
-          // For XML files, we might want to display them directly or convert them back to D&D Beyond format
-          notifications.addInfo(`📄 Fantasy Grounds XML file loaded: ${result.characterData.name}`);
-        } else {
-          // For JSON files, proceed with normal conversion
-          notifications.addSuccess(`📁 Character file loaded successfully: ${result.characterData.name}`);
+          // Convert the processed character data to Fantasy Grounds XML
+          const conversionResult = await facade.convertCharacterData(result.characterData);
+          
+          if (!conversionResult.success || !conversionResult.xml) {
+            throw new Error(conversionResult.error || 'Failed to convert character to XML');
+          }
+
+          // Step 7: Store result (same as character ID input)
+          this.currentStep = 'Complete!';
+          this.uploadProgress = 100;
+          await this.delay(300);
+
+          const characterName = result.characterData.name || 'Unknown Character';
+          const characterId = result.characterData.id || 'unknown';
+          const conversionResults = Alpine.store('conversionResults');
+          conversionResults.setResult(conversionResult.xml, characterName, characterId);
+
+          // Dispatch character data event (same as character ID input, without fromFile flag)
+          const characterDataEvent = new CustomEvent('characterDataLoaded', {
+            detail: {
+              characterData: result.characterData,
+              xml: conversionResult.xml,
+              characterName: characterName
+            }
+          });
+          document.dispatchEvent(characterDataEvent);
+
+          // Dispatch Alpine event to parent component
+          if (this.$dispatch) {
+            console.log('📁 Dispatching file-converted event to parent');
+            this.$dispatch('file-converted', {
+              characterData: result.characterData,
+              xml: conversionResult.xml,
+              characterName: characterName,
+              characterId: `file_${result.characterData.id || Date.now()}`
+            });
+          } else {
+            console.log('📁 $dispatch not available, trying direct access');
+            
+            // Fallback: directly update the parent enhanced converter component
+            const converterElement = document.querySelector('[x-data*="enhancedCharacterConverter"]');
+            if (converterElement && (converterElement as any)._x_dataStack) {
+              const converterData = (converterElement as any)._x_dataStack[0];
+              if (converterData) {
+                console.log('📁 Directly updating parent converter component');
+                converterData.characterId = `file_${result.characterData.id || Date.now()}`;
+                converterData.isValidId = true;
+                converterData.isConverting = false;
+                converterData.progress = 100;
+                converterData.currentStep = 'File conversion complete!';
+                converterData.characterData = result.characterData;
+              }
+            }
+          }
+
+          notifications.addSuccess(`📁 Character "${characterName}" converted successfully!`);
+
+          console.log('✅ File processed and converted successfully:', {
+            character: result.characterData.name,
+            source: result.sourceType,
+            filename: result.filename
+          });
+
+        } catch (conversionError) {
+          console.error('❌ XML conversion failed:', conversionError);
+          const errorMessage = conversionError instanceof Error ? conversionError.message : 'Conversion failed';
+          notifications.addError(`❌ File processed but conversion failed: ${errorMessage}`);
+          
+          this.currentStep = 'Conversion error';
+          this.uploadProgress = 80; // Partial success
         }
-
-        console.log('✅ File processed successfully:', {
-          character: result.characterData.name,
-          source: result.sourceType,
-          filename: result.filename
-        });
       } else {
         // Error handling
         const errorMessage = result.errors ? result.errors.join('; ') : 'Unknown error';
@@ -256,59 +312,6 @@ Alpine.data('fileUploader', (): FileUploaderData => ({
     return isValid ? '✅' : '❌';
   },
 
-  async downloadProcessedFile() {
-    if (!this.processResult?.success || !this.processResult.characterData) {
-      const notifications = Alpine.store('notifications');
-      notifications.addError('No processed file available for download');
-      return;
-    }
-
-    try {
-      // Use the existing character converter facade to convert to Fantasy Grounds XML
-      const facade = (window as any).characterConverterFacade;
-      if (!facade) {
-        throw new Error('CharacterConverterFacade not available');
-      }
-
-      const notifications = Alpine.store('notifications');
-      notifications.addInfo('🔄 Converting character to Fantasy Grounds XML...');
-
-      // Convert the processed character data to Fantasy Grounds XML
-      const result = await facade.convertCharacterData(this.processResult.characterData);
-      
-      if (!result.success || !result.xml) {
-        throw new Error(result.error || 'Failed to convert character to XML');
-      }
-
-      // Create downloadable XML file
-      const blob = new Blob([result.xml], { type: 'application/xml' });
-      const url = URL.createObjectURL(blob);
-      
-      const characterName = this.processResult.characterData.name || 'character';
-      const characterId = this.processResult.characterData.id || 'unknown';
-      const sanitizedName = characterName.replace(/[^a-zA-Z0-9_-]/g, '_');
-      
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${sanitizedName}_${characterId}.xml`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      notifications.addSuccess(`✅ Fantasy Grounds XML downloaded: ${characterName}`);
-      
-      // Also store the result in the conversion results store for consistency
-      const conversionResults = Alpine.store('conversionResults');
-      conversionResults.setResult(result.xml, characterName);
-      
-    } catch (error) {
-      console.error('XML conversion/download error:', error);
-      const notifications = Alpine.store('notifications');
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      notifications.addError(`Failed to convert to Fantasy Grounds XML: ${errorMessage}`);
-    }
-  },
 
   showHelp() {
     const notifications = Alpine.store('notifications');

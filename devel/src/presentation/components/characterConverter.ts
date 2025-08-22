@@ -57,6 +57,30 @@ Alpine.data('characterConverter', (): CharacterConverterData => ({
     window.addEventListener('featureFlagsChanged', () => {
       this.updateFeatureFlags();
     });
+
+    // Listen for character data loaded from file upload
+    window.addEventListener('characterDataLoaded', (event: any) => {
+      if (event.detail && event.detail.characterData && event.detail.xml) {
+        console.log('📁 Character loaded from file, updating converter state');
+        
+        // Update character converter state to reflect successful conversion
+        this.characterId = `file_${event.detail.characterData.id || Date.now()}`;
+        this.isValidId = true;
+        this.isConverting = false;
+        this.progress = 100;
+        this.currentStep = 'File conversion complete!';
+        
+        // Ensure conversion results store is properly updated
+        const conversionResults = Alpine.store('conversionResults');
+        const characterId = event.detail.characterData.id || 'unknown';
+        conversionResults.setResult(event.detail.xml, event.detail.characterName || event.detail.characterData.name, characterId);
+
+        console.log('📁 Basic converter state updated after file upload:', {
+          characterId: this.characterId,
+          hasResult: conversionResults.hasResult
+        });
+      }
+    });
   },
 
   // Methods
@@ -146,8 +170,9 @@ Alpine.data('characterConverter', (): CharacterConverterData => ({
       
       // Store result
       const characterName = result.characterData?.name || 'Unknown Character';
+      const characterId = result.characterData?.id || this.characterId;
       const conversionResults = Alpine.store('conversionResults');
-      conversionResults.setResult(result.xml!, characterName);
+      conversionResults.setResult(result.xml!, characterName, characterId);
       
       // Dispatch event for simplified components with character data
       const characterDataEvent = new CustomEvent('characterDataLoaded', {

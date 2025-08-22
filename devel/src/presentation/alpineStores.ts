@@ -8,7 +8,7 @@ interface ConversionResultsStore {
   convertedAt: Date | null;
   hasResult: boolean;
   resultSize: string;
-  setResult(xml: string, characterName?: string): void;
+  setResult(xml: string, characterName?: string, characterId?: string): void;
   clearResult(): void;
   downloadXML(): boolean;
 }
@@ -30,12 +30,20 @@ Alpine.store('conversionResults', {
     return `${kb} KB`;
   },
 
-  setResult(xml: string, characterName: string = 'Unknown Character'): void {
+  setResult(xml: string, characterName: string = 'Unknown Character', characterId?: string): void {
     this.result = xml;
     this.characterName = characterName;
     this.convertedAt = new Date();
-    this.filename = `${characterName.replace(/[^a-zA-Z0-9]/g, '_')}_character.xml`;
-    console.log('Conversion result set:', { characterName, size: this.resultSize });
+    
+    // Use new naming format: charactername_characterID.xml
+    const sanitizedName = characterName.replace(/[^a-zA-Z0-9_-]/g, '_');
+    if (characterId) {
+      this.filename = `${sanitizedName}_${characterId}.xml`;
+    } else {
+      this.filename = `${sanitizedName}_character.xml`;
+    }
+    
+    console.log('Conversion result set:', { characterName, characterId, filename: this.filename, size: this.resultSize });
   },
 
   clearResult(): void {
