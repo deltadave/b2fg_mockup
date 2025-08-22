@@ -285,11 +285,12 @@ Alpine.data('fileUploader', (): FileUploaderData => ({
       const url = URL.createObjectURL(blob);
       
       const characterName = this.processResult.characterData.name || 'character';
+      const characterId = this.processResult.characterData.id || 'unknown';
       const sanitizedName = characterName.replace(/[^a-zA-Z0-9_-]/g, '_');
       
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${sanitizedName}_fantasy_grounds.xml`;
+      link.download = `${sanitizedName}_${characterId}.xml`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Preview with Validation - D&D Beyond to Fantasy Grounds</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Alpine.js for interactivity -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Custom validation styles -->
+    <style>
+        .validation-enter-active,
+        .validation-leave-active {
+            transition: all 0.3s ease;
+        }
+        
+        .validation-enter-from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        
+        .validation-leave-to {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        
+        .validation-pulse {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Custom progress bar shimmer */
+        .progress-shimmer {
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(255, 255, 255, 0.4) 50%, 
+                transparent 100%
+            );
+            animation: shimmer 1.5s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    
+    <!-- Character Preview with Validation -->
+    <div class="max-w-6xl mx-auto p-6" x-data="enhancedCharacterPreviewDisclosure">
+        
+        <!-- Header with Overall Validation Status -->
+        <div class="mb-8">
+            <div class="bg-white rounded-xl shadow-lg p-6 border">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900 mb-2">Character Preview</h1>
+                        <p class="text-gray-600">Real-time validation feedback for D&D Beyond conversion</p>
+                    </div>
+                    
+                    <!-- Overall Validation Indicator -->
+                    <div x-show="validationReport" class="text-right">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="w-16 h-16 rounded-full border-4 border-gray-200 relative">
+                                <!-- Circular Progress -->
+                                <svg class="w-16 h-16 transform -rotate-90" viewBox="0 0 36 36">
+                                    <circle cx="18" cy="18" r="16" fill="none" class="stroke-gray-200" stroke-width="2"></circle>
+                                    <circle cx="18" cy="18" r="16" fill="none" 
+                                            :class="getOverallIndicator().color.replace('text-', 'stroke-')"
+                                            stroke-width="2" 
+                                            stroke-dasharray="100"
+                                            :stroke-dashoffset="100 - getOverallIndicator().percentage"
+                                            class="transition-all duration-500"></circle>
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <span x-text="getOverallIndicator().percentage + '%'" 
+                                          class="text-lg font-bold"></span>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <div class="text-2xl font-bold" 
+                                     :class="getOverallIndicator().color" 
+                                     x-text="validationReport?.overallAccuracy + '% Accuracy'">
+                                </div>
+                                <div class="text-sm text-gray-500" 
+                                     x-text="validationReport?.characterName || 'Unknown Character'">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Validation Actions -->
+                        <div class="flex gap-2">
+                            <button @click="retryValidation()" 
+                                    class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                                <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                                Retry
+                            </button>
+                            
+                            <button @click="exportValidationReport()" 
+                                    class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                                <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                                Export
+                            </button>
+                            
+                            <button @click="toggleValidationMode()" 
+                                    class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                                <span x-text="validationMode.charAt(0).toUpperCase() + validationMode.slice(1) + ' Mode'"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Validation Summary -->
+                <div x-show="validationReport && validationMode === 'summary'" class="mt-6 pt-6 border-t">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="text-center p-4 bg-blue-50 rounded-lg">
+                            <div class="text-2xl font-bold text-blue-600" 
+                                 x-text="validationReport?.summary.totalItems || 0">
+                            </div>
+                            <div class="text-sm text-gray-600">Total Items</div>
+                        </div>
+                        <div class="text-center p-4 bg-green-50 rounded-lg">
+                            <div class="text-2xl font-bold text-green-600" 
+                                 x-text="validationReport?.summary.validatedItems || 0">
+                            </div>
+                            <div class="text-sm text-gray-600">Validated</div>
+                        </div>
+                        <div class="text-center p-4 bg-yellow-50 rounded-lg">
+                            <div class="text-2xl font-bold text-yellow-600" 
+                                 x-text="validationReport?.summary.missingItems || 0">
+                            </div>
+                            <div class="text-sm text-gray-600">Missing</div>
+                        </div>
+                        <div class="text-center p-4 bg-red-50 rounded-lg">
+                            <div class="text-2xl font-bold text-red-600" 
+                                 x-text="validationReport?.summary.erroredItems || 0">
+                            </div>
+                            <div class="text-sm text-gray-600">Errors</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Character Sections with Validation -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- Character Section Template -->
+            <template x-for="section in sections" :key="section.id">
+                <div class="bg-white rounded-xl shadow-lg border overflow-hidden">
+                    
+                    <!-- Section Header with Validation -->
+                    <div class="p-4 border-b cursor-pointer select-none"
+                         :class="section.validation ? getSectionHeaderClass(section.validation.status) : 'bg-gray-50 hover:bg-gray-100'"
+                         @click="toggleSection(section.id)">
+                        
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <span class="text-2xl" x-text="section.icon"></span>
+                                <div>
+                                    <h3 class="text-lg font-semibold" x-text="section.title"></h3>
+                                    <div x-show="section.validation" class="text-sm text-gray-600">
+                                        <span x-text="getValidationBadgeText(section)"></span>
+                                        <span class="mx-2">•</span>
+                                        <span x-text="formatAccuracyPercentage(section.validation?.overallAccuracy || 0) + ' accuracy'"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center gap-2">
+                                <!-- Validation Indicator -->
+                                <div x-show="section.validation" 
+                                     class="flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium"
+                                     :class="getValidationClasses(section.validation?.status || 'loading')">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <template x-if="section.validation?.status === 'success'">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </template>
+                                        <template x-if="section.validation?.status === 'warning'">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"></path>
+                                        </template>
+                                        <template x-if="section.validation?.status === 'error'">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                  d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </template>
+                                    </svg>
+                                    <span x-text="formatAccuracyPercentage(section.validation?.overallAccuracy || 0)"></span>
+                                </div>
+                                
+                                <!-- Badge -->
+                                <span x-show="section.badge" 
+                                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                                      x-text="formatValidationBadge(section)">
+                                </span>
+                                
+                                <!-- Expand/Collapse Icon -->
+                                <svg class="w-5 h-5 transition-transform" 
+                                     :class="section.expanded ? 'rotate-180' : ''" 
+                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        
+                        <!-- Progress Bar -->
+                        <div x-show="section.validation" class="mt-3">
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="h-2 rounded-full transition-all duration-500"
+                                     :class="getProgressBarColor(section.validation?.status || 'loading')"
+                                     :style="`width: ${section.validation?.overallAccuracy || 0}%`">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Section Content -->
+                    <div x-show="section.expanded" 
+                         x-transition:enter="validation-enter-active"
+                         x-transition:enter-start="validation-enter-from"
+                         x-transition:leave="validation-leave-active"
+                         x-transition:leave-to="validation-leave-to"
+                         class="p-4">
+                        
+                        <!-- Loading State -->
+                        <div x-show="section.loading" class="text-center py-8">
+                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                            <p class="mt-2 text-gray-500">Loading section data...</p>
+                        </div>
+                        
+                        <!-- Error State -->
+                        <div x-show="section.error" class="text-center py-8 text-red-600">
+                            <svg class="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"></path>
+                            </svg>
+                            <p x-text="section.error"></p>
+                        </div>
+                        
+                        <!-- Section Data -->
+                        <div x-show="!section.loading && !section.error">
+                            
+                            <!-- Validation Details (Detailed Mode) -->
+                            <div x-show="validationMode === 'detailed' && section.validation" 
+                                 class="mb-6 p-4 bg-gray-50 rounded-lg">
+                                <h4 class="font-semibold mb-3 flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Validation Details
+                                </h4>
+                                
+                                <!-- Validation Results -->
+                                <template x-for="result in (section.validation?.results || [])" :key="result.message">
+                                    <div class="mb-3 p-3 rounded-md border-l-4"
+                                         :class="getResultClasses(result.severity)">
+                                        <div class="flex items-start gap-3">
+                                            <svg class="w-5 h-5 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <template x-if="result.severity === 'success'">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </template>
+                                                <template x-if="result.severity === 'warning'">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"></path>
+                                                </template>
+                                                <template x-if="result.severity === 'error'">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                          d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                </template>
+                                            </svg>
+                                            
+                                            <div class="flex-1">
+                                                <p class="font-medium" x-text="result.message"></p>
+                                                <template x-if="result.details && result.details.length > 0">
+                                                    <ul class="mt-2 text-sm list-disc list-inside text-gray-600">
+                                                        <template x-for="detail in result.details" :key="detail">
+                                                            <li x-text="detail"></li>
+                                                        </template>
+                                                    </ul>
+                                                </template>
+                                                <template x-if="result.suggestions && result.suggestions.length > 0">
+                                                    <div class="mt-2 text-sm">
+                                                        <strong>Suggestions:</strong>
+                                                        <ul class="mt-1 list-disc list-inside text-gray-600">
+                                                            <template x-for="suggestion in result.suggestions" :key="suggestion">
+                                                                <li x-text="suggestion"></li>
+                                                            </template>
+                                                        </ul>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                            
+                                            <div x-show="result.accuracy !== undefined" 
+                                                 class="text-sm font-medium"
+                                                 x-text="result.accuracy + '%'">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                            
+                            <!-- Character Data Preview -->
+                            <div class="space-y-4">
+                                <!-- This would be populated with actual character data -->
+                                <div class="text-center py-8 text-gray-500">
+                                    <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" 
+                                              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                    </svg>
+                                    <p>Character section data will appear here</p>
+                                    <p class="text-sm">Load a character to see validation in action</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+        
+        <!-- Empty State -->
+        <div x-show="sections.length === 0" class="text-center py-16">
+            <div class="max-w-md mx-auto">
+                <svg class="w-24 h-24 mx-auto mb-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" 
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+                <h3 class="text-xl font-semibold text-gray-900 mb-2">No Character Loaded</h3>
+                <p class="text-gray-600 mb-6">
+                    Load a character from D&D Beyond to see the enhanced preview with validation feedback.
+                </p>
+                <button @click="loadSampleCharacter()" 
+                        class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                    Load Sample Character
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sample Character Data and Testing -->
+    <script>
+        // Sample character data for testing
+        const sampleCharacterData = {
+            name: "Lyralei Nightwhisper",
+            level: 8,
+            race: { baseName: "Elf", subraceShortName: "Wood" },
+            classes: [
+                {
+                    definition: { name: "Ranger" },
+                    level: 5,
+                    subclass: { definition: { name: "Gloom Stalker" } }
+                },
+                {
+                    definition: { name: "Rogue" },
+                    level: 3,
+                    subclass: { definition: { name: "Scout" } }
+                }
+            ],
+            abilities: {
+                strength: { value: 13, modifier: 1 },
+                dexterity: { value: 18, modifier: 4 },
+                constitution: { value: 14, modifier: 2 },
+                intelligence: { value: 12, modifier: 1 },
+                wisdom: { value: 16, modifier: 3 },
+                charisma: { value: 8, modifier: -1 }
+            },
+            skills: [
+                { name: "Animal Handling", ability: "wisdom", proficient: true, expertise: false },
+                { name: "Nature", ability: "intelligence", proficient: true, expertise: true },
+                { name: "Perception", ability: "wisdom", proficient: true, expertise: true },
+                { name: "Stealth", ability: "dexterity", proficient: true, expertise: false },
+                { name: "Survival", ability: "wisdom", proficient: true, expertise: true }
+            ],
+            armorClass: 16,
+            hitPoints: 72,
+            proficiencyBonus: 3,
+            equipment: [
+                {
+                    category: "Weapons",
+                    items: [
+                        { name: "Longbow +1", details: "1d8+5 piercing, magical, range 150/600" },
+                        { name: "Shortsword", details: "1d6+4 piercing, finesse, light" }
+                    ]
+                },
+                {
+                    category: "Armor",
+                    items: [
+                        { name: "Studded Leather", details: "AC 12 + Dex modifier" }
+                    ]
+                }
+            ],
+            spells: {
+                spellSlots: { 1: 4, 2: 2 },
+                knownSpells: [
+                    {
+                        name: "Hunter's Mark",
+                        level: 1,
+                        school: "divination",
+                        castingTime: "1 bonus action",
+                        range: "90 feet",
+                        concentration: true
+                    }
+                ]
+            },
+            features: [
+                {
+                    name: "Favored Enemy (Undead)",
+                    source: "Ranger",
+                    description: "You have advantage on Survival checks to track undead."
+                },
+                {
+                    name: "Sneak Attack",
+                    source: "Rogue",
+                    description: "Deal extra 2d6 damage once per turn with advantage."
+                }
+            ]
+        };
+        
+        // Helper functions for the Alpine.js component
+        window.characterPreviewHelpers = {
+            getSectionHeaderClass: function(status) {
+                const classes = {
+                    success: 'bg-green-50 hover:bg-green-100 border-green-200',
+                    warning: 'bg-yellow-50 hover:bg-yellow-100 border-yellow-200',
+                    error: 'bg-red-50 hover:bg-red-100 border-red-200',
+                    loading: 'bg-blue-50 hover:bg-blue-100 border-blue-200'
+                };
+                return classes[status] || 'bg-gray-50 hover:bg-gray-100';
+            },
+            
+            getValidationClasses: function(status) {
+                const classes = {
+                    success: 'bg-green-100 text-green-800 border-green-300',
+                    warning: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+                    error: 'bg-red-100 text-red-800 border-red-300',
+                    loading: 'bg-blue-100 text-blue-800 border-blue-300'
+                };
+                return classes[status] || 'bg-gray-100 text-gray-800';
+            },
+            
+            getProgressBarColor: function(status) {
+                const colors = {
+                    success: 'bg-green-500',
+                    warning: 'bg-yellow-500',
+                    error: 'bg-red-500',
+                    loading: 'bg-blue-500'
+                };
+                return colors[status] || 'bg-gray-500';
+            },
+            
+            getResultClasses: function(severity) {
+                const classes = {
+                    success: 'bg-green-50 border-green-500 text-green-700',
+                    warning: 'bg-yellow-50 border-yellow-500 text-yellow-700',
+                    error: 'bg-red-50 border-red-500 text-red-700',
+                    info: 'bg-blue-50 border-blue-500 text-blue-700'
+                };
+                return classes[severity] || 'bg-gray-50 border-gray-500 text-gray-700';
+            },
+            
+            loadSampleCharacter: function() {
+                // Simulate character loading
+                setTimeout(() => {
+                    window.dispatchEvent(new CustomEvent('characterDataLoaded', {
+                        detail: sampleCharacterData
+                    }));
+                    
+                    // Simulate validation completion
+                    setTimeout(() => {
+                        const mockValidationReport = {
+                            characterName: sampleCharacterData.name,
+                            overallAccuracy: 87,
+                            overallStatus: 'warning',
+                            timestamp: new Date(),
+                            sections: [
+                                {
+                                    sectionId: 'identity',
+                                    sectionName: 'Character Identity',
+                                    overallAccuracy: 95,
+                                    status: 'success',
+                                    results: [
+                                        {
+                                            valid: true,
+                                            severity: 'success',
+                                            message: 'Character name and basic info validated',
+                                            accuracy: 95
+                                        }
+                                    ],
+                                    itemCount: { total: 4, validated: 4, missing: 0, errored: 0 }
+                                },
+                                {
+                                    sectionId: 'abilities',
+                                    sectionName: 'Ability Scores',
+                                    overallAccuracy: 100,
+                                    status: 'success',
+                                    results: [
+                                        {
+                                            valid: true,
+                                            severity: 'success',
+                                            message: 'All ability scores and modifiers correct',
+                                            accuracy: 100
+                                        }
+                                    ],
+                                    itemCount: { total: 6, validated: 6, missing: 0, errored: 0 }
+                                },
+                                {
+                                    sectionId: 'skills',
+                                    sectionName: 'Skills & Proficiencies',
+                                    overallAccuracy: 85,
+                                    status: 'warning',
+                                    results: [
+                                        {
+                                            valid: false,
+                                            severity: 'warning',
+                                            message: 'Some skill bonuses may need verification',
+                                            accuracy: 85,
+                                            suggestions: ['Double-check expertise calculations']
+                                        }
+                                    ],
+                                    itemCount: { total: 5, validated: 4, missing: 1, errored: 0 }
+                                }
+                            ],
+                            summary: {
+                                totalItems: 15,
+                                validatedItems: 14,
+                                missingItems: 1,
+                                erroredItems: 0
+                            }
+                        };
+                        
+                        window.dispatchEvent(new CustomEvent('characterValidationComplete', {
+                            detail: { report: mockValidationReport }
+                        }));
+                    }, 1000);
+                }, 500);
+            }
+        };
+        
+        // Extend Alpine.js component methods
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('enhancedCharacterPreviewDisclosure', () => ({
+                // ... base component data would be imported from the TypeScript files
+                
+                // Add helper methods for the template
+                getSectionHeaderClass: window.characterPreviewHelpers.getSectionHeaderClass,
+                getValidationClasses: window.characterPreviewHelpers.getValidationClasses,
+                getProgressBarColor: window.characterPreviewHelpers.getProgressBarColor,
+                getResultClasses: window.characterPreviewHelpers.getResultClasses,
+                loadSampleCharacter: window.characterPreviewHelpers.loadSampleCharacter,
+                
+                // Mock sections for demonstration
+                sections: [],
+                validationReport: null,
+                validationMode: 'inline',
+                
+                // Mock methods (in real implementation, these would come from TypeScript files)
+                getOverallIndicator() {
+                    if (!this.validationReport) {
+                        return { percentage: 0, color: 'text-gray-500' };
+                    }
+                    
+                    const accuracy = this.validationReport.overallAccuracy;
+                    let color = 'text-green-500';
+                    if (accuracy < 70) color = 'text-red-500';
+                    else if (accuracy < 90) color = 'text-yellow-500';
+                    
+                    return { percentage: accuracy, color };
+                },
+                
+                formatAccuracyPercentage(accuracy) {
+                    return Math.round(accuracy || 0) + '%';
+                },
+                
+                getValidationBadgeText(section) {
+                    if (!section.validation) return '';
+                    const { validated, missing, errored } = section.validation.itemCount;
+                    if (errored > 0) return `${errored} error${errored > 1 ? 's' : ''}`;
+                    if (missing > 0) return `${missing} missing`;
+                    return `${validated} verified`;
+                },
+                
+                formatValidationBadge(section) {
+                    const baseText = section.badge || '';
+                    if (!section.validation) return baseText;
+                    
+                    const accuracy = section.validation.overallAccuracy;
+                    if (accuracy < 70) return `${baseText} ⚠️`;
+                    else if (accuracy < 90) return `${baseText} ⚠️`;
+                    else return `${baseText} ✅`;
+                },
+                
+                toggleSection(sectionId) {
+                    const section = this.sections.find(s => s.id === sectionId);
+                    if (section) section.expanded = !section.expanded;
+                },
+                
+                retryValidation() {
+                    console.log('Retrying validation...');
+                },
+                
+                exportValidationReport() {
+                    console.log('Exporting validation report...');
+                },
+                
+                toggleValidationMode() {
+                    const modes = ['inline', 'detailed', 'summary'];
+                    const currentIndex = modes.indexOf(this.validationMode);
+                    this.validationMode = modes[(currentIndex + 1) % modes.length];
+                }
+            }));
+        });
+    </script>
+    
+</body>
+</html>

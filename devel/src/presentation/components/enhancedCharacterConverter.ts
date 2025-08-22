@@ -1,8 +1,15 @@
-// Alpine.js character converter component
+/**
+ * Enhanced Character Converter Alpine.js Component
+ * 
+ * Extends the original character converter to support multi-format selection
+ * and advanced UX features from Phase 2 implementation.
+ */
+
 import Alpine from 'alpinejs';
 import { featureFlags } from '@/core/FeatureFlags';
+import type { CharacterData } from '@/domain/character/services/CharacterFetcher';
 
-export interface CharacterConverterData {
+export interface EnhancedCharacterConverterData {
   // Form state
   characterId: string;
   fgVersion: 'unity' | 'classic';
@@ -12,6 +19,9 @@ export interface CharacterConverterData {
   progress: number;
   currentStep: string;
   
+  // Character data
+  characterData: CharacterData | null;
+  
   // Validation
   isValidId: boolean;
   
@@ -19,21 +29,29 @@ export interface CharacterConverterData {
   showCharacterPreview: boolean;
   showPerformanceMetrics: boolean;
   enableBulkConversion: boolean;
+  enableMultiFormat: boolean;
+  
+  // Multi-format integration
+  showFormatSelection: boolean;
+  formatSelectionAnalyzed: boolean;
   
   // Methods
   init(): void;
   validateCharacterId(): void;
   convertCharacter(): Promise<void>;
+  triggerFormatAnalysis(): Promise<void>;
   resetForm(): void;
   downloadResult(): void;
   delay(ms: number): Promise<void>;
   updateFeatureFlags(): void;
-  showFormatSelector(): void;
   validateWarlockPactMagic(result: any, notifications: any): void;
+  showFormatSelector(): void;
+  hideFormatSelector(): void;
+  onCharacterDataLoaded(characterData: CharacterData): void;
 }
 
-// Character converter Alpine.js component
-Alpine.data('characterConverter', (): CharacterConverterData => ({
+// Enhanced Character converter Alpine.js component
+Alpine.data('enhancedCharacterConverter', (): EnhancedCharacterConverterData => ({
   // Form state
   characterId: '',
   fgVersion: 'unity',
@@ -43,6 +61,9 @@ Alpine.data('characterConverter', (): CharacterConverterData => ({
   progress: 0,
   currentStep: '',
   
+  // Character data
+  characterData: null,
+  
   // Validation
   isValidId: true,
   
@@ -50,13 +71,21 @@ Alpine.data('characterConverter', (): CharacterConverterData => ({
   showCharacterPreview: featureFlags.isEnabled('character_preview'),
   showPerformanceMetrics: featureFlags.isEnabled('performance_metrics'),
   enableBulkConversion: featureFlags.isEnabled('bulk_conversion'),
+  enableMultiFormat: featureFlags.isEnabled('multi_format_export'),
   
-  // Initialize feature flag listeners
+  // Multi-format integration
+  showFormatSelection: false,
+  formatSelectionAnalyzed: false,
+  
+  // Initialize component
   init() {
     // Listen for feature flag changes
     window.addEventListener('featureFlagsChanged', () => {
       this.updateFeatureFlags();
     });
+    
+    console.log('🎯 Enhanced Character Converter initialized');
+    console.log('Multi-format support:', this.enableMultiFormat ? 'enabled' : 'disabled');
   },
 
   // Methods
@@ -140,24 +169,17 @@ Alpine.data('characterConverter', (): CharacterConverterData => ({
         throw new Error(result.error || 'Conversion failed');
       }
 
+      // Store character data for format analysis
+      this.characterData = result.characterData;
+      this.onCharacterDataLoaded(result.characterData);
+
       // Step 5: Complete
       this.currentStep = 'Complete!';
       this.progress = 100;
       
-      // Store result
+      // Store result (maintain backward compatibility)
       const characterName = result.characterData?.name || 'Unknown Character';
-      const conversionResults = Alpine.store('conversionResults');
       conversionResults.setResult(result.xml!, characterName);
-      
-      // Dispatch event for simplified components with character data
-      const characterDataEvent = new CustomEvent('characterDataLoaded', {
-        detail: {
-          characterData: result.characterData,
-          xml: result.xml,
-          characterName: characterName
-        }
-      });
-      document.dispatchEvent(characterDataEvent);
       
       const notifications = Alpine.store('notifications');
       const isDebugMode = (window as any).featureFlags?.isEnabled('debug_character_data');
@@ -170,6 +192,11 @@ Alpine.data('characterConverter', (): CharacterConverterData => ({
         : `Character "${characterName}" converted successfully!`;
       
       notifications.addSuccess(successMessage);
+      
+      // Show format selection if multi-format is enabled
+      if (this.enableMultiFormat) {
+        await this.triggerFormatAnalysis();
+      }
       
     } catch (error) {
       console.error('Conversion error:', error);
@@ -184,7 +211,63 @@ Alpine.data('characterConverter', (): CharacterConverterData => ({
       this.isConverting = false;
     }
   },
-  
+
+  async triggerFormatAnalysis() {
+    if (!this.characterData || !this.enableMultiFormat) return;
+    
+    try {
+      console.log('🔍 Triggering format compatibility analysis...');
+      
+      // Dispatch event to format selector
+      const event = new CustomEvent('characterDataLoaded', {
+        detail: { characterData: this.characterData }
+      });
+      window.dispatchEvent(event);
+      
+      // Small delay to allow format analysis
+      await this.delay(500);
+      
+      this.formatSelectionAnalyzed = true;
+      
+      const notifications = Alpine.store('notifications');
+      notifications.addInfo('Format compatibility analysis complete. You can now export to multiple formats.');
+      
+    } catch (error) {
+      console.error('Format analysis failed:', error);
+    }
+  },
+
+  showFormatSelector() {
+    if (!this.enableMultiFormat) {
+      const notifications = Alpine.store('notifications');
+      notifications.addInfo('Multi-format export is not enabled. Please enable the feature flag to access format selection.');
+      return;
+    }
+    
+    if (!this.characterData) {
+      const notifications = Alpine.store('notifications');
+      notifications.addError('Please convert a character first before selecting export formats.');
+      return;
+    }
+    
+    // Trigger simple format selector by dispatching event
+    window.dispatchEvent(new CustomEvent('showFormatSelector'));
+    console.log('📋 Simple format selector triggered');
+  },
+
+  hideFormatSelector() {
+    this.showFormatSelection = false;
+    console.log('📋 Format selector closed');
+  },
+
+  onCharacterDataLoaded(characterData: CharacterData) {
+    console.log('📊 Character data loaded for format analysis:', {
+      name: characterData.name,
+      level: this.calculateTotalLevel(characterData),
+      classes: characterData.classes?.length || 0,
+      race: characterData.race?.fullName
+    });
+  },
   
   resetForm() {
     this.characterId = '';
@@ -193,6 +276,9 @@ Alpine.data('characterConverter', (): CharacterConverterData => ({
     this.progress = 0;
     this.currentStep = '';
     this.isValidId = true;
+    this.characterData = null;
+    this.showFormatSelection = false;
+    this.formatSelectionAnalyzed = false;
     
     const conversionResults = Alpine.store('conversionResults');
     conversionResults.clearResult();
@@ -200,7 +286,13 @@ Alpine.data('characterConverter', (): CharacterConverterData => ({
     const notifications = Alpine.store('notifications');
     notifications.clear();
     
-    console.log('Character converter form reset');
+    // Reset format selector if present
+    const formatSelector = document.querySelector('[x-data*="formatSelector"]');
+    if (formatSelector && (formatSelector as any).formatSelector) {
+      (formatSelector as any).formatSelector.reset();
+    }
+    
+    console.log('🔄 Enhanced character converter form reset');
   },
   
   downloadResult() {
@@ -209,9 +301,9 @@ Alpine.data('characterConverter', (): CharacterConverterData => ({
     
     const notifications = Alpine.store('notifications');
     if (success) {
-      notifications.addSuccess('XML file downloaded successfully!');
+      notifications.addSuccess('Fantasy Grounds XML file downloaded successfully!');
     } else {
-      notifications.addError('Failed to download XML file');
+      notifications.addError('Failed to download Fantasy Grounds XML file');
     }
   },
   
@@ -220,11 +312,25 @@ Alpine.data('characterConverter', (): CharacterConverterData => ({
     this.showCharacterPreview = featureFlags.isEnabled('character_preview');
     this.showPerformanceMetrics = featureFlags.isEnabled('performance_metrics');
     this.enableBulkConversion = featureFlags.isEnabled('bulk_conversion');
+    this.enableMultiFormat = featureFlags.isEnabled('multi_format_export');
+    
+    console.log('🎛️ Feature flags updated:', {
+      characterPreview: this.showCharacterPreview,
+      performanceMetrics: this.showPerformanceMetrics,
+      bulkConversion: this.enableBulkConversion,
+      multiFormat: this.enableMultiFormat
+    });
   },
   
   // Utility method for delays
   delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
+  },
+
+  // Calculate total character level
+  calculateTotalLevel(characterData: CharacterData): number {
+    const classes = characterData.classes || [];
+    return classes.reduce((total, cls) => total + (cls.level || 0), 0);
   },
 
   // Validate warlock pact magic in converted characters
@@ -295,10 +401,5 @@ Alpine.data('characterConverter', (): CharacterConverterData => ({
         notifications.addError(`❌ Warlock error: Level ${warlockLevel} ${characterName} has no spell slots generated`);
       }
     }
-  },
-
-  showFormatSelector() {
-    // Dispatch event to show format selector modal
-    window.dispatchEvent(new CustomEvent('showFormatSelector'));
   }
 }));

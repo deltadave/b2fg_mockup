@@ -1,0 +1,214 @@
+/* Design System Tokens - CSS Custom Properties */
+/* Generated from design system specification */
+
+:root {
+  /* Color Tokens - Primary Burgundy Scale */
+  --color-primary-50: #FDF2F5;
+  --color-primary-100: #FAE5EB;
+  --color-primary-200: #F2CCD7;
+  --color-primary-300: #E9A8B8;
+  --color-primary-400: #DD7A94;
+  --color-primary-500: #8B1538;
+  --color-primary-600: #6B1028;
+  --color-primary-700: #5A0E23;
+  --color-primary-800: #4A0C1D;
+  --color-primary-900: #3D0A18;
+
+  /* Color Tokens - D&D Gold Scale */
+  --color-gold-50: #FEFBF0;
+  --color-gold-100: #FDF7E1;
+  --color-gold-200: #FAEFC3;
+  --color-gold-300: #F6E7A5;
+  --color-gold-400: #F1DE87;
+  --color-gold-500: #D4AF37;
+  --color-gold-600: #B8941F;
+  --color-gold-700: #9C7A18;
+  --color-gold-800: #806010;
+  --color-gold-900: #644609;
+
+  /* Color Tokens - Fantasy Blue Scale */
+  --color-secondary-50: #EFF6FF;
+  --color-secondary-100: #DBEAFE;
+  --color-secondary-200: #BFDBFE;
+  --color-secondary-300: #93C5FD;
+  --color-secondary-400: #60A5FA;
+  --color-secondary-500: #1E40AF;
+  --color-secondary-600: #1E3A8A;
+  --color-secondary-700: #1D4ED8;
+  --color-secondary-800: #1E3A8A;
+  --color-secondary-900: #1E3A8A;
+
+  /* Color Tokens - Semantic Colors */
+  --color-success: #059669;
+  --color-warning: #D97706;
+  --color-error: #DC2626;
+  --color-info: #0EA5E9;
+
+  /* Color Tokens - Neutral Scale */
+  --color-neutral-50: #FAFAFA;
+  --color-neutral-100: #F5F5F5;
+  --color-neutral-200: #E5E5E5;
+  --color-neutral-300: #D4D4D4;
+  --color-neutral-400: #A3A3A3;
+  --color-neutral-500: #737373;
+  --color-neutral-600: #525252;
+  --color-neutral-700: #404040;
+  --color-neutral-800: #262626;
+  --color-neutral-900: #171717;
+
+  /* Color Tokens - Dark Mode Scale */
+  --color-dark-600: #475569;
+  --color-dark-700: #334155;
+  --color-dark-800: #1E293B;
+  --color-dark-900: #0F172A;
+
+  /* Typography Tokens - Font Families */
+  --font-family-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-display: 'Cinzel', serif;
+  --font-family-mono: 'JetBrains Mono', Consolas, 'Courier New', monospace;
+
+  /* Typography Tokens - Font Sizes */
+  --font-size-h1: 3.5rem;
+  --font-size-h2: 2.5rem;
+  --font-size-h3: 2rem;
+  --font-size-h4: 1.5rem;
+  --font-size-h5: 1.25rem;
+  --font-size-bodyLarge: 1.125rem;
+  --font-size-body: 1rem;
+  --font-size-bodySmall: 0.875rem;
+  --font-size-caption: 0.75rem;
+  --font-size-label: 0.875rem;
+  --font-size-code: 0.875rem;
+  --font-size-button: 1rem;
+
+  /* Typography Tokens - Font Weights */
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Typography Tokens - Line Heights */
+  --line-height-h1: 1.2;
+  --line-height-h2: 1.3;
+  --line-height-h3: 1.4;
+  --line-height-h4: 1.5;
+  --line-height-h5: 1.6;
+  --line-height-bodyLarge: 1.7;
+  --line-height-body: 1.6;
+  --line-height-bodySmall: 1.5;
+  --line-height-caption: 1.4;
+  --line-height-label: 1.3;
+  --line-height-code: 1.6;
+  --line-height-button: 1.2;
+
+  /* Typography Tokens - Letter Spacing */
+  --letter-spacing-h1: -0.025em;
+  --letter-spacing-h2: -0.02em;
+  --letter-spacing-h3: -0.015em;
+  --letter-spacing-h4: -0.01em;
+  --letter-spacing-h5: normal;
+  --letter-spacing-label: 0.05em;
+
+  /* Spacing Tokens */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+
+  /* Animation Tokens - Durations */
+  --duration-micro: 150ms;
+  --duration-local: 250ms;
+  --duration-page: 350ms;
+  --duration-complex: 600ms;
+
+  /* Animation Tokens - Easing Functions */
+  --easing-easeOut: cubic-bezier(0.0, 0, 0.2, 1);
+  --easing-easeInOut: cubic-bezier(0.4, 0, 0.6, 1);
+  --easing-sharp: cubic-bezier(0.4, 0, 0.6, 1);
+  --easing-spring-gentle: cubic-bezier(0.16, 1, 0.3, 1);
+  --easing-spring-bouncy: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --easing-spring-firm: cubic-bezier(0.2, 0, 0.38, 0.9);
+
+  /* Shadow Tokens */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(139, 21, 56, 0.2);
+  --shadow-lg: 0 8px 24px rgba(139, 21, 56, 0.1);
+  --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.3);
+
+  /* Border Radius Tokens */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+
+  /* Breakpoint Tokens */
+  --breakpoint-mobile: 320px;
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1024px;
+  --breakpoint-wide: 1440px;
+
+  /* Component-Specific Tokens */
+  --button-height: 3rem;
+  --input-height: 3rem;
+  --modal-backdrop: rgba(0, 0, 0, 0.6);
+  --modal-backdrop-blur: 4px;
+  
+  /* Grid System */
+  --container-max-width: 1200px;
+  --grid-gutter: 2rem;
+  --grid-gutter-mobile: 1rem;
+  --grid-gutter-tablet: 1.5rem;
+}
+
+/* Responsive Typography Scaling */
+@media (max-width: 767px) {
+  :root {
+    --font-size-h1: 2.5rem;
+    --font-size-h2: 2rem;
+    --font-size-h3: 1.75rem;
+    --grid-gutter: var(--grid-gutter-mobile);
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  :root {
+    --font-size-h1: 3rem;
+    --font-size-h2: 2.25rem;
+    --grid-gutter: var(--grid-gutter-tablet);
+  }
+}
+
+/* Dark Mode Color Overrides */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-text-primary: var(--color-neutral-100);
+    --color-text-secondary: var(--color-neutral-300);
+    --color-background-primary: var(--color-dark-900);
+    --color-background-secondary: var(--color-dark-800);
+    --color-surface: var(--color-dark-700);
+  }
+}
+
+/* High Contrast Mode Overrides */
+@media (prefers-contrast: high) {
+  :root {
+    --color-primary-500: #000000;
+    --color-gold-500: #FFD700;
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.8);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+  }
+}
+
+/* Reduced Motion Overrides */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-micro: 0ms;
+    --duration-local: 0ms;
+    --duration-page: 0ms;
+    --duration-complex: 0ms;
+  }
+}

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Format Selection Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .format-card {
+            transition: all 0.2s ease-in-out;
+        }
+        .format-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.15);
+        }
+        .compatibility-bar {
+            height: 4px;
+            background: linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #10b981 100%);
+            border-radius: 2px;
+        }
+        .matrix-cell {
+            min-width: 120px;
+            text-align: center;
+            padding: 8px;
+            border: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 p-8">
+    <div class="max-w-6xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-900 mb-8">Multi-Format Selection System</h1>
+        
+        <!-- Format Selection Interface -->
+        <div x-data="formatSelector" class="space-y-8">
+            
+            <!-- Analysis Status -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <h2 class="text-xl font-semibold mb-4">Format Analysis</h2>
+                
+                <div x-show="!analysisComplete" class="text-gray-600">
+                    <div class="flex items-center space-x-2">
+                        <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                        <span>Analyzing character compatibility...</span>
+                    </div>
+                </div>
+                
+                <div x-show="analysisComplete" class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Formats analyzed:</span>
+                        <span class="font-semibold" x-text="availableFormats.length"></span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between" x-show="recommendedFormat">
+                        <span class="text-sm text-gray-600">Recommended format:</span>
+                        <span class="font-semibold text-blue-600" x-text="recommendedFormat"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Format Cards -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-semibold">Available Formats</h2>
+                    
+                    <div class="flex space-x-2">
+                        <button @click="selectRecommendedFormat()" 
+                                class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                            Select Recommended
+                        </button>
+                        <button @click="selectAllFormats()" 
+                                class="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors">
+                            Select All
+                        </button>
+                        <button @click="clearSelections()" 
+                                class="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
+                            Clear All
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <template x-for="format in availableFormats" :key="format.metadata.id">
+                        <div class="format-card border rounded-lg p-4 cursor-pointer"
+                             :class="format.selected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'"
+                             @click="toggleFormatSelection(format.metadata.id)">
+                            
+                            <!-- Format Header -->
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="font-semibold text-lg" x-text="format.metadata.name"></h3>
+                                <div class="flex items-center space-x-2">
+                                    <input type="checkbox" 
+                                           :checked="format.selected"
+                                           class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                    <span class="text-xs px-2 py-1 rounded-full border"
+                                          :class="getRecommendationBadgeClass(format.compatibility.recommendation)"
+                                          x-text="format.compatibility.recommendation">
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <!-- Compatibility Score -->
+                            <div class="mb-3">
+                                <div class="flex items-center justify-between text-sm mb-1">
+                                    <span class="text-gray-600">Compatibility</span>
+                                    <span class="font-semibold" x-text="format.compatibility.score + '%'"></span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="compatibility-bar h-2 rounded-full" 
+                                         :style="'width: ' + format.compatibility.score + '%'"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Format Details -->
+                            <p class="text-sm text-gray-600 mb-3" x-text="format.metadata.description"></p>
+                            
+                            <!-- Data Loss Indicator -->
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="text-gray-500">Data Loss:</span>
+                                <span :class="format.compatibility.dataLoss <= 5 ? 'text-green-600' : 
+                                              format.compatibility.dataLoss <= 15 ? 'text-yellow-600' : 'text-red-600'"
+                                      x-text="format.compatibility.dataLoss + '%'"></span>
+                            </div>
+                            
+                            <!-- Limitations Preview -->
+                            <div x-show="format.compatibility.limitations.length > 0" class="mt-2">
+                                <button @click.stop="toggleFormatDetails(format.metadata.id)"
+                                        class="text-xs text-blue-600 hover:text-blue-800">
+                                    View Limitations
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            
+            <!-- Compatibility Matrix Toggle -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-semibold">Advanced Options</h2>
+                    
+                    <div class="flex space-x-4">
+                        <button @click="toggleCompatibilityMatrix()" 
+                                :class="showCompatibilityMatrix ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'"
+                                class="px-4 py-2 rounded-md transition-colors">
+                            Compatibility Matrix
+                        </button>
+                        <button @click="toggleFormatComparison()" 
+                                :class="showFormatComparison ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'"
+                                class="px-4 py-2 rounded-md transition-colors">
+                            Format Comparison
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Compatibility Matrix -->
+            <div x-show="showCompatibilityMatrix" 
+                 x-data="compatibilityMatrix" 
+                 class="bg-white rounded-lg shadow-sm p-6">
+                
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-lg font-semibold">Feature Compatibility Matrix</h3>
+                    <button @click="exportMatrix()" 
+                            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+                        Export Matrix
+                    </button>
+                </div>
+                
+                <!-- Category Filter -->
+                <div class="mb-4">
+                    <div class="flex flex-wrap gap-2">
+                        <template x-for="category in categories" :key="category.id">
+                            <button @click="filterByCategory(category.id)"
+                                    :class="selectedCategory === category.id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'"
+                                    class="px-3 py-1 rounded-md text-sm transition-colors">
+                                <span x-text="category.name"></span>
+                                <span class="ml-1 text-xs opacity-75" x-text="'(' + category.count + ')'"></span>
+                            </button>
+                        </template>
+                    </div>
+                </div>
+                
+                <!-- Matrix Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50">
+                                <th class="matrix-cell text-left font-semibold">Feature</th>
+                                <template x-for="format in formats" :key="format.id">
+                                    <th class="matrix-cell font-semibold" x-text="format.name"></th>
+                                </template>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="feature in getFilteredFeatures()" :key="feature.feature">
+                                <tr @mouseover="highlightFeature(feature.feature)" 
+                                    @mouseleave="highlightFeature(null)"
+                                    :class="highlightedFeature === feature.feature ? 'bg-blue-50' : 'hover:bg-gray-50'">
+                                    <td class="matrix-cell text-left font-medium" x-text="feature.displayName"></td>
+                                    <template x-for="format in formats" :key="format.id">
+                                        <td class="matrix-cell">
+                                            <div class="flex items-center justify-center space-x-1">
+                                                <span x-text="getSupportIcon(feature.supportByFormat[format.id]?.support || 'none')"></span>
+                                                <span class="text-xs px-2 py-1 rounded border"
+                                                      :class="getSupportColor(feature.supportByFormat[format.id]?.support || 'none')"
+                                                      x-text="getSupportText(feature.supportByFormat[format.id]?.support || 'none')">
+                                                </span>
+                                            </div>
+                                        </td>
+                                    </template>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Legend -->
+                <div x-show="showLegend" class="mt-6 p-4 bg-gray-50 rounded-lg">
+                    <h4 class="font-semibold mb-2">Legend</h4>
+                    <div class="flex flex-wrap gap-4 text-sm">
+                        <div class="flex items-center space-x-2">
+                            <span>✅</span>
+                            <span class="px-2 py-1 rounded border bg-green-100 text-green-800 border-green-300">Full Support</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span>⚠️</span>
+                            <span class="px-2 py-1 rounded border bg-yellow-100 text-yellow-800 border-yellow-300">Partial Support</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span>❌</span>
+                            <span class="px-2 py-1 rounded border bg-red-100 text-red-800 border-red-300">Not Supported</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Conversion Actions -->
+            <div class="bg-white rounded-lg shadow-sm p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold">Convert to Selected Formats</h3>
+                        <p class="text-sm text-gray-600 mt-1">
+                            <span x-text="selectedFormats.length"></span> format(s) selected
+                        </p>
+                    </div>
+                    
+                    <div class="flex space-x-3">
+                        <button @click="convertToSelectedFormats()" 
+                                :disabled="selectedFormats.length === 0 || isConverting"
+                                :class="selectedFormats.length === 0 || isConverting ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'"
+                                class="px-6 py-2 text-white rounded-md transition-colors">
+                            <span x-show="!isConverting">Convert Selected</span>
+                            <span x-show="isConverting" class="flex items-center space-x-2">
+                                <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                <span>Converting...</span>
+                            </span>
+                        </button>
+                        
+                        <button @click="downloadAllFormats()" 
+                                :disabled="Object.values(conversionProgress).filter(p => p.status === 'complete').length === 0"
+                                class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed">
+                            Download All
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Conversion Progress -->
+                <div x-show="Object.keys(conversionProgress).length > 0" class="mt-6">
+                    <h4 class="font-semibold mb-3">Conversion Progress</h4>
+                    <div class="space-y-2">
+                        <template x-for="(progress, formatId) in conversionProgress" :key="formatId">
+                            <div class="flex items-center justify-between p-3 border rounded-lg">
+                                <div class="flex items-center space-x-3">
+                                    <span class="font-medium" x-text="formatId"></span>
+                                    <span class="text-sm text-gray-600" x-text="progress.status"></span>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <div x-show="progress.status === 'complete'" class="text-green-600">✅</div>
+                                    <div x-show="progress.status === 'converting'" class="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                    <div x-show="progress.status === 'error'" class="text-red-600">❌</div>
+                                    <button x-show="progress.status === 'complete'" 
+                                            @click="downloadFormat(formatId)"
+                                            class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+                                        Download
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mock Alpine.js components for demo -->
+    <script>
+        // Mock data for demonstration
+        window.mockCharacterData = {
+            id: 12345,
+            name: "Thorin Ironforge",
+            classes: [
+                { definition: { name: "Fighter" }, level: 8 },
+                { definition: { name: "Cleric" }, level: 2 }
+            ],
+            race: { fullName: "Mountain Dwarf" },
+            stats: [
+                { id: 1, value: 18 },
+                { id: 2, value: 14 },
+                { id: 3, value: 16 },
+                { id: 4, value: 12 },
+                { id: 5, value: 15 },
+                { id: 6, value: 13 }
+            ],
+            spells: { class: [{ definition: { name: "Cure Wounds" } }] },
+            inventory: [
+                { definition: { name: "Warhammer", filterType: "Weapon" } },
+                { definition: { name: "Plate Armor", filterType: "Armor" } }
+            ]
+        };
+
+        // Mock format adapter data
+        window.mockFormatData = [
+            {
+                metadata: { id: 'fantasy-grounds', name: 'Fantasy Grounds', description: 'XML format for Fantasy Grounds Unity and Classic', fileExtension: 'xml' },
+                compatibility: { score: 95, recommendation: 'excellent', dataLoss: 2, limitations: [] },
+                selected: true
+            },
+            {
+                metadata: { id: 'foundry-vtt', name: 'Foundry VTT', description: 'JSON format for Foundry Virtual Tabletop D&D 5e system', fileExtension: 'json' },
+                compatibility: { score: 88, recommendation: 'good', dataLoss: 8, limitations: ['Complex features may need manual setup'] },
+                selected: false
+            },
+            {
+                metadata: { id: 'roll20', name: 'Roll20', description: 'JSON format for Roll20 D&D 5e character sheets', fileExtension: 'json' },
+                compatibility: { score: 72, recommendation: 'fair', dataLoss: 25, limitations: ['Limited automation', 'Basic feature support only'] },
+                selected: false
+            },
+            {
+                metadata: { id: 'generic-json', name: 'Generic JSON', description: 'Comprehensive JSON format preserving all character data', fileExtension: 'json' },
+                compatibility: { score: 100, recommendation: 'excellent', dataLoss: 0, limitations: [] },
+                selected: false
+            }
+        ];
+
+        console.log('🎭 Multi-Format Selection Demo loaded');
+        console.log('Mock data available:', { character: window.mockCharacterData, formats: window.mockFormatData });
+    </script>
+</body>
+</html>

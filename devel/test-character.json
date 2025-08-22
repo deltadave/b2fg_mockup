@@ -1,0 +1,35 @@
+{
+  "id": 12345,
+  "name": "Test Character",
+  "race": {
+    "fullName": "Human",
+    "baseName": "Human"
+  },
+  "classes": [
+    {
+      "definition": {
+        "name": "Fighter"
+      },
+      "level": 5
+    }
+  ],
+  "stats": [
+    { "id": 1, "value": 16 },
+    { "id": 2, "value": 14 },
+    { "id": 3, "value": 15 },
+    { "id": 4, "value": 12 },
+    { "id": 5, "value": 13 },
+    { "id": 6, "value": 10 }
+  ],
+  "bonusStats": [],
+  "hitPointsMax": 47,
+  "armorClass": 18,
+  "proficiencyBonus": 3,
+  "inventory": [
+    {
+      "definition": {
+        "name": "Longsword"
+      }
+    }
+  ]
+}

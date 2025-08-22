@@ -1,0 +1,362 @@
+<!-- Progressive Disclosure System Examples -->
+<!-- Demonstrates integration with character preview functionality -->
+
+<div class="disclosure-examples-container">
+  <!-- Character Preview Disclosure Group -->
+  <div class="disclosure-group" x-data="characterPreviewDisclosure()">
+    <!-- Group Header with Actions -->
+    <div class="disclosure-group-header">
+      <h2 class="disclosure-group-title">Character Preview</h2>
+      <div class="disclosure-group-actions">
+        <button 
+          class="disclosure-group-action" 
+          @click="$refs.progressiveDisclosure.expandAll()"
+          :disabled="isLoading">
+          Expand All
+        </button>
+        <button 
+          class="disclosure-group-action" 
+          @click="$refs.progressiveDisclosure.collapseAll()"
+          :disabled="isLoading">
+          Collapse All
+        </button>
+        <button 
+          class="disclosure-group-action" 
+          @click="loadCharacterData('sample')"
+          :disabled="isLoading">
+          <span x-show="!isLoading">Load Sample</span>
+          <span x-show="isLoading" class="disclosure-loading-spinner"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div x-show="isLoading" class="disclosure-content-loading">
+      <div class="disclosure-loading-spinner"></div>
+      Loading character data...
+    </div>
+
+    <!-- Error State -->
+    <div x-show="error" class="disclosure-content-error" x-text="error"></div>
+
+    <!-- Progressive Disclosure Component -->
+    <div x-show="!isLoading && !error && characterData" 
+         x-data="progressiveDisclosure(sections, { allowMultiple: true, enableAnimations: true })"
+         x-ref="progressiveDisclosure">
+      
+      <!-- Iterate through disclosure sections -->
+      <template x-for="(section, index) in sections" :key="section.id">
+        <div class="disclosure" 
+             :class="{ 
+               'expanded': section.expanded, 
+               'disclosure-loading': section.loading,
+               'disclosure-error': section.error,
+               [`disclosure-${section.id.replace('character-', '')}`]: true
+             }">
+          
+          <!-- Disclosure Trigger -->
+          <button class="disclosure-trigger"
+                  :id="section.id"
+                  :aria-expanded="section.expanded.toString()"
+                  :aria-controls="`${section.id}-content`"
+                  @click="toggleSection(section.id)"
+                  @keydown="handleKeydown($event, section.id)"
+                  :disabled="section.loading">
+            
+            <!-- Trigger Content -->
+            <div class="disclosure-trigger-content">
+              <!-- Icon -->
+              <span class="disclosure-trigger-icon" x-text="section.icon"></span>
+              
+              <!-- Title and Subtitle -->
+              <div>
+                <div class="disclosure-trigger-title" x-text="section.title"></div>
+                <div class="disclosure-trigger-subtitle" 
+                     x-show="section.content?.description"
+                     x-text="section.content?.description"></div>
+              </div>
+            </div>
+            
+            <!-- Badge -->
+            <span x-show="section.badge" 
+                  class="disclosure-trigger-badge" 
+                  x-text="section.badge"></span>
+            
+            <!-- Loading Spinner -->
+            <div x-show="section.loading" class="disclosure-loading-spinner"></div>
+            
+            <!-- Chevron -->
+            <div x-show="!section.loading" class="disclosure-chevron"></div>
+          </button>
+
+          <!-- Disclosure Content -->
+          <div class="disclosure-content"
+               :id="`${section.id}-content`"
+               :aria-labelledby="section.id"
+               role="region"
+               x-show="section.expanded"
+               x-data="{ section: section }"
+               x-transition:enter="transition ease-out duration-300"
+               x-transition:enter-start="opacity-0 transform translate-y-2"
+               x-transition:enter-end="opacity-100 transform translate-y-0"
+               x-transition:leave="transition ease-in duration-200"
+               x-transition:leave-start="opacity-100 transform translate-y-0"
+               x-transition:leave-end="opacity-0 transform translate-y-2">
+
+            <!-- Error State -->
+            <div x-show="section.error" class="disclosure-content-error">
+              <strong>Error:</strong> <span x-text="section.error"></span>
+            </div>
+
+            <!-- Content based on section type -->
+            <div x-show="!section.error" class="disclosure-content-inner">
+              
+              <!-- Skills Content -->
+              <template x-if="section.content?.type === 'skills'">
+                <div>
+                  <template x-for="group in section.content.groups" :key="group.ability">
+                    <div class="skill-group">
+                      <h4 class="skill-group-title" x-text="group.ability"></h4>
+                      <ul class="skill-list">
+                        <template x-for="skill in group.skills" :key="skill.name">
+                          <li class="skill-item" :class="{ 'skill-proficient': skill.proficient }">
+                            <span class="skill-name">
+                              <span x-text="skill.name"></span>
+                              <span x-show="skill.expertise" title="Expertise">★</span>
+                            </span>
+                            <span class="skill-modifier" x-text="skill.modifier"></span>
+                          </li>
+                        </template>
+                      </ul>
+                    </div>
+                  </template>
+                </div>
+              </template>
+
+              <!-- Equipment Content -->
+              <template x-if="section.content?.type === 'equipment'">
+                <div>
+                  <template x-for="category in section.content.categories" :key="category.name">
+                    <div class="equipment-category">
+                      <h4 class="equipment-category-title">
+                        <span class="equipment-category-icon" x-text="category.icon"></span>
+                        <span x-text="category.name"></span>
+                      </h4>
+                      <ul class="equipment-list">
+                        <template x-for="item in category.items" :key="item.name">
+                          <li class="equipment-item">
+                            <div class="equipment-item-name" x-text="item.name"></div>
+                            <div x-show="item.details" 
+                                 class="equipment-item-details" 
+                                 x-text="item.details"></div>
+                          </li>
+                        </template>
+                      </ul>
+                    </div>
+                  </template>
+                </div>
+              </template>
+
+              <!-- Spells Content -->
+              <template x-if="section.content?.type === 'spells'">
+                <div>
+                  <template x-for="level in section.content.levels" :key="level.level">
+                    <div class="spell-level-group">
+                      <div class="spell-level-header">
+                        <h4 class="spell-level-title" x-text="level.level"></h4>
+                        <div x-show="level.slots > 0" class="spell-slots">
+                          <template x-for="slot in level.slots" :key="slot">
+                            <div class="spell-slot" 
+                                 :class="{ 'used': slot <= level.usedSlots }"></div>
+                          </template>
+                        </div>
+                      </div>
+                      <ul class="spell-list">
+                        <template x-for="spell in level.spells" :key="spell.name">
+                          <li class="spell-item" 
+                              @click="$dispatch('spell-details', spell)"
+                              role="button"
+                              tabindex="0">
+                            <div class="spell-name">
+                              <span x-text="spell.name"></span>
+                              <span x-show="spell.concentration" title="Concentration">C</span>
+                            </div>
+                            <div class="spell-details">
+                              <span x-text="spell.school"></span> • 
+                              <span x-text="spell.castingTime"></span> • 
+                              <span x-text="spell.range"></span>
+                            </div>
+                          </li>
+                        </template>
+                      </ul>
+                    </div>
+                  </template>
+                </div>
+              </template>
+
+              <!-- Features Content -->
+              <template x-if="section.content?.type === 'features'">
+                <div>
+                  <template x-for="feature in section.content.features" :key="feature.name">
+                    <div class="feature-item">
+                      <div class="feature-header">
+                        <h4 class="feature-name" x-text="feature.name"></h4>
+                        <span class="feature-source" x-text="feature.source"></span>
+                      </div>
+                      <p class="feature-description" x-text="feature.description"></p>
+                    </div>
+                  </template>
+                </div>
+              </template>
+
+            </div>
+          </div>
+        </div>
+      </template>
+    </div>
+
+    <!-- Empty State -->
+    <div x-show="!isLoading && !error && !characterData" class="disclosure-content-loading">
+      <div style="text-align: center; color: var(--color-neutral-500);">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">🏛️</div>
+        <p>No character data loaded</p>
+        <p style="font-size: var(--font-size-bodySmall);">
+          Convert a character or load sample data to see the preview
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Standalone Disclosure Examples -->
+  <div class="disclosure-examples-standalone" style="margin-top: var(--space-3xl);">
+    <h2 style="margin-bottom: var(--space-lg);">Standalone Disclosure Examples</h2>
+    
+    <!-- Simple Disclosure -->
+    <div x-data="progressiveDisclosure([
+      {
+        id: 'simple-example',
+        title: 'Simple Disclosure Example',
+        content: { type: 'html', html: '<p>This is a simple disclosure with basic content. Click the trigger to expand and collapse this section.</p>' },
+        expanded: false,
+        icon: '📝'
+      }
+    ])">
+      <div class="disclosure">
+        <button class="disclosure-trigger"
+                id="simple-example"
+                aria-expanded="false"
+                @click="toggleSection('simple-example')">
+          <div class="disclosure-trigger-content">
+            <span class="disclosure-trigger-icon">📝</span>
+            <div class="disclosure-trigger-title">Simple Disclosure Example</div>
+          </div>
+          <div class="disclosure-chevron"></div>
+        </button>
+        <div class="disclosure-content" 
+             id="simple-example-content"
+             x-show="sections[0]?.expanded">
+          <div class="disclosure-content-inner">
+            <p>This is a simple disclosure with basic content. Click the trigger to expand and collapse this section.</p>
+            <p>The progressive disclosure system provides smooth animations, full keyboard accessibility, and integrates seamlessly with the existing design system.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Accordion-Style Group -->
+    <div x-data="progressiveDisclosure([
+      {
+        id: 'accordion-1',
+        title: 'Accordion Section 1',
+        content: { type: 'html' },
+        expanded: false,
+        icon: '1️⃣'
+      },
+      {
+        id: 'accordion-2', 
+        title: 'Accordion Section 2',
+        content: { type: 'html' },
+        expanded: false,
+        icon: '2️⃣'
+      },
+      {
+        id: 'accordion-3',
+        title: 'Accordion Section 3', 
+        content: { type: 'html' },
+        expanded: false,
+        icon: '3️⃣'
+      }
+    ], { allowMultiple: false })" style="margin-top: var(--space-lg);">
+      
+      <h3 style="margin-bottom: var(--space-md);">Accordion Example (Single Selection)</h3>
+      
+      <div class="disclosure-group">
+        <template x-for="(section, index) in sections" :key="section.id">
+          <div class="disclosure">
+            <button class="disclosure-trigger"
+                    :id="section.id"
+                    :aria-expanded="section.expanded.toString()"
+                    @click="toggleSection(section.id)">
+              <div class="disclosure-trigger-content">
+                <span class="disclosure-trigger-icon" x-text="section.icon"></span>
+                <div class="disclosure-trigger-title" x-text="section.title"></div>
+              </div>
+              <div class="disclosure-chevron plus-minus"></div>
+            </button>
+            <div class="disclosure-content" 
+                 :id="`${section.id}-content`"
+                 x-show="section.expanded">
+              <div class="disclosure-content-inner">
+                <p x-text="`This is the content for ${section.title}. Only one accordion section can be open at a time.`"></p>
+                <p>Perfect for FAQ sections, configuration options, or any content where you want to focus attention on one item at a time.</p>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+
+  <!-- Integration Instructions -->
+  <div class="integration-instructions" style="margin-top: var(--space-3xl); padding: var(--space-lg); background: var(--color-neutral-100); border-radius: var(--radius-md);">
+    <h3 style="margin-bottom: var(--space-md);">Integration with Character Converter</h3>
+    <p style="margin-bottom: var(--space-sm);">
+      To integrate the progressive disclosure system with the main character converter:
+    </p>
+    <ol style="padding-left: var(--space-lg); margin-bottom: var(--space-md);">
+      <li style="margin-bottom: var(--space-xs);">Import the ProgressiveDisclosure and CharacterPreviewDisclosure components</li>
+      <li style="margin-bottom: var(--space-xs);">Add the character preview disclosure HTML to your main template</li>
+      <li style="margin-bottom: var(--space-xs);">Listen for character conversion events to populate disclosure sections</li>
+      <li style="margin-bottom: var(--space-xs);">Customize disclosure content based on your character data structure</li>
+    </ol>
+    <p style="color: var(--color-neutral-600); font-size: var(--font-size-bodySmall);">
+      The system is fully accessible with ARIA states, keyboard navigation, and supports reduced motion preferences.
+    </p>
+  </div>
+</div>
+
+<script>
+// Example of dispatching character data event
+function simulateCharacterConversion() {
+  const sampleData = {
+    name: "Test Character",
+    level: 3,
+    classes: [{ definition: { name: "Wizard" }, level: 3 }],
+    skills: [
+      { name: "Arcana", ability: "intelligence", proficient: true, expertise: false }
+    ],
+    equipment: [],
+    features: []
+  };
+  
+  window.dispatchEvent(new CustomEvent('characterDataLoaded', {
+    detail: sampleData
+  }));
+}
+
+// Listen for spell details events
+document.addEventListener('spell-details', (event) => {
+  console.log('Spell details requested:', event.detail);
+  // You could open a modal or tooltip with spell details here
+});
+</script>

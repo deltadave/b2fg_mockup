@@ -192,6 +192,12 @@ export const defaultFeatureFlags: FeatureFlagConfig = {
       description: 'Enable multiple export format options (JSON, PDF, etc.)',
       rolloutPercentage: 100
     },
+    'multi_format_export': {
+      key: 'multi_format_export',
+      enabled: true,
+      description: 'Enable multi-format export with compatibility analysis',
+      rolloutPercentage: 100
+    },
     'performance_metrics': {
       key: 'performance_metrics',
       enabled: true,
