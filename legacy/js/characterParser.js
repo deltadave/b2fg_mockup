@@ -92,9 +92,11 @@ function parseCharacter(inputChar) {
 
     // Handle character name with safety check
     const characterName = character.name || "Unknown Character";
+    const characterId = character.id || "unknown";
     console.log("Character name found:", characterName);
+    console.log("Character ID found:", characterId);
     
-    pcFilename = characterName.replace(/\W/g, '');
+    pcFilename = `${characterName.replace(/\W/g, '')}_${characterId}`;
     buildXML += `\t\t<name type="string">${characterName}</name>\n`;
     
     // Performance timing: basic setup complete
@@ -622,7 +624,7 @@ function parseCharacter(inputChar) {
         // Check if this trait should be hidden from display
         const hiddenTraits = ["Ability Score Increase", "Ability Score Increases", "Age", "Alignment", "Size", "Speed", "Darkvision",
                              "Dwarven Combat Training", "Tool Proficiency", "Languages", "Dwarven Toughness",
-                             "Cantrip", "Extra Language", "Dwarven Armor Training", "Skill Versatility"];
+                             "Cantrip", "Extra Language", "Dwarven Armor Training", "Skill Versatility", "Elven Lineage", "Creature Type", "Elven Lineage Spells"];
         
         if (!hiddenTraits.includes(current_trait.definition.name)) {
             // Only display if not in hidden traits list
