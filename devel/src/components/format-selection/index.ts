@@ -11,8 +11,8 @@ import './CompatibilityMatrix';
 import { formatAdapterRegistry } from '@/domain/formats/FormatAdapterRegistry';
 import { FantasyGroundsAdapter } from '@/domain/formats/adapters/FantasyGroundsAdapter';
 import { FoundryVTTAdapter } from '@/domain/formats/adapters/FoundryVTTAdapter';
-import { Roll20Adapter } from '@/domain/formats/adapters/Roll20Adapter';
-import { GenericJSONAdapter } from '@/domain/formats/adapters/GenericJSONAdapter';
+// import { Roll20Adapter } from '@/domain/formats/adapters/Roll20Adapter';
+// import { GenericJSONAdapter } from '@/domain/formats/adapters/GenericJSONAdapter';
 
 /**
  * Initialize format adapters
@@ -24,8 +24,8 @@ export function initializeFormatAdapters(): void {
     // Register all available format adapters
     formatAdapterRegistry.register(new FantasyGroundsAdapter());
     formatAdapterRegistry.register(new FoundryVTTAdapter());
-    formatAdapterRegistry.register(new Roll20Adapter());
-    formatAdapterRegistry.register(new GenericJSONAdapter());
+    // formatAdapterRegistry.register(new Roll20Adapter()); // Hidden - not fully implemented
+    // formatAdapterRegistry.register(new GenericJSONAdapter()); // Hidden - not fully implemented
     
     const registeredFormats = formatAdapterRegistry.getAllFormatMetadata();
     console.log('✅ Format adapters initialized:', {

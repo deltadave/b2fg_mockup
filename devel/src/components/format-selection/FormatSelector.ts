@@ -99,39 +99,39 @@ const defaultFormatOptions: FormatOption[] = [
     },
     selected: false
   },
-  {
-    metadata: {
-      id: 'roll20',
-      name: 'Roll20',
-      description: 'JSON format for Roll20 D&D 5e character sheets',
-      fileExtension: 'json',
-      version: '1.0.0',
-      website: 'https://roll20.net'
-    },
-    compatibility: {
-      score: 72,
-      recommendation: 'fair',
-      dataLoss: 25,
-      limitations: ['Limited automation', 'Basic feature support only']
-    },
-    selected: false
-  },
-  {
-    metadata: {
-      id: 'generic-json',
-      name: 'Generic JSON',
-      description: 'Comprehensive JSON format preserving all character data',
-      fileExtension: 'json',
-      version: '1.0.0'
-    },
-    compatibility: {
-      score: 100,
-      recommendation: 'excellent',
-      dataLoss: 0,
-      limitations: []
-    },
-    selected: false
-  }
+  // {
+  //   metadata: {
+  //     id: 'roll20',
+  //     name: 'Roll20',
+  //     description: 'JSON format for Roll20 D&D 5e character sheets',
+  //     fileExtension: 'json',
+  //     version: '1.0.0',
+  //     website: 'https://roll20.net'
+  //   },
+  //   compatibility: {
+  //     score: 72,
+  //     recommendation: 'fair',
+  //     dataLoss: 25,
+  //     limitations: ['Limited automation', 'Basic feature support only']
+  //   },
+  //   selected: false
+  // },
+  // {
+  //   metadata: {
+  //     id: 'generic-json',
+  //     name: 'Generic JSON',
+  //     description: 'Comprehensive JSON format preserving all character data',
+  //     fileExtension: 'json',
+  //     version: '1.0.0'
+  //   },
+  //   compatibility: {
+  //     score: 100,
+  //     recommendation: 'excellent',
+  //     dataLoss: 0,
+  //     limitations: []
+  //   },
+  //   selected: false
+  // }
 ];
 
 // Alpine.js component
