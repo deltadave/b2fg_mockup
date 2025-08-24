@@ -196,9 +196,21 @@
             // Create download link
             const a = document.createElement('a');
             a.href = url;
-            // Use sanitized filename
-            const sanitizedFilename = fixQuote(characterIdInput.value || 'export');
-            a.download = `character_${sanitizedFilename}.xml`;
+            
+            // Use pcFilename if available, otherwise extract character name from XML
+            let filename;
+            if (window.pcFilename && window.pcFilename.trim()) {
+                filename = `${window.pcFilename}.xml`;
+            } else {
+                // Extract character name from XML content as fallback
+                const xmlContent = textarea.value;
+                const nameMatch = xmlContent.match(/<name type="string">([^<]+)<\/name>/);
+                const characterName = nameMatch ? nameMatch[1].replace(/\W/g, '') : 'character';
+                const characterId = characterIdInput.value || 'unknown';
+                filename = `${characterName}_${characterId}.xml`;
+            }
+            
+            a.download = filename;
             document.body.appendChild(a);
             a.click();
             

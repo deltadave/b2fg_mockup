@@ -28,6 +28,8 @@ cmake-build*/
 #claude files
 .claude/
 CLAUDE.md
+design-documentation/
+project-documentation/
 
 #project and design documentation
 design-documentation/
