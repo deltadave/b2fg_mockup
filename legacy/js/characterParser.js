@@ -618,27 +618,27 @@ function parseCharacter(inputChar) {
     });
 
     buildXML += "\t\t<traitlist>\n";
-    character.race.racialTraits.some(function(current_trait, i) {
-        switch (current_trait.definition.name) {
-            case "Ability Score Increase": case "Age": case "Alignment": case "Size": case "Speed": case "Darkvision":
-            case "Dwarven Combat Training": case "Tool Proficiency": case "Languages": case "Dwarven Toughness":
-            case "Cantrip": case "Extra Language": case "Dwarven Armor Training": case "Skill Versatility":
-                return;
-            default:
-                break;
-        }
-        thisIteration = pad(i + 1, 5);
-        buildXML += `\t\t\t<id-${thisIteration}>\n`;
+    character.race.racialTraits.forEach(function(current_trait, i) {
+        // Check if this trait should be hidden from display
+        const hiddenTraits = ["Ability Score Increase", "Ability Score Increases", "Age", "Alignment", "Size", "Speed", "Darkvision",
+                             "Dwarven Combat Training", "Tool Proficiency", "Languages", "Dwarven Toughness",
+                             "Cantrip", "Extra Language", "Dwarven Armor Training", "Skill Versatility"];
+        
+        if (!hiddenTraits.includes(current_trait.definition.name)) {
+            // Only display if not in hidden traits list
+            thisIteration = pad(i + 1, 5);
+            buildXML += `\t\t\t<id-${thisIteration}>\n`;
 
-        // Drag/drop only lists name, not any snippet, so we've removed it.
-        buildXML += "\t\t\t\t<name type=\"string\">" + fixQuote(current_trait.definition.name).trim() + "</name>\n";
-        buildXML += "\t\t\t\t<source type=\"string\">" + convert_case(replaceDash(character.race.baseName.toLowerCase())) + "</source>\n";
-        buildXML += "\t\t\t\t<locked type=\"number\">1</locked>\n";
-        buildXML += "\t\t\t\t<text type=\"formattedtext\">\n";
-        buildXML += "\t\t\t\t\t" + fixDesc(current_trait.definition.description) + "\n";
-        buildXML += "\t\t\t\t</text>\n";
-        buildXML += "\t\t\t\t<type type=\"string\">racial</type>\n";
-        buildXML += `\t\t\t</id-${thisIteration}>\n`;
+            // Drag/drop only lists name, not any snippet, so we've removed it.
+            buildXML += "\t\t\t\t<name type=\"string\">" + fixQuote(current_trait.definition.name).trim() + "</name>\n";
+            buildXML += "\t\t\t\t<source type=\"string\">" + convert_case(replaceDash(character.race.baseName.toLowerCase())) + "</source>\n";
+            buildXML += "\t\t\t\t<locked type=\"number\">1</locked>\n";
+            buildXML += "\t\t\t\t<text type=\"formattedtext\">\n";
+            buildXML += "\t\t\t\t\t" + fixDesc(current_trait.definition.description) + "\n";
+            buildXML += "\t\t\t\t</text>\n";
+            buildXML += "\t\t\t\t<type type=\"string\">racial</type>\n";
+            buildXML += `\t\t\t</id-${thisIteration}>\n`;
+        }
     });
 
     buildXML += "\t\t</traitlist>\n";
@@ -649,39 +649,45 @@ function parseCharacter(inputChar) {
     console.log(`Pre-features time: ${(featuresStartTime - skillsEndTime).toFixed(2)}ms`);
     
     buildXML += "\t\t<featurelist>\n";
-    character.classes.some(function(current_class) {
+    character.classes.forEach(function(current_class) {
         classLevel = current_class.level;
-        current_class.definition.classFeatures.some(function(current_feature) {
-
-
-            switch (current_feature.name) {
-                case "Hit Points": case "Proficiencies": case "Martial Archetype": case "Fighting Style":
-                case "Ability Score Improvement": case "Oath Spells": case "Spellcasting":
-                case "Circle Spells": case "Bonus Cantrip": case "Bonus Proficiencies": case "Druidic":
-                case "Expanded Spell List": case "Otherwordly Patron": case "Expanded Spell List":
-                case "Acrobatics": case "Animal Handling": case "Arcana": case "Athletics": case "Deception":
-                case "History": case "Intimidation": case "Investigation": case "Medicine": case "Nature":
-                case "Perception": case "Performance": case "Persuasion": case "Religion": case "Sleight of Hand":
-                case "Stealth": case "Survival": case "Divine Domain": case "Bonus Proficiency":
-                    return;
-                default:
-                    break;
-            }
-            if(parseInt(current_feature.requiredLevel) <= parseInt(classLevel)) {
-                if(holdFeatures.includes(current_feature.name)) {
-                    //Skip this one, it's already in the array
-                } else {
-                    holdFeatures.push(current_feature.name);
-                    totalFeatures += 1;
-                    thisIteration = pad(totalFeatures, 5);
-                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
-                    buildXML += "\t\t\t\t<locked type=\"number\">1</locked>\n";
-                    buildXML += "\t\t\t\t<name type=\"string\">" + fixQuote(current_feature.name) + "</name>\n";
-                    buildXML += "\t\t\t\t<source type=\"string\">" + convert_case(replaceDash(current_class.definition.name.toLowerCase())) + "</source>\n";
-                    buildXML += "\t\t\t\t<text type=\"formattedtext\">\n";
-                    buildXML += "\t\t\t\t\t" + fixDesc(current_feature.description) + "\n";
-                    buildXML += "\t\t\t\t</text>\n";
-                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
+        current_class.definition.classFeatures.forEach(function(current_feature) {
+            // System features that should never be displayed or processed for XML
+            const systemFeatures = ["Hit Points", "Proficiencies", "Martial Archetype", "Fighting Style",
+                                   "Ability Score Improvement", "Oath Spells",
+                                   "Circle Spells", "Bonus Cantrip", "Bonus Proficiencies", "Druidic",
+                                   "Expanded Spell List", "Otherwordly Patron", "Expanded Spell List",
+                                   "Acrobatics", "Animal Handling", "Arcana", "Athletics", "Deception",
+                                   "History", "Intimidation", "Investigation", "Medicine", "Nature",
+                                   "Perception", "Performance", "Persuasion", "Religion", "Sleight of Hand",
+                                   "Stealth", "Survival", "Divine Domain", "Bonus Proficiency"];
+                                   
+            // Admin features that should be processed but not displayed
+            const adminFeatures = ["Core Rogue Traits", "Core Wizard Traits", "Ability Score Increases", "Choose a Wizard Skill Proficiency", "Choose a Wizard Skill Proficiency "];
+            
+            // Skip system features entirely (both processing and display)
+            if (!systemFeatures.includes(current_feature.name)) {
+                if(parseInt(current_feature.requiredLevel) <= parseInt(classLevel)) {
+                    if(holdFeatures.includes(current_feature.name)) {
+                        //Skip this one, it's already in the array
+                    } else {
+                        holdFeatures.push(current_feature.name);
+                        
+                        // Check if this feature should be processed but not displayed
+                        if (!adminFeatures.includes(current_feature.name)) {
+                            // Only display if not in admin features list
+                            totalFeatures += 1;
+                            thisIteration = pad(totalFeatures, 5);
+                            buildXML += `\t\t\t<id-${thisIteration}>\n`;
+                            buildXML += "\t\t\t\t<locked type=\"number\">1</locked>\n";
+                            buildXML += "\t\t\t\t<name type=\"string\">" + fixQuote(current_feature.name) + "</name>\n";
+                            buildXML += "\t\t\t\t<source type=\"string\">" + convert_case(replaceDash(current_class.definition.name.toLowerCase())) + "</source>\n";
+                            buildXML += "\t\t\t\t<text type=\"formattedtext\">\n";
+                            buildXML += "\t\t\t\t\t" + fixDesc(current_feature.description) + "\n";
+                            buildXML += "\t\t\t\t</text>\n";
+                            buildXML += `\t\t\t</id-${thisIteration}>\n`;
+                        }
+                    }
                 }
             }
         });
@@ -721,15 +727,21 @@ function parseCharacter(inputChar) {
                             // Skip this one, it's already in the array
                         } else {
                             holdFeatures.push(charSubClass.name);
-                            totalFeatures += 1;
-                            thisIteration = pad(totalFeatures, 5);
-                            buildXML += `\t\t\t<id-${thisIteration}>\n`;
-                            buildXML += "\t\t\t\t<locked type=\"number\">1</locked>\n";
-                            buildXML += "\t\t\t\t<name type=\"string\">" + fixQuote(charSubClass.name) + "</name>\n";
-                            buildXML += "\t\t\t\t<text type=\"formattedtext\">\n";
-                            buildXML += "\t\t\t\t\t" + fixDesc(charSubClass.description) + "\n";
-                            buildXML += "\t\t\t\t</text>\n";
-                            buildXML += `\t\t\t</id-${thisIteration}>\n`;
+                            
+                            // Check if this feature should be processed but not displayed
+                            const hiddenFeatures = ["Core Rogue Traits", "Core Wizard Traits", "Ability Score Increases", "Choose a Wizard Skill Proficiency"];
+                            if (!hiddenFeatures.includes(charSubClass.name)) {
+                                // Only display if not in hidden features list
+                                totalFeatures += 1;
+                                thisIteration = pad(totalFeatures, 5);
+                                buildXML += `\t\t\t<id-${thisIteration}>\n`;
+                                buildXML += "\t\t\t\t<locked type=\"number\">1</locked>\n";
+                                buildXML += "\t\t\t\t<name type=\"string\">" + fixQuote(charSubClass.name) + "</name>\n";
+                                buildXML += "\t\t\t\t<text type=\"formattedtext\">\n";
+                                buildXML += "\t\t\t\t\t" + fixDesc(charSubClass.description) + "\n";
+                                buildXML += "\t\t\t\t</text>\n";
+                                buildXML += `\t\t\t</id-${thisIteration}>\n`;
+                            }
                         }
                     }
                 });
@@ -752,15 +764,21 @@ function parseCharacter(inputChar) {
             default:
                 break;
         }
-        totalFeatures += 1;
-        thisIteration = pad(totalFeatures, 5);
-        buildXML += `\t\t\t<id-${thisIteration}>\n`;
-        buildXML += "\t\t\t\t<locked type=\"number\">1</locked>\n";
-        buildXML += "\t\t\t\t<name type=\"string\">" + fixQuote(thisOption.definition.name) + "</name>\n";
-        buildXML += "\t\t\t\t<text type=\"formattedtext\">\n";
-        buildXML += "\t\t\t\t\t" + fixDesc(thisOption.definition.description) + "\n";
-        buildXML += "\t\t\t\t</text>\n";
-        buildXML += `\t\t\t</id-${thisIteration}>\n`;
+        
+        // Check if this option should be processed but not displayed
+        const hiddenFeatures = ["Core Rogue Traits", "Core Wizard Traits", "Ability Score Increases", "Choose a Wizard Skill Proficiency"];
+        if (!hiddenFeatures.includes(thisOption.definition.name)) {
+            // Only display if not in hidden features list
+            totalFeatures += 1;
+            thisIteration = pad(totalFeatures, 5);
+            buildXML += `\t\t\t<id-${thisIteration}>\n`;
+            buildXML += "\t\t\t\t<locked type=\"number\">1</locked>\n";
+            buildXML += "\t\t\t\t<name type=\"string\">" + fixQuote(thisOption.definition.name) + "</name>\n";
+            buildXML += "\t\t\t\t<text type=\"formattedtext\">\n";
+            buildXML += "\t\t\t\t\t" + fixDesc(thisOption.definition.description) + "\n";
+            buildXML += "\t\t\t\t</text>\n";
+            buildXML += `\t\t\t</id-${thisIteration}>\n`;
+        }
     });
 
     if (character.background.definition != null) {
@@ -1131,7 +1149,7 @@ function parseCharacter(inputChar) {
     totalProfs = 0;
     buildXML += "\t\t<proficiencylist>\n";
     var proficiencies = getObjects(character, 'type', 'proficiency');
-    if(proficiencies != null) proficiencies.some(function(prof, i) {
+    if(proficiencies != null) proficiencies.forEach(function(prof, i) {
         if (typeof prof.friendlySubtypeName == 'undefined') {
             //    console.log("Has friendly");
             //} else {
@@ -1145,16 +1163,17 @@ function parseCharacter(inputChar) {
             if (prof.friendlySubtypeName && ((prof.friendlySubtypeName).match(/Saving\sThrows/) || holdProf.includes(prof.friendlySubtypeName))) {
                 // Skip Saving Throws in proficiencies
             } else {
-                switch (prof.friendlySubtypeName) {
-                    case "Athletics": case "Acrobatics": case "Sleight of Hand": case "Stealth": case "Arcana": case "History": case "Investigation": case "Nature": case "Religion": case "Animal Handling": case "Insight": case "Medicine": case "Perception": case "Survival": case "Deception": case "Intimidation": case "Performance": case "Persuasion":
-                        return;
-                    default:
-                        holdProf.push(prof.friendlySubtypeName);
-                        thisIteration = pad(i + 1, 5);
-                        totalProfs += 1;
-                        buildXML += `\t\t\t<id-${thisIteration}>\n`;
-                        buildXML += "\t\t\t\t<name type=\"string\">" + fixQuote(prof.friendlySubtypeName) + "</name>\n";
-                        buildXML += `\t\t\t</id-${thisIteration}>\n`;
+                // Check if this proficiency should be hidden from display
+                const hiddenProficiencies = ["Choose a Wizard Skill Proficiency", "Choose a Wizard Skill Proficiency "];
+                
+                if (!hiddenProficiencies.includes(prof.friendlySubtypeName)) {
+                    // Only display if not in hidden proficiencies list
+                    holdProf.push(prof.friendlySubtypeName);
+                    thisIteration = pad(i + 1, 5);
+                    totalProfs += 1;
+                    buildXML += `\t\t\t<id-${thisIteration}>\n`;
+                    buildXML += "\t\t\t\t<name type=\"string\">" + fixQuote(prof.friendlySubtypeName) + "</name>\n";
+                    buildXML += `\t\t\t</id-${thisIteration}>\n`;
                 }
             }
         }

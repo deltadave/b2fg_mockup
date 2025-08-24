@@ -66,6 +66,226 @@ function safeAccess(obj, path, defaultValue = null) {
 }
 
 // =============================================================================
+// CANONICAL HTML SANITIZATION
+// =============================================================================
+
+/**
+ * Canonical HTML sanitization function for all text processing needs
+ * Replaces fixQuote(), fixDesc(), and remove_tags_traits() with unified approach
+ * 
+ * @param {string} input - Input string that may contain HTML/text to sanitize
+ * @param {Object} options - Sanitization options
+ * @param {string} options.mode - 'text' for simple text, 'html' for HTML content
+ * @param {number} options.maxLength - Maximum length (default: 10000 for html, 1000 for text)
+ * @param {boolean} options.preserveFormatting - Keep line breaks and basic formatting
+ * @returns {string} Sanitized string safe for XML output
+ */
+function sanitizeForXML(input, options = {}) {
+    // Handle null/undefined/non-string input
+    if (!input || typeof input !== 'string') {
+        return "";
+    }
+    
+    // Default options
+    const opts = {
+        mode: 'html',
+        maxLength: options.mode === 'text' ? 1000 : 10000,
+        preserveFormatting: options.mode !== 'text',
+        ...options
+    };
+    
+    // Initial length limit and basic cleanup
+    let result = String(input).substring(0, opts.maxLength);
+    
+    // Step 1: Decode HTML entities first to normalize content
+    result = result
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">") 
+        .replace(/&amp;/g, "&")
+        .replace(/&nbsp;/g, " ")
+        .replace(/&rsquo;/g, "'")
+        .replace(/&lsquo;/g, "'")
+        .replace(/&rdquo;/g, '"')
+        .replace(/&ldquo;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&#34;/g, '"')
+        .replace(/&ndash;/g, "-");
+    
+    if (opts.mode === 'html') {
+        // Step 2: HTML-specific processing
+        result = processHTMLContent(result);
+    }
+    
+    // Step 3: Final XML safety processing
+    result = makeXMLSafe(result, opts);
+    
+    return result.trim();
+}
+
+/**
+ * Process HTML content - apply whitelist filtering and structure fixes
+ * @private
+ */
+function processHTMLContent(html) {
+    // Whitelist of allowed HTML tags
+    const allowedTags = ['p', 'a', 'strong', 'em', 'b', 'i', 'ul', 'ol', 'li', 'blockquote', 'div', 'span', 'br', 'br/', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'caption'];
+    
+    let result = html;
+    
+    // Feature flag: track non-whitelisted tags for debugging
+    const showRemovedTags = window.DEBUG_SHOW_REMOVED_TAGS || false;
+    const removedTags = new Set();
+    
+    // Convert strong tags to b tags for consistency
+    result = result
+        .replace(/<strong([^>]*)>/gi, "<b$1>")
+        .replace(/<\/strong>/gi, "</b>");
+    
+    // Remove non-whitelisted HTML tags
+    result = result.replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)[^>]*>/gi, function(match, tagName) {
+        const tag = tagName.toLowerCase();
+        if (allowedTags.includes(tag)) {
+            return match; // Keep whitelisted tags
+        } else {
+            if (showRemovedTags) {
+                removedTags.add(tag);
+            }
+            return ''; // Remove non-whitelisted tags
+        }
+    });
+    
+    // Remove dangerous elements and attributes
+    result = result
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "") // Remove scripts
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")   // Remove styles
+        .replace(/on\w+\s*=\s*[^>]*/gi, "")                // Remove event handlers
+        .replace(/javascript:/gi, "")                        // Remove javascript:
+        .replace(/vbscript:/gi, "")                         // Remove vbscript:
+        .replace(/href="[^">]*>/gi, 'href="#">')             // Fix malformed href
+        .replace(/href='[^'>]*>/gi, "href='#'>");            // Fix malformed href
+    
+    // Conservative tag balancing for simple formatting tags only
+    // Disabled for now as it was adding orphaned tags
+    // result = balanceSimpleTags(result);
+    
+    // Log removed tags if feature flag is enabled
+    if (showRemovedTags && removedTags.size > 0) {
+        console.log('🚫 Non-whitelisted HTML tags removed:', Array.from(removedTags).sort());
+    }
+    
+    return result;
+}
+
+/**
+ * Balance simple HTML tags that commonly have missing closing tags
+ * @private
+ */
+function balanceSimpleTags(html) {
+    let result = html;
+    
+    // Only balance simple text formatting tags
+    const simpleTagsToBalance = ['p', 'i', 'b', 'em'];
+    
+    simpleTagsToBalance.forEach(tag => {
+        const openRegex = new RegExp(`<${tag}[^>]*>`, 'gi');
+        const closeRegex = new RegExp(`<\\/${tag}>`, 'gi');
+        const openMatches = (result.match(openRegex) || []).length;
+        const closeMatches = (result.match(closeRegex) || []).length;
+        
+        // Only add closing tags if there's a reasonable imbalance and we're missing closing tags
+        if (openMatches > closeMatches && (openMatches - closeMatches) <= 2) {
+            for (let i = 0; i < openMatches - closeMatches; i++) {
+                result += `</${tag}>`;
+            }
+        }
+    });
+    
+    // Remove orphaned closing tags for simple tags
+    const tagsToCheck = ['i', 'b', 'em', 'p'];
+    tagsToCheck.forEach(tag => {
+        const openCount = (result.match(new RegExp(`<${tag}[^>]*>`, 'gi')) || []).length;
+        const closeCount = (result.match(new RegExp(`<\\/${tag}>`, 'gi')) || []).length;
+        
+        if (closeCount > openCount) {
+            // Remove excess closing tags from the end
+            for (let i = 0; i < closeCount - openCount; i++) {
+                const lastIndex = result.lastIndexOf(`</${tag}>`);
+                if (lastIndex !== -1) {
+                    result = result.substring(0, lastIndex) + result.substring(lastIndex + `</${tag}>`.length);
+                }
+            }
+        }
+    });
+    
+    return result;
+}
+
+/**
+ * Make content safe for XML output
+ * @private
+ */
+function makeXMLSafe(content, opts) {
+    let result = content;
+    
+    // For HTML mode, we need to preserve HTML structure while making it XML-safe
+    if (opts.mode === 'html') {
+        // For HTML content within XML formattedtext elements:
+        // - Preserve HTML structure (< and > for tags)
+        // - Keep normal quotes for HTML attributes 
+        // - Only escape & characters that aren't part of valid entities
+        result = result
+            .replace(/&(?!amp;|quot;|#39;|lt;|gt;|#\d+;)/g, "&amp;");  // Escape unescaped & only
+        // Note: < > " ' are preserved for HTML structure within XML formattedtext
+    } else {
+        // Text mode - escape everything for XML safety
+        result = result
+            .replace(/&/g, "&amp;")      // Must be first
+            .replace(/</g, "&lt;")       // Escape < characters  
+            .replace(/>/g, "&gt;")       // Escape > characters
+            .replace(/"/g, "&quot;")     // Prevent attribute injection
+            .replace(/'/g, "&#39;")      // Prevent attribute injection
+            .replace(/\//g, "&#x2F;");   // Forward slash for extra safety
+    }
+    
+    // Handle whitespace based on options
+    if (!opts.preserveFormatting) {
+        result = result
+            .replace(/\n/g, " ")         // Replace newlines with spaces
+            .replace(/\r/g, " ")         // Replace carriage returns
+            .replace(/\t/g, " ")         // Replace tabs
+            .replace(/\s+/g, " ");       // Normalize multiple spaces
+    }
+    
+    // Remove control characters
+    result = result.replace(/[\x00-\x1F\x7F]/g, "");
+    
+    // Final length limit
+    return result.substring(0, opts.maxLength);
+}
+
+// =============================================================================
+// CONVENIENCE FUNCTIONS (using canonical sanitizer)
+// =============================================================================
+
+/**
+ * Simple text sanitization (replaces fixQuote)
+ * @param {string} text - Text to sanitize
+ * @returns {string} XML-safe text
+ */
+function sanitizeText(text) {
+    return sanitizeForXML(text, { mode: 'text', maxLength: 1000, preserveFormatting: false });
+}
+
+/**
+ * HTML content sanitization (replaces fixDesc and remove_tags_traits)
+ * @param {string} html - HTML content to sanitize
+ * @returns {string} XML-safe HTML
+ */
+function sanitizeHTML(html) {
+    return sanitizeForXML(html, { mode: 'html', maxLength: 10000, preserveFormatting: true });
+}
+
+// =============================================================================
 // STRING MANIPULATION UTILITIES
 // =============================================================================
 
@@ -76,7 +296,7 @@ function safeAccess(obj, path, defaultValue = null) {
  */
 function replaceDash(str) {
     firstStep = str.replace(/-/g, "_");
-    return firstStep.replace(/\\s/g, "_");
+    return firstStep.replace(/\s/g, "_");
 }
 
 /**
@@ -121,177 +341,28 @@ function convert_case(str) {
  * @param {string} badString - Input string to sanitize
  * @returns {string} Sanitized and encoded string
  */
+/**
+ * @deprecated Use sanitizeText() instead - Legacy wrapper for compatibility
+ */
 function fixQuote(badString) {
-    // Enhanced security: strict input validation and comprehensive sanitization
-    if (badString == null || badString === undefined || badString === "") {
-        return "";
-    }
-    
-    // Convert to string if not already
-    const inputString = String(badString);
-    
-    // Comprehensive HTML entity encoding for security
-    let tempString = inputString
-        .replace(/&/g, "&amp;")      // Must be first to avoid double-encoding
-        .replace(/</g, "&lt;")       // Prevent HTML injection
-        .replace(/>/g, "&gt;")       // Prevent HTML injection
-        .replace(/"/g, "&quot;")     // Prevent attribute injection
-        .replace(/'/g, "&#39;")      // Prevent attribute injection
-        .replace(/\//g, "&#x2F;")    // Forward slash for extra safety
-        .replace(/\n/g, " ")         // Replace newlines with spaces
-        .replace(/\r/g, " ")         // Replace carriage returns
-        .replace(/\t/g, " ")         // Replace tabs
-        .replace(/[\x00-\x1F\x7F]/g, ""); // Remove control characters
-    
-    // Additional sanitization: limit length and remove potentially dangerous patterns
-    tempString = tempString
-        .substring(0, 1000) // Reasonable length limit
-        .replace(/javascript:/gi, "") // Remove javascript: protocols
-        .replace(/vbscript:/gi, "")   // Remove vbscript: protocols
-        .replace(/data:/gi, "")       // Remove data: protocols
-        .replace(/on\\w+\\s*=/gi, ""); // Remove event handlers
-    
-    return tempString.trim();
+    return sanitizeText(badString);
 }
 
+// Legacy fixDesc function implementation removed - see wrapper function below
+// All legacy function implementations cleaned up - using canonical sanitizer
+
 /**
- * Sanitizes HTML content while preserving allowed tags and converting entities
- * @param {string} badString - Input HTML string to process
- * @returns {string} Sanitized HTML string
+ * @deprecated Use sanitizeHTML() instead - Legacy wrapper for compatibility
  */
 function fixDesc(badString) {
-    // Enhanced security: strict input validation
-    if (badString == null || badString === undefined || badString === "") {
-        return "";
-    }
-    
-    // Convert to string and limit initial length
-    let inputString = String(badString).substring(0, 20000);
-    
-    // Step 1: Decode HTML entities first to normalize content
-    let tempString1 = inputString
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-        .replace(/&amp;/g, "&")
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'")
-        .replace(/&#x2F;/g, "/");
-    
-    // Step 2: Typography improvements - smart quotes and dashes
-    let tempString2 = tempString1
-        .replace(/&rsquo;/g, "'")
-        .replace(/&lsquo;/g, "'")
-        .replace(/&rdquo;/g, '"')
-        .replace(/&ldquo;/g, '"')
-        .replace(/&ndash;/g, "-")
-        .replace(/&mdash;/g, "—")
-        .replace(/&#34;/g, '"')
-        .replace(/&nbsp;/g, " ");
-    
-    // Step 3: Convert line breaks and headers for better formatting
-    let tempString3 = tempString2
-        .replace(/<br\s*\/?>/gi, "\n")
-        .replace(/<\/p>/gi, "</p>\n")
-        .replace(/<h([1-6])[^>]*>/gi, "<p><b>")
-        .replace(/<\/h[1-6]>/gi, "</b></p>");
-    
-    // Step 4: Table improvements - convert th to td for better compatibility
-    tempString3 = tempString3
-        .replace(/<th\s+style/gi, "<td style")
-        .replace(/<th\s+rowspan/gi, "<td rowspan")
-        .replace(/<th\s+colspan/gi, "<td colspan")
-        .replace(/<\/th>/gi, "</td>")
-        .replace(/<th>/gi, "<td>");
-    
-    // Step 5: Clean up spans and remove dangerous elements
-    tempString3 = tempString3
-        .replace(/<span[^>]*>/gi, "")
-        .replace(/<\/span>/gi, "")
-        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "") // Remove scripts
-        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")   // Remove styles
-        .replace(/on\w+\s*=\s*[^>]*/gi, "")                // Remove event handlers
-        .replace(/javascript:/gi, "")                        // Remove javascript:
-        .replace(/vbscript:/gi, "")                         // Remove vbscript:
-        .replace(/href="[^">]*>/gi, 'href="#">')             // Fix malformed href where > appears before closing quote
-        .replace(/href='[^'>]*>/gi, "href='#'>")             // Fix malformed href where > appears before closing quote
-    
-    // Enhanced HTML tag balancing to prevent XML parsing errors
-    function balanceHtmlTags(html) {
-        const allowedTags = ['p', 'b', 'i', 'u', 'strong', 'em', 'table', 'tr', 'td', 'ul', 'ol', 'li'];
-        const stack = [];
-        let balancedResult = html;
-        
-        // Simple tag balancing - add missing closing tags
-        allowedTags.forEach(tag => {
-            const openRegex = new RegExp(`<${tag}[^>]*>`, 'gi');
-            const closeRegex = new RegExp(`<\\/${tag}>`, 'gi');
-            const openMatches = (balancedResult.match(openRegex) || []).length;
-            const closeMatches = (balancedResult.match(closeRegex) || []).length;
-            
-            // Add missing closing tags
-            if (openMatches > closeMatches) {
-                for (let i = 0; i < openMatches - closeMatches; i++) {
-                    balancedResult += `</${tag}>`;
-                }
-            }
-        });
-        
-        return balancedResult;
-    }
-    
-    // Apply tag balancing to prevent XML parsing errors
-    const balanced = balanceHtmlTags(tempString3);
-    
-    // Remove orphaned closing tags that don't have matching opening tags
-    function removeOrphanedClosingTags(html) {
-        let result = html;
-        const tagsToCheck = ['u', 'i', 'b', 'strong', 'em'];
-        
-        tagsToCheck.forEach(tag => {
-            const openCount = (result.match(new RegExp(`<${tag}[^>]*>`, 'gi')) || []).length;
-            const closeCount = (result.match(new RegExp(`<\\/${tag}>`, 'gi')) || []).length;
-            
-            if (closeCount > openCount) {
-                // Remove excess closing tags from the end
-                for (let i = 0; i < closeCount - openCount; i++) {
-                    const lastIndex = result.lastIndexOf(`</${tag}>`);
-                    if (lastIndex !== -1) {
-                        result = result.substring(0, lastIndex) + result.substring(lastIndex + `</${tag}>`.length);
-                    }
-                }
-            }
-        });
-        
-        return result;
-    }
-    
-    const cleanedBalance = removeOrphanedClosingTags(balanced);
-    
-    // Step 6: Final cleanup and validation
-    return cleanedBalance
-        .replace(/\s+/g, " ") // Normalize whitespace
-        .replace(/<\/u>\s*<\/p>/gi, "</p>") // Remove stray </u> before closing paragraph
-        .replace(/<\/u>\s*$/gi, "") // Remove stray </u> at end
-        .replace(/\s*<\/u>\s*/gi, " ") // Replace stray </u> with space
-        .trim()
-        .substring(0, 10000); // Final length limit
+    return sanitizeHTML(badString);
 }
 
 /**
- * Remove and clean HTML tags from trait descriptions
- * Legacy function - consider using fixDesc for new implementations
- * @param {string} badString - Input HTML string
- * @returns {string} Cleaned string
+ * @deprecated Use sanitizeHTML() instead - Legacy wrapper for compatibility
  */
 function remove_tags_traits(badString) {
-    var tempString1 = badString.replace(/&lt;/g, "<").replace(/&gt;/g, ">");
-    var tempString2 = tempString1.replace(/&rsquo;/g, "'").replace(/&lsquo;/g, "'").replace(/&rdquo;/g, '"').replace(/&ldquo;/g, '"');
-    var tempString3 = tempString2.replace(/&#34;/g, '"').replace(/<br>/g, "<br />").replace(/&ndash;/g, "-");
-    var tempString4 = tempString3.replace(/<th\sstyle/g, "<td style").replace(/<\/th>/g, "</td>").replace(/<th\srowspan/g, "<td rowspan").replace(/<th\scolspan/g, "<td colspan").replace(/<th>/g, "<td>");
-    var tempString5 = tempString4.replace(/<span>/g, "").replace(/<\/span>/g, "").replace(/<span\sstyle\="font-weight\:400">/g, "");
-    var tempString6 = tempString5.replace(/&nbsp;/g, " ").replace(/<br>/g, "\n").replace(/<h5>/g, "<p><b>").replace(/<\/h5>/g, "</b></p>").replace(/<span\sstyle\="color\:#[a-zA-Z0-9]{3}">/g, "").replace(/<span\sstyle\="color\:#[a-zA-Z0-9]{6}">/g, "");
-
-    return tempString6;
+    return sanitizeHTML(badString);
 }
 
 // =============================================================================
@@ -968,6 +1039,9 @@ if (typeof window !== 'undefined') {
     window.fixQuote = fixQuote;
     window.fixDesc = fixDesc;
     window.remove_tags_traits = remove_tags_traits;
+    window.sanitizeText = sanitizeText;
+    window.sanitizeHTML = sanitizeHTML;
+    window.sanitizeForXML = sanitizeForXML;
     
     // Performance monitoring functions
     window.createPerformanceTimer = createPerformanceTimer;
@@ -983,4 +1057,7 @@ if (typeof window !== 'undefined') {
     window.buildNestedInventory = buildNestedInventory;
     window.generateContainerContentsXML = generateContainerContentsXML;
     window.processNestedInventoryXML = processNestedInventoryXML;
+    
+    // Debug flag for HTML sanitization
+    window.DEBUG_SHOW_REMOVED_TAGS = false;
 }
