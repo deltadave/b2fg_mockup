@@ -7,6 +7,7 @@
  */
 
 import { CharacterFetcher, type FetchResult, type CharacterData } from '@/domain/character/services/CharacterFetcher';
+import { ConversionOrchestrator, type ConversionResult as OrchestrationResult, type ConversionOptions, type ProcessedCharacterData as OrchProcessedData } from '@/domain/conversion/ConversionOrchestrator';
 import { featureFlags } from '@/core/FeatureFlags';
 import { gameConfigService } from '@/shared/services/GameConfigService';
 import { ObjectSearch } from '@/shared/utils/ObjectSearch';
@@ -43,6 +44,7 @@ export interface ConversionResult {
 
 export class CharacterConverterFacade {
   private characterFetcher: CharacterFetcher;
+  private conversionOrchestrator: ConversionOrchestrator;
   private inventoryProcessor: InventoryProcessor;
   private encumbranceCalculator: EncumbranceCalculator;
   private spellSlotCalculator: SpellSlotCalculator;
@@ -51,6 +53,7 @@ export class CharacterConverterFacade {
 
   constructor() {
     this.characterFetcher = new CharacterFetcher();
+    this.conversionOrchestrator = new ConversionOrchestrator();
     this.inventoryProcessor = new InventoryProcessor();
     this.encumbranceCalculator = new EncumbranceCalculator();
     this.spellSlotCalculator = new SpellSlotCalculator();
@@ -3501,6 +3504,313 @@ ${actions}        </actions>`;
         <stat2 type="string">dexterity</stat2>
         <temporary type="number">0</temporary>
         <total type="number">${fallbackAC}</total>`;
+  }
+
+  /**
+   * Modern conversion method using ConversionOrchestrator
+   * 
+   * This provides the new service-driven architecture for character processing,
+   * completely independent of the legacy system. Uses Chain of Responsibility
+   * pattern for processing character data through specialized services.
+   * 
+   * @param characterId - Character ID or URL
+   * @param options - Conversion processing options
+   * @returns Comprehensive conversion result with processed character data
+   */
+  async convertCharacterModern(
+    characterId: string, 
+    options: ConversionOptions = {
+      strictValidation: true,
+      includeDebugInfo: featureFlags.isEnabled('debug_character_processing'),
+      enablePerformanceTracking: true,
+      skipOptionalProcessing: false
+    }
+  ): Promise<OrchestrationResult> {
+    
+    const performanceStart = performance.now();
+    
+    if (featureFlags.isEnabled('conversion_orchestrator_debug') || options.includeDebugInfo) {
+      console.log('🚀 CharacterConverterFacade: Starting modern conversion', {
+        characterId,
+        options,
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    try {
+      // Step 1: Fetch character data using modern fetcher
+      this.reportProgress('Fetching character data', 10);
+      
+      const fetchResult = await this.characterFetcher.fetchCharacter(characterId);
+      if (!fetchResult.success || !fetchResult.data) {
+        return {
+          success: false,
+          errors: [{
+            step: 'fetch',
+            type: 'data',
+            message: fetchResult.error || 'Failed to fetch character data',
+            recoverable: false
+          }],
+          warnings: [],
+          performance: {
+            totalTime: performance.now() - performanceStart,
+            stepBreakdown: []
+          }
+        };
+      }
+      
+      const characterData = fetchResult.data;
+      
+      // Step 2: Validate character data
+      this.reportProgress('Validating character data', 20);
+      
+      const validation = this.conversionOrchestrator.validateCharacterData(characterData);
+      if (!validation.isValid) {
+        return {
+          success: false,
+          errors: validation.errors.map(error => ({
+            step: 'validation',
+            type: 'validation',
+            message: error,
+            recoverable: false
+          })),
+          warnings: [],
+          performance: {
+            totalTime: performance.now() - performanceStart,
+            stepBreakdown: []
+          }
+        };
+      }
+      
+      // Step 3: Process character through orchestrator
+      this.reportProgress('Processing character data', 30);
+      
+      const orchestrationResult = await this.conversionOrchestrator.processCharacter(
+        characterData, 
+        options
+      );
+      
+      if (!orchestrationResult.success) {
+        this.reportProgress('Processing failed', 100);
+        return orchestrationResult;
+      }
+      
+      // Step 4: Complete processing
+      this.reportProgress('Conversion complete', 100);
+      
+      const finalResult: OrchestrationResult = {
+        ...orchestrationResult,
+        performance: {
+          ...orchestrationResult.performance,
+          totalTime: performance.now() - performanceStart
+        }
+      };
+      
+      if (featureFlags.isEnabled('conversion_orchestrator_debug') || options.includeDebugInfo) {
+        console.log('🚀 CharacterConverterFacade: Modern conversion complete', {
+          success: true,
+          characterName: characterData.name,
+          totalTime: finalResult.performance.totalTime,
+          warningCount: finalResult.warnings.length,
+          errorCount: finalResult.errors.length,
+          processedCharacter: finalResult.processedCharacter ? {
+            id: finalResult.processedCharacter.id,
+            name: finalResult.processedCharacter.name,
+            level: finalResult.processedCharacter.level,
+            hasAbilities: !!finalResult.processedCharacter.abilities,
+            hasSpellSlots: !!finalResult.processedCharacter.spellSlots,
+            hasInventory: !!finalResult.processedCharacter.inventory,
+            hasFeatures: !!finalResult.processedCharacter.features,
+            hasEncumbrance: !!finalResult.processedCharacter.encumbrance
+          } : null
+        });
+      }
+      
+      return finalResult;
+      
+    } catch (error) {
+      const totalTime = performance.now() - performanceStart;
+      
+      console.error('🚀 CharacterConverterFacade: Modern conversion failed', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        characterId,
+        totalTime
+      });
+      
+      return {
+        success: false,
+        errors: [{
+          step: 'system',
+          type: 'system',
+          message: error instanceof Error ? error.message : 'Unknown system error during modern conversion',
+          recoverable: false
+        }],
+        warnings: [],
+        performance: {
+          totalTime,
+          stepBreakdown: []
+        }
+      };
+    }
+  }
+  
+  /**
+   * Convert processed character data to specified output format
+   * 
+   * Takes the output from convertCharacterModern() and generates the requested format.
+   * This separates processing from formatting for better architecture.
+   * 
+   * @param processedCharacter - Result from convertCharacterModern()
+   * @param format - Target output format ('fantasy-grounds', 'foundry-vtt', etc.)
+   * @param options - Format-specific options
+   * @returns Formatted output result
+   */
+  async convertToFormat(
+    processedCharacter: OrchProcessedData,
+    format: string,
+    options: FormatOptions = {}
+  ): Promise<FormatResult> {
+    
+    if (featureFlags.isEnabled('format_conversion_debug')) {
+      console.log('📄 CharacterConverterFacade: Converting to format', {
+        format,
+        characterName: processedCharacter.name,
+        characterLevel: processedCharacter.level,
+        options
+      });
+    }
+    
+    try {
+      // Get the appropriate formatter from the registry
+      const formatter = formatRegistry.getFormatter(format);
+      if (!formatter) {
+        return {
+          success: false,
+          error: `Unsupported output format: ${format}`,
+          supportedFormats: formatRegistry.getSupportedFormats().map(f => f.id)
+        };
+      }
+      
+      // Convert processed character data to the format expected by the formatter
+      const formatterInput: ProcessedCharacterData = {
+        id: processedCharacter.id,
+        name: processedCharacter.name,
+        level: processedCharacter.level,
+        abilities: processedCharacter.abilities,
+        spells: processedCharacter.spellSlots,
+        inventory: processedCharacter.inventory,
+        features: processedCharacter.features,
+        // Add any additional mappings needed
+      };
+      
+      // Generate the formatted output
+      const formatResult = await formatter.generateOutput(formatterInput, options);
+      
+      if (featureFlags.isEnabled('format_conversion_debug')) {
+        console.log('📄 CharacterConverterFacade: Format conversion complete', {
+          format,
+          success: formatResult.success,
+          outputLength: formatResult.output?.length || 0,
+          warningCount: formatResult.warnings?.length || 0
+        });
+      }
+      
+      return formatResult;
+      
+    } catch (error) {
+      console.error('📄 CharacterConverterFacade: Format conversion failed', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        format,
+        characterName: processedCharacter.name
+      });
+      
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error during format conversion'
+      };
+    }
+  }
+  
+  /**
+   * Complete modern conversion pipeline: fetch -> process -> format
+   * 
+   * This is the main entry point for the new architecture that combines
+   * character processing with format generation in a single call.
+   * 
+   * @param characterId - Character ID or URL  
+   * @param format - Target output format
+   * @param conversionOptions - Processing options
+   * @param formatOptions - Format-specific options
+   * @returns Complete conversion result with formatted output
+   */
+  async convertCharacterComplete(
+    characterId: string,
+    format: string = 'fantasy-grounds',
+    conversionOptions?: ConversionOptions,
+    formatOptions?: FormatOptions
+  ): Promise<ConversionResult> {
+    
+    const performanceStart = performance.now();
+    
+    try {
+      // Step 1: Process character using modern orchestrator
+      const processingResult = await this.convertCharacterModern(characterId, conversionOptions);
+      
+      if (!processingResult.success || !processingResult.processedCharacter) {
+        return {
+          success: false,
+          error: processingResult.errors.map(e => e.message).join('; '),
+          performance: {
+            fetchTime: 0,
+            parseTime: processingResult.performance.totalTime,
+            totalTime: performance.now() - performanceStart
+          }
+        };
+      }
+      
+      // Step 2: Convert to requested format
+      const formatResult = await this.convertToFormat(
+        processingResult.processedCharacter,
+        format,
+        formatOptions
+      );
+      
+      if (!formatResult.success) {
+        return {
+          success: false,
+          error: formatResult.error,
+          characterData: processingResult.processedCharacter as any, // Type compatibility
+          performance: {
+            fetchTime: 0,
+            parseTime: processingResult.performance.totalTime,
+            totalTime: performance.now() - performanceStart
+          }
+        };
+      }
+      
+      // Step 3: Return complete result
+      return {
+        success: true,
+        xml: formatResult.output,
+        characterData: processingResult.processedCharacter as any, // Type compatibility
+        performance: {
+          fetchTime: 0,
+          parseTime: processingResult.performance.totalTime,
+          totalTime: performance.now() - performanceStart
+        }
+      };
+      
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error during complete conversion',
+        performance: {
+          fetchTime: 0,
+          parseTime: 0,
+          totalTime: performance.now() - performanceStart
+        }
+      };
+    }
   }
 }
 

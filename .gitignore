@@ -24,6 +24,8 @@ _ReSharper*/
 
 #cmake build directories
 cmake-build*/
+devel/dist/*
+legacy/devel/*
 
 #claude files
 .claude/
