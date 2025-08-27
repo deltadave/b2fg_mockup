@@ -23,6 +23,8 @@ import { FeatureProcessor } from '@/domain/character/services/FeatureProcessor';
 import { type InventoryItem } from '@/domain/character/models/Inventory';
 import { formatRegistry, type FormatCompatibilityInfo } from '@/domain/export/registry/FormatRegistry';
 import type { ProcessedCharacterData, FormatOptions, FormatResult, FormatInfo } from '@/domain/export/interfaces/OutputFormatter';
+import { errorService, createApiError, createValidationError, createProcessingError } from '@/shared/errors/ErrorService';
+import { type ConversionError, ErrorCategory, ErrorSeverity } from '@/shared/errors/ConversionErrors';
 
 export interface ConversionProgress {
   step: string;
@@ -3543,13 +3545,29 @@ ${actions}        </actions>`;
       
       const fetchResult = await this.characterFetcher.fetchCharacter(characterId);
       if (!fetchResult.success || !fetchResult.data) {
+        // Use centralized error handling for API/fetch failures
+        const fetchError = createApiError(
+          fetchResult.error || 'Failed to fetch character data',
+          fetchResult.httpStatus,
+          characterId
+        );
+        
+        const handledError = await errorService.handleError(fetchError, {
+          step: 'character_fetch',
+          component: 'CharacterConverterFacade',
+          characterId,
+          httpStatus: fetchResult.httpStatus
+        });
+
         return {
           success: false,
           errors: [{
             step: 'fetch',
             type: 'data',
-            message: fetchResult.error || 'Failed to fetch character data',
-            recoverable: false
+            message: handledError.message,
+            recoverable: handledError.recoverable,
+            technicalDetails: handledError.technicalDetails,
+            conversionError: handledError
           }],
           warnings: [],
           performance: {
@@ -3566,14 +3584,30 @@ ${actions}        </actions>`;
       
       const validation = this.conversionOrchestrator.validateCharacterData(characterData);
       if (!validation.isValid) {
+        // Use centralized error handling for validation failures
+        const validationError = createValidationError(
+          validation.errors.join('; '),
+          characterData.name
+        );
+        
+        const handledError = await errorService.handleError(validationError, {
+          step: 'character_validation',
+          component: 'CharacterConverterFacade',
+          characterId,
+          characterName: characterData.name,
+          metadata: { validationErrors: validation.errors }
+        });
+
         return {
           success: false,
-          errors: validation.errors.map(error => ({
+          errors: [{
             step: 'validation',
             type: 'validation',
-            message: error,
-            recoverable: false
-          })),
+            message: handledError.message,
+            recoverable: handledError.recoverable,
+            technicalDetails: handledError.technicalDetails,
+            conversionError: handledError
+          }],
           warnings: [],
           performance: {
             totalTime: performance.now() - performanceStart,
@@ -3637,13 +3671,23 @@ ${actions}        </actions>`;
         totalTime
       });
       
+      // Use centralized error handling for system errors
+      const handledError = await errorService.handleError(error instanceof Error ? error : new Error('Unknown system error'), {
+        step: 'character_conversion_system',
+        component: 'CharacterConverterFacade',
+        characterId,
+        metadata: { totalTime, phase: 'modern_conversion' }
+      });
+      
       return {
         success: false,
         errors: [{
           step: 'system',
           type: 'system',
-          message: error instanceof Error ? error.message : 'Unknown system error during modern conversion',
-          recoverable: false
+          message: handledError.message,
+          recoverable: handledError.recoverable,
+          technicalDetails: handledError.technicalDetails,
+          conversionError: handledError
         }],
         warnings: [],
         performance: {
@@ -3684,10 +3728,29 @@ ${actions}        </actions>`;
       // Get the appropriate formatter from the registry
       const formatter = formatRegistry.getFormatter(format);
       if (!formatter) {
+        // Use centralized error handling for unsupported format
+        const formatError = createProcessingError(
+          'format_selection',
+          'CharacterConverterFacade',
+          `Unsupported output format: ${format}`
+        );
+        
+        const handledError = await errorService.handleError(formatError, {
+          step: 'format_selection',
+          component: 'CharacterConverterFacade',
+          characterId: processedCharacter.id,
+          characterName: processedCharacter.name,
+          metadata: { 
+            requestedFormat: format,
+            supportedFormats: formatRegistry.getSupportedFormats().map(f => f.id)
+          }
+        });
+
         return {
           success: false,
-          error: `Unsupported output format: ${format}`,
-          supportedFormats: formatRegistry.getSupportedFormats().map(f => f.id)
+          error: handledError.message,
+          supportedFormats: formatRegistry.getSupportedFormats().map(f => f.id),
+          conversionError: handledError
         };
       }
       
@@ -3724,9 +3787,19 @@ ${actions}        </actions>`;
         characterName: processedCharacter.name
       });
       
+      // Use centralized error handling for format conversion failures
+      const handledError = await errorService.handleError(error instanceof Error ? error : new Error('Unknown format conversion error'), {
+        step: 'format_conversion',
+        component: 'CharacterConverterFacade',
+        characterId: processedCharacter.id,
+        characterName: processedCharacter.name,
+        metadata: { targetFormat: format }
+      });
+      
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error during format conversion'
+        error: handledError.message,
+        conversionError: handledError
       };
     }
   }

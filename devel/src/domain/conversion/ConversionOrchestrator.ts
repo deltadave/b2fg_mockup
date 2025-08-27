@@ -15,6 +15,8 @@ import { InventoryProcessor, type ProcessedInventory } from '@/domain/character/
 import { FeatureProcessor, type ProcessedFeatures } from '@/domain/character/services/FeatureProcessor';
 import { EncumbranceCalculator, type EncumbranceResult } from '@/domain/character/services/EncumbranceCalculator';
 import { featureFlags } from '@/core/FeatureFlags';
+import { errorService, createProcessingError } from '@/shared/errors/ErrorService';
+import { type ConversionError as CentralizedError } from '@/shared/errors/ConversionErrors';
 
 export interface ConversionContext {
   originalCharacter: CharacterData;
@@ -117,10 +119,23 @@ export abstract class CharacterProcessor {
       const duration = performance.now() - stepStartTime;
       this.trackProcessingStep(context, this.getStepName(), duration, false, error);
       
+      // Use centralized error handling for processing step errors
+      const handledError = await errorService.handleError(error instanceof Error ? error : new Error('Unknown processing error'), {
+        step: this.getStepName(),
+        component: this.constructor.name,
+        characterId: context.originalCharacter.id,
+        characterName: context.originalCharacter.name,
+        metadata: { 
+          processingDuration: duration,
+          processingStep: this.getStepName(),
+          currentProgress: context.progress
+        }
+      });
+      
       result = ProcessingResult.error(
         this.getStepName(),
-        error instanceof Error ? error.message : 'Unknown processing error',
-        this.isRecoverable(error)
+        handledError.message,
+        handledError.recoverable
       );
     }
     
@@ -524,11 +539,25 @@ export class ConversionOrchestrator {
       return finalResult;
       
     } catch (error) {
+      // Use centralized error handling for orchestrator system errors
+      const handledError = await errorService.handleError(error instanceof Error ? error : new Error('Unknown system error'), {
+        step: context.currentStep,
+        component: 'ConversionOrchestrator',
+        characterId: character.id,
+        characterName: character.name,
+        metadata: { 
+          totalTime: performance.now() - startTime,
+          processingOptions: options,
+          currentProgress: context.progress
+        }
+      });
+
       const conversionError: ConversionError = {
         step: context.currentStep,
         type: 'system',
-        message: error instanceof Error ? error.message : 'Unknown system error',
-        recoverable: false
+        message: handledError.message,
+        details: handledError.technicalDetails,
+        recoverable: handledError.recoverable
       };
       
       return {
