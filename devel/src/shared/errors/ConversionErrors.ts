@@ -41,7 +41,13 @@ export enum RecoveryAction {
   CONTACT_SUPPORT = 'contact_support', // Contact support for help
   USE_LEGACY = 'use_legacy',          // Fall back to legacy converter
   TRY_DIFFERENT_FORMAT = 'try_format', // Try a different output format
-  REFRESH_PAGE = 'refresh_page'       // Refresh the page and try again
+  REFRESH_PAGE = 'refresh_page',      // Refresh the page and try again
+  FIX_CHARACTER_ID = 'fix_id',        // Automatically fix character ID format
+  EXTRACT_FROM_URL = 'extract_url',   // Extract character ID from URL
+  USE_ALTERNATIVE_API = 'alt_api',    // Try alternative API endpoint
+  RETRY_WITH_DELAY = 'retry_delay',   // Retry with longer delay
+  CLEAR_CACHE = 'clear_cache',        // Clear browser cache and retry
+  TRY_DIFFERENT_BROWSER = 'try_browser' // Suggest different browser
 }
 
 /**

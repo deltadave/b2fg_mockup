@@ -7,6 +7,7 @@
 import Alpine from 'alpinejs';
 import { formatRegistry } from '../../domain/export/registry/FormatRegistry';
 import type { FormatInfo } from '../../domain/export/interfaces/OutputFormatter';
+import { errorService, createProcessingError, createValidationError } from '@/shared/errors/ErrorService';
 
 export interface SimpleFormat {
   id: string;
@@ -34,7 +35,7 @@ export interface SimpleFormatSelectorData {
   selectRecommendedFormats(): void;
   clearSelection(): void;
   convertToSelectedFormats(): Promise<void>;
-  downloadFormat(formatId: string): void;
+  downloadFormat(formatId: string): Promise<void>;
   closeModal(): void;
   getCompatibilityColor(level: string): string;
   getCompatibilityMessage(level: string): string;
@@ -233,6 +234,17 @@ Alpine.data('simpleFormatSelector', (): SimpleFormatSelectorData => ({
 
     if (!this.characterData) {
       console.error('❌ No character data available for conversion');
+      
+      // Use centralized error handling for validation errors
+      const validationError = createValidationError('No character data available for conversion');
+      errorService.handleError(validationError, {
+        step: 'pre_conversion_validation',
+        component: 'SimpleFormatSelector',
+        metadata: { 
+          selectedFormats: this.selectedFormats
+        }
+      });
+      
       const notifications = Alpine.store('notifications');
       notifications.addError('No character data available for conversion');
       return;
@@ -311,7 +323,22 @@ Alpine.data('simpleFormatSelector', (): SimpleFormatSelectorData => ({
       
     } catch (error) {
       console.error('Conversion error:', error);
-      notifications.addError('Failed to convert to selected formats');
+      
+      // Use centralized error handling
+      const handledError = await errorService.handleError(
+        error instanceof Error ? error : new Error('Unknown format conversion error'), 
+        {
+          step: 'multi_format_conversion',
+          component: 'SimpleFormatSelector',
+          metadata: { 
+            selectedFormats: this.selectedFormats,
+            characterName: this.characterData?.name,
+            characterId: this.characterData?.id
+          }
+        }
+      );
+      
+      notifications.addError(handledError.message);
     }
   },
 
@@ -340,7 +367,7 @@ Alpine.data('simpleFormatSelector', (): SimpleFormatSelectorData => ({
     console.log(`✅ ${format.name} conversion complete`);
   },
 
-  downloadFormat(formatId: string) {
+  async downloadFormat(formatId: string) {
     const result = this.conversionResults[formatId];
     if (!result) {
       console.warn('No conversion result found for format:', formatId);
@@ -368,8 +395,23 @@ Alpine.data('simpleFormatSelector', (): SimpleFormatSelectorData => ({
       
     } catch (error) {
       console.error('Download failed:', error);
+      
+      // Use centralized error handling for download errors
+      const handledError = await errorService.handleError(
+        error instanceof Error ? error : new Error('File download failed'), 
+        {
+          step: 'file_download',
+          component: 'SimpleFormatSelector',
+          metadata: { 
+            formatId: formatId,
+            formatName: result.format.name,
+            filename: result.filename
+          }
+        }
+      );
+      
       const notifications = Alpine.store('notifications');
-      notifications.addError(`Failed to download ${result.format.name} file`);
+      notifications.addError(handledError.message);
     }
   },
 

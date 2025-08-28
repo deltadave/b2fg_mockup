@@ -207,25 +207,43 @@ export class RecoveryStrategies {
   static getManualRecoveryInstructions(action: RecoveryAction, error: ConversionError): string {
     switch (action) {
       case RecoveryAction.CHECK_CHARACTER_ID:
-        return 'Please verify that your character ID is correct. You can copy it from your D&D Beyond character URL.';
+        return 'Please verify that your character ID is correct. You can copy it from your D&D Beyond character URL (e.g., dndbeyond.com/characters/12345678).';
       
       case RecoveryAction.CHECK_PRIVACY:
-        return 'Make sure your character is set to "Public" in D&D Beyond. Go to your character sheet and check the privacy settings.';
+        return 'Make sure your character is set to "Public" in D&D Beyond. Go to your character sheet and check the privacy settings in the top-right corner.';
       
       case RecoveryAction.CHECK_NETWORK:
-        return 'Please check your internet connection and try again. Make sure you can access other websites.';
+        return 'Please check your internet connection and try again. Make sure you can access D&D Beyond and other websites normally.';
       
       case RecoveryAction.REFRESH_PAGE:
-        return 'Try refreshing this page and attempting the conversion again.';
+        return 'Try refreshing this page (Ctrl+F5 or Cmd+R) and attempting the conversion again. This clears temporary issues.';
       
       case RecoveryAction.CONTACT_SUPPORT:
-        return 'If this problem continues, please contact support with the error details shown above.';
+        return 'If this problem continues, please contact support with the error details shown above, including your character ID and browser information.';
       
       case RecoveryAction.USE_LEGACY:
-        return 'Try using the legacy converter as an alternative. It may handle your character differently.';
+        return 'Try using the legacy converter as an alternative. Click the "Use Legacy Version" link below - it may handle your character differently.';
       
       case RecoveryAction.TRY_DIFFERENT_FORMAT:
-        return 'Try converting to a different output format. Some formats may work better with your character.';
+        return 'Try converting to a different output format (Fantasy Grounds, Foundry VTT, etc.). Some formats may work better with your specific character build.';
+
+      case RecoveryAction.FIX_CHARACTER_ID:
+        return 'The system will automatically attempt to fix common character ID formatting issues (removing spaces, extracting from URLs).';
+
+      case RecoveryAction.EXTRACT_FROM_URL:
+        return 'The system will try to extract the character ID from the D&D Beyond URL you provided.';
+
+      case RecoveryAction.CLEAR_CACHE:
+        return 'Clear your browser\'s cache and cookies for this site. This resolves issues with outdated or corrupted data.';
+
+      case RecoveryAction.USE_ALTERNATIVE_API:
+        return 'The system will attempt to use an alternative API endpoint to fetch your character data.';
+
+      case RecoveryAction.RETRY_WITH_DELAY:
+        return 'The system will retry the operation with a longer delay to handle temporary server issues.';
+
+      case RecoveryAction.TRY_DIFFERENT_BROWSER:
+        return 'Try using a different web browser (Chrome, Firefox, Safari, Edge) as some browsers handle the conversion better than others.';
       
       default:
         return 'Please follow the suggested recovery action or contact support for assistance.';
@@ -352,32 +370,116 @@ export class RecoveryStrategies {
       successCondition: () => false,
       handler: this.createManualActionHandler()
     });
+
+    // Character ID validation recovery - automated ID extraction and validation
+    this.strategies.set(RecoveryAction.FIX_CHARACTER_ID, {
+      action: RecoveryAction.FIX_CHARACTER_ID,
+      automated: true,
+      maxAttempts: 1,
+      delayBetweenAttempts: 0,
+      successCondition: (result) => result.success,
+      handler: this.createCharacterIdFixHandler()
+    });
+
+    // URL parsing recovery - extract ID from various URL formats
+    this.strategies.set(RecoveryAction.EXTRACT_FROM_URL, {
+      action: RecoveryAction.EXTRACT_FROM_URL,
+      automated: true,
+      maxAttempts: 1,
+      delayBetweenAttempts: 0,
+      successCondition: (result) => result.success,
+      handler: this.createUrlExtractionHandler()
+    });
+
+    // File processing recovery strategies
+    this.strategies.set(RecoveryAction.RETRY_WITH_DELAY, {
+      action: RecoveryAction.RETRY_WITH_DELAY,
+      automated: true,
+      maxAttempts: 2,
+      delayBetweenAttempts: 2000,
+      successCondition: (result) => result.success,
+      handler: this.createDelayedRetryHandler()
+    });
+
+    this.strategies.set(RecoveryAction.USE_ALTERNATIVE_API, {
+      action: RecoveryAction.USE_ALTERNATIVE_API,
+      automated: true,
+      maxAttempts: 1,
+      delayBetweenAttempts: 0,
+      successCondition: (result) => result.success,
+      handler: this.createAlternativeApiHandler()
+    });
+
+    this.strategies.set(RecoveryAction.CLEAR_CACHE, {
+      action: RecoveryAction.CLEAR_CACHE,
+      automated: false, // Requires user action but provides instructions
+      maxAttempts: 1,
+      delayBetweenAttempts: 0,
+      successCondition: () => false,
+      handler: this.createClearCacheHandler()
+    });
   }
 
   /**
-   * Create retry handler for automated retries
+   * Create retry handler for automated retries with smart logic
    */
   private static createRetryHandler(): RecoveryHandler {
     return async (error: ConversionError, context: ErrorContext, attempt: number): Promise<RecoveryResult> => {
-      // For API errors, we can try the request again
+      // Enhanced retry logic with different strategies per error type
       if (error.category === ErrorCategory.API) {
-        // This would integrate with the actual API retry logic
-        // For now, we simulate a recovery attempt
-        
-        // Exponential backoff for retries
+        // API-specific retry with exponential backoff
         const delay = Math.min(1000 * Math.pow(2, attempt - 1), 30000);
         
-        return {
-          success: false, // Would be determined by actual retry result
-          action: RecoveryAction.RETRY,
-          message: `Retry attempt ${attempt} scheduled`,
-          shouldRetry: attempt < 3,
-          retryDelay: delay,
-          metadata: {
-            attempt,
-            nextDelay: delay
-          }
-        };
+        try {
+          // Try to perform the actual retry based on context
+          const result = await this.performAPIRetry(context, attempt);
+          
+          return {
+            success: result.success,
+            action: RecoveryAction.RETRY,
+            message: result.success 
+              ? `Retry attempt ${attempt} succeeded`
+              : `Retry attempt ${attempt} failed, next retry in ${delay}ms`,
+            shouldRetry: !result.success && attempt < 3,
+            retryDelay: result.success ? 0 : delay,
+            metadata: {
+              attempt,
+              nextDelay: delay,
+              lastError: result.error
+            }
+          };
+        } catch (retryError) {
+          return {
+            success: false,
+            action: RecoveryAction.RETRY,
+            message: `Retry attempt ${attempt} failed: ${retryError instanceof Error ? retryError.message : 'Unknown error'}`,
+            shouldRetry: attempt < 3,
+            retryDelay: delay,
+            metadata: { attempt, retryError: String(retryError) }
+          };
+        }
+      }
+      
+      if (error.category === ErrorCategory.PROCESSING) {
+        // Processing errors might benefit from a single retry
+        try {
+          const result = await this.performProcessingRetry(context);
+          return {
+            success: result.success,
+            action: RecoveryAction.RETRY,
+            message: result.success ? 'Processing retry succeeded' : 'Processing retry failed',
+            shouldRetry: false, // Only one retry for processing errors
+            metadata: { processingRetryResult: result }
+          };
+        } catch (retryError) {
+          return {
+            success: false,
+            action: RecoveryAction.RETRY,
+            message: 'Processing retry failed',
+            shouldRetry: false,
+            metadata: { retryError: String(retryError) }
+          };
+        }
       }
       
       return {
@@ -387,6 +489,384 @@ export class RecoveryStrategies {
         shouldRetry: false
       };
     };
+  }
+
+  /**
+   * Perform actual API retry with intelligent routing
+   */
+  private static async performAPIRetry(context: ErrorContext, attempt: number): Promise<{success: boolean, error?: string}> {
+    // Get the relevant service based on context
+    if (context.component === 'CharacterConverter' || context.component === 'EnhancedCharacterConverter') {
+      // Try to retry the character fetch
+      try {
+        const characterFacade = (window as any)?.characterConverterFacade;
+        if (characterFacade && context.characterId) {
+          const result = await characterFacade.convertFromDNDBeyond(context.characterId);
+          return { success: result.success, error: result.error };
+        }
+      } catch (error) {
+        return { success: false, error: error instanceof Error ? error.message : 'API retry failed' };
+      }
+    }
+    
+    return { success: false, error: 'No retry mechanism available for this context' };
+  }
+
+  /**
+   * Perform processing retry for processing errors
+   */
+  private static async performProcessingRetry(context: ErrorContext): Promise<{success: boolean, error?: string}> {
+    // For processing errors, we might try alternative processing paths
+    try {
+      if (context.component === 'FileUploader' && context.metadata?.fileName) {
+        // Could retry file processing with different settings
+        console.log('🔄 Attempting file processing retry for:', context.metadata.fileName);
+        // This would integrate with actual file processing retry logic
+        return { success: false, error: 'File processing retry not yet implemented' };
+      }
+      
+      if (context.component === 'SimpleFormatSelector') {
+        // Could retry format conversion with fallback options
+        console.log('🔄 Attempting format conversion retry');
+        // This would integrate with actual format conversion retry logic
+        return { success: false, error: 'Format conversion retry not yet implemented' };
+      }
+      
+      return { success: false, error: 'No processing retry available for this context' };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Processing retry failed' };
+    }
+  }
+
+  /**
+   * Create character ID fix handler for automated ID validation and correction
+   */
+  private static createCharacterIdFixHandler(): RecoveryHandler {
+    return async (error: ConversionError, context: ErrorContext, attempt: number): Promise<RecoveryResult> => {
+      try {
+        const characterId = context.characterId || context.metadata?.characterId;
+        if (!characterId) {
+          return {
+            success: false,
+            action: RecoveryAction.FIX_CHARACTER_ID,
+            message: 'No character ID found to fix',
+            shouldRetry: false
+          };
+        }
+
+        // Try to clean and validate the character ID
+        const cleanedId = this.cleanCharacterId(characterId);
+        if (cleanedId && this.isValidCharacterId(cleanedId)) {
+          // Update the UI component with the fixed ID
+          this.updateCharacterIdInUI(cleanedId, context.component);
+          
+          return {
+            success: true,
+            action: RecoveryAction.FIX_CHARACTER_ID,
+            message: `Character ID automatically fixed: ${cleanedId}`,
+            shouldRetry: false,
+            metadata: { originalId: characterId, fixedId: cleanedId }
+          };
+        }
+
+        return {
+          success: false,
+          action: RecoveryAction.FIX_CHARACTER_ID,
+          message: 'Unable to automatically fix character ID',
+          shouldRetry: false,
+          metadata: { triedToFix: characterId }
+        };
+      } catch (error) {
+        return {
+          success: false,
+          action: RecoveryAction.FIX_CHARACTER_ID,
+          message: 'Error during ID fix attempt',
+          shouldRetry: false,
+          metadata: { error: String(error) }
+        };
+      }
+    };
+  }
+
+  /**
+   * Create URL extraction handler for extracting character ID from various URL formats
+   */
+  private static createUrlExtractionHandler(): RecoveryHandler {
+    return async (error: ConversionError, context: ErrorContext, attempt: number): Promise<RecoveryResult> => {
+      try {
+        const input = context.characterId || context.metadata?.characterId || '';
+        
+        // Try multiple URL pattern matches
+        const patterns = [
+          /dndbeyond\.com\/characters\/(\d+)/i,
+          /character\/(\d+)/i,
+          /characters\/(\d+)/i,
+          /\/(\d{8,12})\/?/,
+          /character_id=(\d+)/i,
+          /id=(\d+)/i
+        ];
+
+        for (const pattern of patterns) {
+          const match = input.match(pattern);
+          if (match && match[1]) {
+            const extractedId = match[1];
+            if (this.isValidCharacterId(extractedId)) {
+              // Update the UI component with the extracted ID
+              this.updateCharacterIdInUI(extractedId, context.component);
+              
+              return {
+                success: true,
+                action: RecoveryAction.EXTRACT_FROM_URL,
+                message: `Character ID extracted from URL: ${extractedId}`,
+                shouldRetry: false,
+                metadata: { 
+                  originalInput: input, 
+                  extractedId: extractedId,
+                  pattern: pattern.source
+                }
+              };
+            }
+          }
+        }
+
+        return {
+          success: false,
+          action: RecoveryAction.EXTRACT_FROM_URL,
+          message: 'Unable to extract character ID from input',
+          shouldRetry: false,
+          metadata: { attemptedInput: input }
+        };
+      } catch (error) {
+        return {
+          success: false,
+          action: RecoveryAction.EXTRACT_FROM_URL,
+          message: 'Error during URL extraction',
+          shouldRetry: false,
+          metadata: { error: String(error) }
+        };
+      }
+    };
+  }
+
+  /**
+   * Clean character ID by removing common formatting issues
+   */
+  private static cleanCharacterId(id: string): string {
+    return id
+      .trim()
+      .replace(/[^0-9]/g, '') // Remove all non-numeric characters
+      .replace(/^0+/, ''); // Remove leading zeros
+  }
+
+  /**
+   * Validate character ID format
+   */
+  private static isValidCharacterId(id: string): boolean {
+    return /^\d{8,12}$/.test(id);
+  }
+
+  /**
+   * Update character ID in the relevant UI component
+   */
+  private static updateCharacterIdInUI(characterId: string, componentName?: string): void {
+    try {
+      if (componentName === 'CharacterConverter' || componentName === 'EnhancedCharacterConverter') {
+        // Find the character converter component and update its ID
+        const converterElements = document.querySelectorAll('[x-data*="characterConverter"], [x-data*="enhancedCharacterConverter"]');
+        
+        for (const element of converterElements) {
+          const alpineData = (element as any)?._x_dataStack?.[0];
+          if (alpineData && typeof alpineData.characterId !== 'undefined') {
+            alpineData.characterId = characterId;
+            alpineData.validateCharacterId?.();
+            console.log(`✅ Updated character ID in ${componentName}:`, characterId);
+            break;
+          }
+        }
+
+        // Also update any input fields
+        const inputElements = document.querySelectorAll('input[x-model="characterId"]');
+        for (const input of inputElements) {
+          (input as HTMLInputElement).value = characterId;
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to update character ID in UI:', error);
+    }
+  }
+
+  /**
+   * Create delayed retry handler for file processing and conversion errors
+   */
+  private static createDelayedRetryHandler(): RecoveryHandler {
+    return async (error: ConversionError, context: ErrorContext, attempt: number): Promise<RecoveryResult> => {
+      try {
+        // Add a longer delay for file processing retries
+        const delay = Math.min(2000 * attempt, 10000); // 2s, 4s, 6s... up to 10s
+        
+        await new Promise(resolve => setTimeout(resolve, delay));
+        
+        // Attempt the retry based on the context
+        if (context.component === 'FileUploader') {
+          return {
+            success: false, // Would be determined by actual retry
+            action: RecoveryAction.RETRY_WITH_DELAY,
+            message: `File processing retry attempt ${attempt} after ${delay}ms delay`,
+            shouldRetry: attempt < 2,
+            retryDelay: delay,
+            metadata: { attempt, delay, component: context.component }
+          };
+        }
+        
+        if (context.component === 'SimpleFormatSelector') {
+          return {
+            success: false, // Would be determined by actual retry
+            action: RecoveryAction.RETRY_WITH_DELAY,
+            message: `Format conversion retry attempt ${attempt} after ${delay}ms delay`,
+            shouldRetry: attempt < 2,
+            retryDelay: delay,
+            metadata: { attempt, delay, component: context.component }
+          };
+        }
+        
+        return {
+          success: false,
+          action: RecoveryAction.RETRY_WITH_DELAY,
+          message: 'Delayed retry not applicable to this operation',
+          shouldRetry: false
+        };
+      } catch (error) {
+        return {
+          success: false,
+          action: RecoveryAction.RETRY_WITH_DELAY,
+          message: 'Delayed retry failed',
+          shouldRetry: false,
+          metadata: { error: String(error) }
+        };
+      }
+    };
+  }
+
+  /**
+   * Create alternative API handler for trying different endpoints or methods
+   */
+  private static createAlternativeApiHandler(): RecoveryHandler {
+    return async (error: ConversionError, context: ErrorContext, attempt: number): Promise<RecoveryResult> => {
+      try {
+        // For API errors, try alternative approaches
+        if (error.category === ErrorCategory.API && context.characterId) {
+          // Could try different CORS proxies or API endpoints
+          const alternativeEndpoints = [
+            'https://character-service.dndbeyond.com/character/v5/character/',
+            'https://www.dndbeyond.com/character/v5/character/'
+          ];
+          
+          // This would integrate with actual API retry logic using alternative endpoints
+          return {
+            success: false, // Would be determined by actual API call
+            action: RecoveryAction.USE_ALTERNATIVE_API,
+            message: 'Attempting alternative API endpoint',
+            shouldRetry: false,
+            metadata: { 
+              characterId: context.characterId,
+              alternativeEndpoints,
+              originalError: error.message
+            }
+          };
+        }
+        
+        return {
+          success: false,
+          action: RecoveryAction.USE_ALTERNATIVE_API,
+          message: 'No alternative API available for this operation',
+          shouldRetry: false
+        };
+      } catch (error) {
+        return {
+          success: false,
+          action: RecoveryAction.USE_ALTERNATIVE_API,
+          message: 'Alternative API attempt failed',
+          shouldRetry: false,
+          metadata: { error: String(error) }
+        };
+      }
+    };
+  }
+
+  /**
+   * Create cache clearing handler with user instructions
+   */
+  private static createClearCacheHandler(): RecoveryHandler {
+    return async (error: ConversionError, context: ErrorContext, attempt: number): Promise<RecoveryResult> => {
+      // This is a manual action that provides instructions to the user
+      const instructions = this.getCacheClearInstructions();
+      
+      return {
+        success: false, // Manual action, user must perform
+        action: RecoveryAction.CLEAR_CACHE,
+        message: 'Clear your browser cache and cookies, then try again',
+        shouldRetry: false,
+        metadata: { 
+          instructions,
+          browserDetected: this.detectBrowser()
+        }
+      };
+    };
+  }
+
+  /**
+   * Get browser-specific cache clearing instructions
+   */
+  private static getCacheClearInstructions(): string[] {
+    const browser = this.detectBrowser();
+    
+    switch (browser) {
+      case 'chrome':
+        return [
+          '1. Press Ctrl+Shift+Delete (Windows) or Cmd+Shift+Delete (Mac)',
+          '2. Select "Cached images and files" and "Cookies and other site data"',
+          '3. Click "Clear data"',
+          '4. Refresh this page and try again'
+        ];
+      case 'firefox':
+        return [
+          '1. Press Ctrl+Shift+Delete (Windows) or Cmd+Shift+Delete (Mac)',
+          '2. Select "Cache" and "Cookies"',
+          '3. Click "Clear Now"',
+          '4. Refresh this page and try again'
+        ];
+      case 'safari':
+        return [
+          '1. Press Cmd+Option+E to empty caches',
+          '2. Go to Safari > Preferences > Privacy > Manage Website Data',
+          '3. Click "Remove All"',
+          '4. Refresh this page and try again'
+        ];
+      default:
+        return [
+          '1. Open your browser settings',
+          '2. Find "Clear browsing data" or "Clear cache and cookies"',
+          '3. Select cache and cookies for this site',
+          '4. Clear the data and refresh this page'
+        ];
+    }
+  }
+
+  /**
+   * Simple browser detection for targeted instructions
+   */
+  private static detectBrowser(): string {
+    if (typeof window === 'undefined') return 'unknown';
+    
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    
+    if (userAgent.includes('chrome') && !userAgent.includes('edg')) return 'chrome';
+    if (userAgent.includes('firefox')) return 'firefox';
+    if (userAgent.includes('safari') && !userAgent.includes('chrome')) return 'safari';
+    if (userAgent.includes('edg')) return 'edge';
+    
+    return 'unknown';
   }
 
   /**

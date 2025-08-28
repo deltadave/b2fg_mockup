@@ -8,6 +8,7 @@
 import Alpine from 'alpinejs';
 import { featureFlags } from '@/core/FeatureFlags';
 import type { CharacterData } from '@/domain/character/services/CharacterFetcher';
+import { errorService, createApiError, createProcessingError } from '@/shared/errors/ErrorService';
 
 export interface EnhancedCharacterConverterData {
   // Form state
@@ -251,9 +252,24 @@ Alpine.data('enhancedCharacterConverter', (): EnhancedCharacterConverterData => 
     } catch (error) {
       console.error('Conversion error:', error);
       
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      // Use centralized error handling
+      const handledError = await errorService.handleError(
+        error instanceof Error ? error : new Error('Unknown conversion error'), 
+        {
+          step: this.currentStep,
+          component: 'EnhancedCharacterConverter',
+          characterId: this.characterId,
+          metadata: { 
+            progress: this.progress,
+            enableMultiFormat: this.enableMultiFormat
+          }
+        }
+      );
+      
+      // The error display component will show the error automatically
+      // But also update local state for UI feedback
       const notifications = Alpine.store('notifications');
-      notifications.addError(`Conversion failed: ${errorMessage}`);
+      notifications.addError(handledError.message);
       
       this.currentStep = 'Error occurred';
       this.progress = 0;
@@ -284,6 +300,23 @@ Alpine.data('enhancedCharacterConverter', (): EnhancedCharacterConverterData => 
       
     } catch (error) {
       console.error('Format analysis failed:', error);
+      
+      // Use centralized error handling for format analysis errors
+      const handledError = await errorService.handleError(
+        error instanceof Error ? error : new Error('Format analysis failed'), 
+        {
+          step: 'format_analysis',
+          component: 'EnhancedCharacterConverter',
+          characterId: this.characterId,
+          metadata: { 
+            hasCharacterData: Boolean(this.characterData),
+            enableMultiFormat: this.enableMultiFormat
+          }
+        }
+      );
+      
+      const notifications = Alpine.store('notifications');
+      notifications.addWarning(`Format analysis failed: ${handledError.message}`);
     }
   },
 

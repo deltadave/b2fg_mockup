@@ -1,6 +1,7 @@
 // Alpine.js character converter component
 import Alpine from 'alpinejs';
 import { featureFlags } from '@/core/FeatureFlags';
+import { errorService, createApiError, createValidationError, createProcessingError } from '@/shared/errors/ErrorService';
 
 export interface CharacterConverterData {
   // Form state
@@ -108,6 +109,14 @@ Alpine.data('characterConverter', (): CharacterConverterData => ({
     this.isValidId = idPattern.test(trimmedId);
     
     if (!this.isValidId) {
+      // Use centralized error handling for validation errors
+      const validationError = createValidationError('Please enter a valid character ID or D&D Beyond character URL');
+      errorService.handleError(validationError, {
+        step: 'character_id_validation',
+        component: 'CharacterConverter',
+        characterId: this.characterId
+      });
+      
       const notifications = Alpine.store('notifications');
       notifications.addError('Please enter a valid character ID or D&D Beyond character URL');
     }
@@ -115,6 +124,14 @@ Alpine.data('characterConverter', (): CharacterConverterData => ({
   
   async convertCharacter() {
     if (!this.characterId.trim()) {
+      // Use centralized error handling for empty character ID
+      const validationError = createValidationError('Please enter a character ID');
+      errorService.handleError(validationError, {
+        step: 'character_id_required',
+        component: 'CharacterConverter',
+        characterId: this.characterId
+      });
+      
       const notifications = Alpine.store('notifications');
       notifications.addError('Please enter a character ID');
       return;
@@ -199,9 +216,24 @@ Alpine.data('characterConverter', (): CharacterConverterData => ({
     } catch (error) {
       console.error('Conversion error:', error);
       
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      // Use centralized error handling
+      const handledError = await errorService.handleError(
+        error instanceof Error ? error : new Error('Unknown conversion error'), 
+        {
+          step: this.currentStep,
+          component: 'CharacterConverter',
+          characterId: this.characterId,
+          metadata: { 
+            progress: this.progress,
+            fgVersion: this.fgVersion
+          }
+        }
+      );
+      
+      // The error display component will show the error automatically
+      // But also update local state and notifications for UI feedback
       const notifications = Alpine.store('notifications');
-      notifications.addError(`Conversion failed: ${errorMessage}`);
+      notifications.addError(handledError.message);
       
       this.currentStep = 'Error occurred';
       this.progress = 0;

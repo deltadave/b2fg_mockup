@@ -7,6 +7,7 @@
 
 import Alpine from 'alpinejs';
 import { AbilityScoreProcessor } from '@/domain/character/services/AbilityScoreProcessor';
+import { errorService, createProcessingError } from '@/shared/errors/ErrorService';
 
 export interface ValidationStatus {
   isValid: boolean;
@@ -158,6 +159,17 @@ Alpine.data('simpleCharacterPreview', (): SimpleCharacterPreviewData => ({
       console.log('🎯 Strength from processor:', processedScores.totalScores.strength?.total);
     } catch (e) {
       console.log('Error with AbilityScoreProcessor:', e);
+      
+      // Use centralized error handling for processing errors
+      const processingError = createProcessingError('Failed to process ability score bonuses for character preview');
+      errorService.handleError(processingError, {
+        step: 'ability_score_processing',
+        component: 'SimpleCharacterPreview',
+        metadata: { 
+          characterName: data?.name,
+          characterId: data?.id
+        }
+      });
     }
   },
 
@@ -250,6 +262,17 @@ Alpine.data('simpleCharacterPreview', (): SimpleCharacterPreviewData => ({
       }
     } catch (error) {
       console.error('Error using AbilityScoreProcessor:', error);
+      
+      // Use centralized error handling for ability score calculation errors
+      const processingError = createProcessingError('Failed to calculate ability score during character preview');
+      errorService.handleError(processingError, {
+        step: 'ability_score_calculation',
+        component: 'SimpleCharacterPreview',
+        metadata: { 
+          abilityIndex: index,
+          characterName: this.characterData?.name
+        }
+      });
     }
     
     // Fallback to basic calculation if processor fails
@@ -289,6 +312,17 @@ Alpine.data('simpleCharacterPreview', (): SimpleCharacterPreviewData => ({
       return Math.floor((constitutionScore - 10) / 2);
     } catch (error) {
       console.error('Error calculating Constitution modifier:', error);
+      
+      // Use centralized error handling for constitution modifier calculation errors
+      const processingError = createProcessingError('Failed to calculate Constitution modifier for HP calculation');
+      errorService.handleError(processingError, {
+        step: 'constitution_modifier_calculation',
+        component: 'SimpleCharacterPreview',
+        metadata: { 
+          characterName: this.characterData?.name
+        }
+      });
+      
       return 0;
     }
   },
@@ -310,6 +344,16 @@ Alpine.data('simpleCharacterPreview', (): SimpleCharacterPreviewData => ({
         return 10 + dexModifier + conModifier;
       } catch (error) {
         console.error('Error calculating Unarmored Defense AC:', error);
+        
+        // Use centralized error handling for AC calculation errors
+        const processingError = createProcessingError('Failed to calculate Unarmored Defense AC for character preview');
+        errorService.handleError(processingError, {
+          step: 'unarmored_defense_ac_calculation',
+          component: 'SimpleCharacterPreview',
+          metadata: { 
+            characterName: this.characterData?.name
+          }
+        });
       }
     }
     

@@ -1,0 +1,55 @@
+# 8 step vibe devel process
+
+create a git repo
+
+link a local directory to the repo
+
+## Setup
+
+`invoke the 01-product-manager agent, and pass in the high-level.txt as it's initial starting context`
+
+this will create the product-requirements.md document. Read and validate this file. Is there anything missing or not correct.
+
+`/clear`
+
+`invoke the 02-system-architect agent and pass in the product-requirements.md and tech-stack-pref.md as it's primary context`
+
+preferred tech stack is react native with a minimal library list
+the agent must ask before making any changes
+
+the architect will make the architecture-output.md file. This file should be read and understood.
+
+'/clear'
+'invoke the 03-ux-designer agent, passing in product-requirements.md as the primary context`
+
+will create the design. will take quite a bit of time and tokens. 
+will document the result in design-documentation/
+
+`go through every directory inside of design-documentation/features and see if we added in any new technical details or dependencies that now need to be accounted for by the 02-system-architect agent.`
+
+look at the resulting list of updates and decide if you really want to do all the things on it for your mvp
+
+`clear`
+`invoke the typescript-pro agent with tech-stack-pref.md, design-documentation, and project-documentation as context. use the implementation-guide.md as a checklist of items to address, in order. show me the item you intend to address before starting with a list of alternates to choose from. Do not start work until I ok it.`
+
+
+## Core Development loop
+
+follow a methodical approach - 3 agents in use in a looping process. typescript-pro, security and qa 
+
+`/clear`
+
+`invoke the typescript-pro agent. The inputs for this agent are any of the necessary configuration files found in the main root project directory, as well as the details found in project/project-documentation/system-architecture-analysis.md and project/project-documentation/design-documentation/features/. we are only building the features for the next action item. use the implementation-guide.md as a checklist of items to address, in order. show me the item you intend to address before starting, with a list of alternates to choose from. Do not start work until I ok it.`
+
+invoke the typescript-pro agent with tech-stack-pref.md, design-documentation, and project-documentation as context. use the implementation-guide.md as a checklist of items to address, in order. lets work on the next unfinished
+  item. show me the item you intend to address before starting with a list of alternates to choose from. Do not start work until I ok it.
+
+https://youtu.be/X5UN2LrRK48?t=4603
+
+initial migration of backend.
+
+`compact` unless there is an error
+
+start the backend
+
+enter Expo

@@ -7,6 +7,7 @@
 
 import Alpine from 'alpinejs';
 import { fileProcessor, FileProcessResult } from '@/domain/input/services/FileProcessor';
+import { errorService, createProcessingError, createValidationError } from '@/shared/errors/ErrorService';
 
 export interface FileUploaderData {
   // Upload state
@@ -234,17 +235,43 @@ Alpine.data('fileUploader', (): FileUploaderData => ({
 
         } catch (conversionError) {
           console.error('❌ XML conversion failed:', conversionError);
-          const errorMessage = conversionError instanceof Error ? conversionError.message : 'Conversion failed';
-          notifications.addError(`❌ File processed but conversion failed: ${errorMessage}`);
+          
+          // Use centralized error handling for conversion errors
+          const handledError = await errorService.handleError(
+            conversionError instanceof Error ? conversionError : new Error('File conversion failed'), 
+            {
+              step: 'file_conversion',
+              component: 'FileUploader',
+              metadata: { 
+                fileName: this.fileName,
+                sourceType: result.sourceType,
+                characterName: result.characterData?.name
+              }
+            }
+          );
+          
+          notifications.addError(`❌ File processed but conversion failed: ${handledError.message}`);
           
           this.currentStep = 'Conversion error';
           this.uploadProgress = 80; // Partial success
         }
       } else {
-        // Error handling
+        // Error handling for file processing failures
         const errorMessage = result.errors ? result.errors.join('; ') : 'Unknown error';
-        notifications.addError(`❌ File processing failed: ${errorMessage}`);
         
+        // Use centralized error handling for processing failures
+        const processingError = createProcessingError(`File processing failed: ${errorMessage}`);
+        errorService.handleError(processingError, {
+          step: 'file_processing',
+          component: 'FileUploader',
+          metadata: { 
+            fileName: this.fileName,
+            errors: result.errors,
+            warnings: result.warnings
+          }
+        });
+        
+        notifications.addError(`❌ File processing failed: ${errorMessage}`);
         console.error('❌ File processing failed:', result.errors);
       }
 
@@ -258,15 +285,29 @@ Alpine.data('fileUploader', (): FileUploaderData => ({
     } catch (error) {
       console.error('File processing error:', error);
       
+      // Use centralized error handling
+      const handledError = await errorService.handleError(
+        error instanceof Error ? error : new Error('Unknown file processing error'), 
+        {
+          step: this.currentStep,
+          component: 'FileUploader',
+          metadata: { 
+            fileName: this.fileName,
+            fileSize: this.fileSize,
+            fileType: this.fileType,
+            uploadProgress: this.uploadProgress
+          }
+        }
+      );
+      
       const notifications = Alpine.store('notifications');
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      notifications.addError(`File processing failed: ${errorMessage}`);
+      notifications.addError(handledError.message);
       
       this.currentStep = 'Error occurred';
       this.uploadProgress = 0;
       this.processResult = {
         success: false,
-        errors: [errorMessage]
+        errors: [handledError.message]
       };
     } finally {
       this.isProcessing = false;

@@ -7,6 +7,9 @@
 
 import type { OutputFormatter, FormatInfo, ProcessedCharacterData, FormatOptions, FormatResult } from '../interfaces/OutputFormatter';
 import { FoundryVTTJSONFormatter } from '../formatters/FoundryVTTJSONFormatter';
+import { Roll205eDefaultJSONFormatter } from '../formatters/Roll20JSONFormatter';
+import { FantasyGroundsXMLFormatter } from '../formatters/FantasyGroundsXMLFormatter';
+import { GenericJSONFormatter } from '../formatters/GenericJSONFormatter';
 
 export class FormatRegistry {
   private formatters = new Map<string, OutputFormatter>();
@@ -18,7 +21,10 @@ export class FormatRegistry {
 
   private initializeDefaultFormatters(): void {
     // Register available formatters
+    this.register(new FantasyGroundsXMLFormatter());
     this.register(new FoundryVTTJSONFormatter());
+    this.register(new Roll205eDefaultJSONFormatter());
+    this.register(new GenericJSONFormatter());
   }
 
   /**
@@ -192,7 +198,7 @@ export class FormatRegistry {
     const names: {[key: string]: string} = {
       'foundry-vtt-json': 'Foundry VTT',
       'fantasy-grounds-xml': 'Fantasy Grounds',
-      'roll20-json': 'Roll20',
+      'roll20-5e-default-json': 'Roll20 5e Default',
       'generic-json': 'Generic JSON'
     };
     return names[format] || format;
@@ -202,7 +208,7 @@ export class FormatRegistry {
     const descriptions: {[key: string]: string} = {
       'foundry-vtt-json': 'JSON format for Foundry Virtual Tabletop D&D 5e system',
       'fantasy-grounds-xml': 'XML format for Fantasy Grounds Unity and Classic',
-      'roll20-json': 'JSON character sheet format for Roll20',
+      'roll20-5e-default-json': 'JSON character sheet format for Roll20 D&D 5e Default sheet',
       'generic-json': 'Raw character data in JSON format'
     };
     return descriptions[format] || 'Character export format';
@@ -212,7 +218,7 @@ export class FormatRegistry {
     const extensions: {[key: string]: string} = {
       'foundry-vtt-json': '.json',
       'fantasy-grounds-xml': '.xml',
-      'roll20-json': '.json',
+      'roll20-5e-default-json': '.json',
       'generic-json': '.json'
     };
     return extensions[format] || '.txt';
@@ -222,7 +228,7 @@ export class FormatRegistry {
     const mimeTypes: {[key: string]: string} = {
       'foundry-vtt-json': 'application/json',
       'fantasy-grounds-xml': 'application/xml',
-      'roll20-json': 'application/json',
+      'roll20-5e-default-json': 'application/json',
       'generic-json': 'application/json'
     };
     return mimeTypes[format] || 'text/plain';
@@ -232,7 +238,7 @@ export class FormatRegistry {
     const icons: {[key: string]: string} = {
       'foundry-vtt-json': '⚒️',
       'fantasy-grounds-xml': '🏰',
-      'roll20-json': '🎲',
+      'roll20-5e-default-json': '🎲',
       'generic-json': '📄'
     };
     return icons[format] || '📁';

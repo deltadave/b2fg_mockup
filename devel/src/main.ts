@@ -22,12 +22,19 @@ import { AbilityScoreUtils } from '@/domain/character/constants/AbilityConstants
 import { AbilityScoreProcessor } from '@/domain/character/services/AbilityScoreProcessor';
 import { SpellSlotCalculator } from '@/domain/character/services/SpellSlotCalculator';
 
+// Import error handling system
+import { errorService } from '@/shared/errors/ErrorService';
+import { initializeErrorIntegration } from '@/presentation/components/ErrorIntegration';
+
 // Initialize Alpine.js stores and components
 import './presentation/alpineStores';
 import './presentation/components/characterConverter';
 import './presentation/components/enhancedCharacterConverter';
 import './presentation/components/modernizationStatus';
 import './presentation/components/featureFlagAdmin';
+
+// Import error display component
+import './presentation/components/ErrorDisplay';
 
 // Initialize simplified Phase 2 components (lightweight versions)
 import './presentation/components/simpleDisclosure';
@@ -84,6 +91,9 @@ if (typeof window !== 'undefined') {
   (window as any).AbilityScoreProcessor = AbilityScoreProcessor;
   (window as any).SpellSlotCalculator = SpellSlotCalculator;
   
+  // Error handling system
+  (window as any).errorService = errorService;
+  
   // Design system globals
   (window as any).designTokens = designTokens;
   (window as any).CSSTokenGenerator = CSSTokenGenerator;
@@ -96,6 +106,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     // Initialize design system first (critical foundation)
     await initializeDesignSystem();
+    
+    // Initialize error handling system (critical for user experience)
+    console.log('🛡️ Initializing error handling system...');
+    const errorIntegration = initializeErrorIntegration({
+      autoShow: true,
+      showOnlyUserActionable: true,
+      enableGlobalErrorHandler: true,
+      debugMode: featureFlags.isEnabled('error_integration_debug')
+    });
+    
+    // Initialize recovery strategies
+    const { RecoveryStrategies } = await import('@/shared/errors/RecoveryStrategies');
+    RecoveryStrategies.initialize();
+    console.log('✅ Error handling system initialized with recovery strategies');
     
     // Initialize Phase 2 Systems
     console.log('🔧 Initializing Phase 2 systems...');
@@ -154,6 +178,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('  ✅ Design Token System');
     console.log('  ✅ Animation Engine (60fps hardware acceleration)');
     console.log('  ✅ Accessibility Infrastructure (WCAG AA)');
+    console.log('  ✅ Error Handling System (with recovery strategies)');
     console.log('  ✅ Performance Monitoring');
     console.log('  ✅ Progressive Disclosure System');
     console.log('  ✅ Character Preview with Validation');

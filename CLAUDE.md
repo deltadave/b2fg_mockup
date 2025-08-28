@@ -22,6 +22,10 @@ The D&D Beyond Character Converter is a client-side web application that **elimi
 - **Modern System**: TypeScript + Alpine.js + Vite architecture with domain-driven design
 - **Migration Strategy**: Strangler Fig pattern with feature flags for gradual modernization
 
+## Project Root Directory
+
+/x/b2fg
+
 ## TypeScript Development Guidelines
 
 ### Type Safety Standards

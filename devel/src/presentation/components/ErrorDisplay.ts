@@ -71,6 +71,8 @@ export const errorDisplayComponent = () => ({
   showFeedbackForm: false,
   autoHideTimer: null as number | null,
   fadeOutTimer: null as number | null,
+  autoHideProgress: 0,
+  autoHideEnabled: false,
 
   // Configuration
   config: {
@@ -353,11 +355,26 @@ export const errorDisplayComponent = () => ({
   setupAutoHide() {
     this.clearTimers();
     
-    this.autoHideTimer = window.setTimeout(() => {
-      if (this.currentError && this.shouldAutoHide(this.currentError)) {
-        this.hideError();
-      }
-    }, this.config.autoHideDelay);
+    if (this.currentError && this.shouldAutoHide(this.currentError)) {
+      this.autoHideEnabled = true;
+      this.autoHideProgress = 0;
+      
+      // Update progress every 100ms
+      const progressInterval = 100;
+      const totalTime = this.config.autoHideDelay;
+      const progressStep = (progressInterval / totalTime) * 100;
+      
+      const progressTimer = setInterval(() => {
+        this.autoHideProgress += progressStep;
+        
+        if (this.autoHideProgress >= 100) {
+          clearInterval(progressTimer);
+          this.hideError();
+        }
+      }, progressInterval);
+      
+      this.autoHideTimer = progressTimer;
+    }
   },
 
   shouldAutoHide(error: ConversionError): boolean {
@@ -367,7 +384,7 @@ export const errorDisplayComponent = () => ({
 
   clearTimers() {
     if (this.autoHideTimer) {
-      window.clearTimeout(this.autoHideTimer);
+      clearInterval(this.autoHideTimer);
       this.autoHideTimer = null;
     }
     
@@ -375,6 +392,9 @@ export const errorDisplayComponent = () => ({
       window.clearTimeout(this.fadeOutTimer);
       this.fadeOutTimer = null;
     }
+    
+    this.autoHideEnabled = false;
+    this.autoHideProgress = 0;
   },
 
   showManualRecoveryInstructions(action: RecoveryAction) {

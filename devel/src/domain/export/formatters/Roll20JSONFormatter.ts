@@ -17,8 +17,8 @@ import { gameConfigService } from '../../../shared/services/GameConfigService';
 import { StringSanitizer } from '../../../shared/utils/StringSanitizer';
 import { SafeAccess } from '../../../shared/utils/SafeAccess';
 
-export class Roll20JSONFormatter implements OutputFormatter {
-  readonly format = 'roll20-json';
+export class Roll205eDefaultJSONFormatter implements OutputFormatter {
+  readonly format = 'roll20-5e-default-json';
   readonly version = '1.0';
   readonly supportedFeatures = [
     'abilities', 'skills', 'combat', 'basic-spells', 'equipment', 
@@ -77,7 +77,7 @@ export class Roll20JSONFormatter implements OutputFormatter {
       const sanitizedName = StringSanitizer.sanitizeText(character.name || 'character')
         .replace(/[^a-zA-Z0-9_-]/g, '_');
       const characterId = character.id || 'unknown';
-      const filename = `${sanitizedName}_${characterId}_roll20.json`;
+      const filename = `${sanitizedName}_${characterId}_roll20_5e_default.json`;
 
       return {
         success: true,
