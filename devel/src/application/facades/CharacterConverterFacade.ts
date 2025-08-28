@@ -30,6 +30,10 @@ export interface ConversionProgress {
   step: string;
   percentage: number;
   message?: string;
+  substep?: string;
+  totalSteps?: number;
+  currentStep?: number;
+  estimatedTimeRemaining?: number;
 }
 
 export interface ConversionResult {
@@ -83,7 +87,7 @@ export class CharacterConverterFacade {
     const performanceStart = performance.now();
     
     try {
-      this.reportProgress('Validating character ID', 10);
+      this.reportProgress('Validating character ID', 5, 'Checking ID format and validity', 'Input validation', 1, 8);
 
       // Step 1: Fetch character data
       const fetchResult = await this.fetchCharacterData(characterId);
@@ -349,7 +353,14 @@ export class CharacterConverterFacade {
         console.groupEnd();
       }
       
-      this.reportProgress('Parsing character data', 50);
+      this.reportProgress('Processing character data', 25, 'Initializing character processors', 'Data processing', 3, 8);
+      
+      // Add more granular steps during processing
+      this.reportProgress('Processing abilities', 35, 'Calculating ability scores and modifiers', 'Ability processing', 4, 8);
+      
+      this.reportProgress('Processing spells and features', 45, 'Organizing spells, class features, and equipment', 'Feature processing', 5, 8);
+      
+      this.reportProgress('Generating output format', 65, 'Converting to Fantasy Grounds XML format', 'Format generation', 6, 8);
 
       // Debug: Log personality traits information
       if (featureFlags.isEnabled('debug_character_data')) {
@@ -367,11 +378,11 @@ export class CharacterConverterFacade {
       const xml = await this.parseCharacterToXML(characterData);
       const parseTime = performance.now() - parseStart;
 
-      this.reportProgress('Generating XML', 90);
+      this.reportProgress('Finalizing XML structure', 85, 'Building final XML document', 'XML finalization', 7, 8);
       
       const totalTime = performance.now() - performanceStart;
 
-      this.reportProgress('Conversion complete', 100);
+      this.reportProgress('Conversion complete', 100, 'Character successfully converted to Fantasy Grounds format', 'Completion', 8, 8);
 
       return {
         success: true,
@@ -442,11 +453,11 @@ export class CharacterConverterFacade {
   private async fetchCharacterData(characterId: string): Promise<FetchResult> {
     if (featureFlags.isEnabled('character_fetcher')) {
       console.log('Using new CharacterFetcher service');
-      this.reportProgress('Fetching from D&D Beyond (new)', 25);
+      this.reportProgress('Fetching from D&D Beyond', 15, 'Using modern CharacterFetcher service', 'Fetching character data', 2, 8);
       return await this.characterFetcher.fetchCharacter(characterId);
     } else {
       console.log('Using legacy character fetching');
-      this.reportProgress('Fetching from D&D Beyond (legacy)', 25);
+      this.reportProgress('Fetching from D&D Beyond', 15, 'Using legacy fetch system', 'Fetching character data', 2, 8);
       return await this.fetchCharacterLegacy(characterId);
     }
   }
@@ -677,13 +688,55 @@ export class CharacterConverterFacade {
   }
 
   /**
-   * Report progress to callback if set
+   * Report progress to callback if set with enhanced granular tracking
    */
-  private reportProgress(step: string, percentage: number, message?: string): void {
+  private reportProgress(
+    step: string, 
+    percentage: number, 
+    message?: string,
+    substep?: string,
+    currentStep?: number,
+    totalSteps?: number
+  ): void {
     if (this.onProgress) {
       this.onProgress(step, percentage);
     }
-    console.log(`Progress: ${step} (${percentage}%)${message ? ` - ${message}` : ''}`);
+    
+    const progressInfo: ConversionProgress = {
+      step,
+      percentage,
+      message,
+      substep,
+      currentStep,
+      totalSteps,
+      estimatedTimeRemaining: this.calculateEstimatedTime(percentage)
+    };
+    
+    // Enhanced logging with substep information
+    const substepInfo = substep ? ` → ${substep}` : '';
+    const stepInfo = (currentStep && totalSteps) ? ` (${currentStep}/${totalSteps})` : '';
+    console.log(`Progress: ${step}${substepInfo} (${percentage}%)${stepInfo}${message ? ` - ${message}` : ''}`);
+    
+    // Emit detailed progress event for UI components
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('conversionProgress', {
+        detail: progressInfo
+      }));
+    }
+  }
+  
+  /**
+   * Calculate estimated time remaining based on current progress
+   */
+  private calculateEstimatedTime(percentage: number): number {
+    if (percentage <= 0) return 0;
+    
+    // Simple estimation based on average conversion times
+    const averageConversionTime = 15000; // 15 seconds average
+    const remainingPercentage = 100 - percentage;
+    const estimatedRemaining = (remainingPercentage / percentage) * averageConversionTime;
+    
+    return Math.max(0, Math.round(estimatedRemaining / 1000)); // Return in seconds
   }
 
   /**
@@ -3541,7 +3594,7 @@ ${actions}        </actions>`;
     
     try {
       // Step 1: Fetch character data using modern fetcher
-      this.reportProgress('Fetching character data', 10);
+      this.reportProgress('Fetching character data', 10, 'Retrieving from D&D Beyond API', 'API request', 1, 6);
       
       const fetchResult = await this.characterFetcher.fetchCharacter(characterId);
       if (!fetchResult.success || !fetchResult.data) {
@@ -3580,7 +3633,7 @@ ${actions}        </actions>`;
       const characterData = fetchResult.data;
       
       // Step 2: Validate character data
-      this.reportProgress('Validating character data', 20);
+      this.reportProgress('Validating character data', 25, 'Checking data integrity and completeness', 'Data validation', 2, 6);
       
       const validation = this.conversionOrchestrator.validateCharacterData(characterData);
       if (!validation.isValid) {
@@ -3617,7 +3670,12 @@ ${actions}        </actions>`;
       }
       
       // Step 3: Process character through orchestrator
-      this.reportProgress('Processing character data', 30);
+      this.reportProgress('Processing character data', 45, 'Running character through processing pipeline', 'Data processing', 3, 6);
+      
+      // Add intermediate processing steps
+      this.reportProgress('Processing abilities and stats', 55, 'Calculating ability scores, modifiers, and skills', 'Ability processing', 4, 6);
+      
+      this.reportProgress('Processing features and equipment', 70, 'Organizing class features, spells, and inventory', 'Feature processing', 5, 6);
       
       const orchestrationResult = await this.conversionOrchestrator.processCharacter(
         characterData, 
@@ -3630,7 +3688,10 @@ ${actions}        </actions>`;
       }
       
       // Step 4: Complete processing
-      this.reportProgress('Conversion complete', 100);
+      this.reportProgress('Finalizing conversion', 90, 'Preparing final output and cleanup', 'Finalization', 6, 6);
+      
+      // Final completion
+      this.reportProgress('Conversion complete', 100, 'Character processing completed successfully', 'Complete', 6, 6);
       
       const finalResult: OrchestrationResult = {
         ...orchestrationResult,

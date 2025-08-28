@@ -12,6 +12,10 @@ export interface CharacterConverterData {
   isConverting: boolean;
   progress: number;
   currentStep: string;
+  substep: string;
+  currentStepNumber: number;
+  totalSteps: number;
+  estimatedTimeRemaining: number;
   
   // Validation
   isValidId: boolean;
@@ -43,6 +47,10 @@ Alpine.data('characterConverter', (): CharacterConverterData => ({
   isConverting: false,
   progress: 0,
   currentStep: '',
+  substep: '',
+  currentStepNumber: 0,
+  totalSteps: 0,
+  estimatedTimeRemaining: 0,
   
   // Validation
   isValidId: true,
@@ -57,6 +65,21 @@ Alpine.data('characterConverter', (): CharacterConverterData => ({
     // Listen for feature flag changes
     window.addEventListener('featureFlagsChanged', () => {
       this.updateFeatureFlags();
+    });
+
+    // Listen for enhanced progress events from CharacterConverterFacade
+    window.addEventListener('conversionProgress', (event: any) => {
+      if (event.detail) {
+        const progressDetail = event.detail;
+        this.currentStep = progressDetail.step;
+        this.progress = progressDetail.percentage;
+        this.substep = progressDetail.substep || '';
+        this.currentStepNumber = progressDetail.currentStep || 0;
+        this.totalSteps = progressDetail.totalSteps || 0;
+        this.estimatedTimeRemaining = progressDetail.estimatedTimeRemaining || 0;
+        
+        console.log('📊 Enhanced progress update:', progressDetail);
+      }
     });
 
     // Listen for character data loaded from file upload

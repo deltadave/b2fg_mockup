@@ -314,15 +314,28 @@
                         </p>
                     </div>
                     
-                    <!-- Progress Bar -->
-                    <div x-show="isConverting" class="space-y-2">
+                    <!-- Enhanced Progress Bar -->
+                    <div x-show="isConverting" class="space-y-3">
                         <div class="flex justify-between text-sm">
-                            <span x-text="currentStep"></span>
-                            <span x-text="progress + '%'"></span>
+                            <div class="space-y-1">
+                                <div x-text="currentStep" class="font-semibold text-white"></div>
+                                <div x-show="substep" x-text="substep" class="text-gray-400 text-xs"></div>
+                            </div>
+                            <div class="text-right space-y-1">
+                                <div x-text="progress + '%'" class="text-dnd-gold"></div>
+                                <div x-show="totalSteps > 0" 
+                                     x-text="`Step ${currentStepNumber}/${totalSteps}`" 
+                                     class="text-gray-400 text-xs"></div>
+                            </div>
                         </div>
                         <div class="w-full bg-gray-700 rounded-full h-2">
-                            <div class="bg-dnd-gold h-2 rounded-full transition-all duration-300" 
+                            <div class="bg-dnd-gold h-2 rounded-full transition-all duration-500" 
                                  :style="`width: ${progress}%`"></div>
+                        </div>
+                        <!-- Estimated Time Remaining -->
+                        <div x-show="estimatedTimeRemaining > 0" class="text-xs text-gray-500 text-center">
+                            <span>Estimated time remaining: </span>
+                            <span x-text="estimatedTimeRemaining < 60 ? estimatedTimeRemaining + 's' : Math.floor(estimatedTimeRemaining/60) + 'm ' + (estimatedTimeRemaining%60) + 's'"></span>
                         </div>
                     </div>
                     
