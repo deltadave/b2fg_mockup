@@ -46,12 +46,42 @@ export interface RacialTrait {
   };
 }
 
+export interface Feat {
+  id: number;
+  name: string;
+  description: string;
+  prerequisite?: string;
+  category: string;
+  type: 'origin' | 'general' | 'fighting_style' | 'epic_boon';
+  isRepeatable: boolean;
+  mechanics?: {
+    abilityScoreIncrease?: {
+      count: number;
+      abilities?: string[];
+    };
+    proficiencies?: string[];
+    skillProficiencies?: string[];
+    languages?: string[];
+    spells?: string[];
+    bonusActions?: string[];
+    reactions?: string[];
+    initiative?: boolean;
+    armorClass?: number;
+    hitPoints?: number;
+    damage?: string;
+    range?: string;
+    duration?: string;
+  };
+}
+
 export interface ProcessedFeatures {
   classFeatures: ClassFeature[];
   racialTraits: RacialTrait[];
+  feats: Feat[];
   totalFeatures: number;
   featuresByClass: Record<string, ClassFeature[]>;
   traitsByRace: Record<string, RacialTrait[]>;
+  featsByCategory: Record<string, Feat[]>;
   debugInfo: {
     processingMethod: 'single_class' | 'multiclass';
     classBreakdown: Array<{
@@ -64,6 +94,12 @@ export interface ProcessedFeatures {
       raceName: string;
       subraceName?: string;
       traitCount: number;
+    };
+    featBreakdown: {
+      totalFeats: number;
+      originFeats: number;
+      generalFeats: number;
+      featCount: number;
     };
     warnings: string[];
   };
@@ -131,6 +167,41 @@ export const CLASS_FEATURE_TYPES: Record<string, Record<string, string>> = {
     'Elusive': 'passive',
     'Stroke of Luck': 'resource'
   }
+};
+
+// Common feat type mappings
+export const FEAT_TYPES: Record<string, string> = {
+  'Alert': 'origin',
+  'Weapon Mastery': 'general',
+  'Great Weapon Master': 'general',
+  'Sharpshooter': 'general',
+  'Lucky': 'general',
+  'Fey Touched': 'general',
+  'Shadow Touched': 'general',
+  'Magic Initiate': 'general',
+  'Ritual Caster': 'general',
+  'Observant': 'general',
+  'Sentinel': 'general',
+  'Polearm Master': 'general',
+  'Crossbow Expert': 'general',
+  'Mobile': 'general',
+  'War Caster': 'general',
+  'Resilient': 'general',
+  'Tough': 'general',
+  'Skilled': 'general',
+  'Actor': 'general',
+  'Athlete': 'general',
+  'Chef': 'general',
+  'Crusher': 'general',
+  'Fencer': 'general',
+  'Grappler': 'general',
+  'Healer': 'general',
+  'Inspiring Leader': 'general',
+  'Keen Mind': 'general',
+  'Linguist': 'general',
+  'Tavern Brawler': 'general',
+  'Telekinetic': 'general',
+  'Telepathic': 'general'
 };
 
 // Common racial trait mappings
@@ -224,6 +295,27 @@ export class FeatureValidator {
     
     if (trait.type && !['passive', 'active', 'spell', 'proficiency'].includes(trait.type)) {
       errors.push('Trait type must be passive, active, spell, or proficiency');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors
+    };
+  }
+  
+  static validateFeat(feat: Partial<Feat>): { isValid: boolean; errors: string[] } {
+    const errors: string[] = [];
+    
+    if (!feat.name || feat.name.trim().length === 0) {
+      errors.push('Feat name is required');
+    }
+    
+    if (!feat.category || feat.category.trim().length === 0) {
+      errors.push('Feat category is required');
+    }
+    
+    if (feat.type && !['origin', 'general', 'fighting_style', 'epic_boon'].includes(feat.type)) {
+      errors.push('Feat type must be origin, general, fighting_style, or epic_boon');
     }
     
     return {

@@ -1239,6 +1239,51 @@ export class CharacterConverterFacade {
   }
 
   /**
+   * Generate Fantasy Grounds XML for character feats using FeatureProcessor
+   * 
+   * @param characterData - Character data from D&D Beyond
+   * @returns Fantasy Grounds feat list XML
+   */
+  private generateFeatsXML(characterData: CharacterData): string {
+    if (featureFlags.isEnabled('feature_processor')) {
+      try {
+        console.log('🎭 Using modern FeatureProcessor service for feats');
+        
+        // Enable debug mode if feature flag is set
+        if (featureFlags.isEnabled('feature_processor_debug')) {
+          FeatureProcessor.setDebugMode(true);
+        }
+        
+        // Process character features
+        const processedFeatures = this.featureProcessor.processCharacterFeatures(characterData);
+        
+        // Generate XML from processed feats
+        const featsXML = this.featureProcessor.generateFeatsXML(processedFeatures);
+        
+        // Reset debug mode
+        FeatureProcessor.setDebugMode(false);
+        
+        // Show detailed breakdown if debug is enabled
+        if (featureFlags.isEnabled('feature_processor_debug')) {
+          console.log('Feats Breakdown:', processedFeatures.debugInfo.featBreakdown);
+          console.log(`Processing Method: ${processedFeatures.debugInfo.processingMethod}`);
+          console.log('Feats by Category:', processedFeatures.featsByCategory);
+        }
+        
+        console.log(`🎭 Generated feats XML: ${processedFeatures.debugInfo.featBreakdown.totalFeats} total feats`);
+        return featsXML;
+        
+      } catch (error) {
+        console.error('Failed to generate feats XML:', error);
+        return '<!-- Feat processing failed -->';
+      }
+    } else {
+      console.log('🎭 Using legacy feat processing (placeholder)');
+      return '<!-- Legacy feat processing not yet implemented -->';
+    }
+  }
+
+  /**
    * Generate weaponlist XML from character inventory data
    */
   private generateWeaponsXML(characterData: CharacterData): string {
@@ -1621,59 +1666,6 @@ ${actions}        </actions>`;
     }
   }
 
-  /**
-   * Generate featlist XML from character feat data
-   */
-  private generateFeatsXML(characterData: CharacterData): string {
-    try {
-      console.log('📜 Generating feats XML');
-      
-      const feats = characterData.feats || [];
-      if (!Array.isArray(feats)) {
-        console.log('📜 No feats array found in character data');
-        return '<!-- No feats data found -->';
-      }
-
-      if (feats.length === 0) {
-        console.log('📜 Character has no feats');
-        return '<!-- Character has no feats -->';
-      }
-
-      let xml = '';
-      feats.forEach((feat, index) => {
-        const featId = String(index + 1).padStart(5, '0');
-        const featName = feat.definition?.name || feat.name || 'Unknown Feat';
-        const featDescription = feat.definition?.description || feat.description || '';
-        
-        xml += `      <id-${featId}>
-        <locked type="number">1</locked>
-        <name type="string">${this.sanitizeString(featName)}</name>
-        <text type="formattedtext">
-          <p>${this.sanitizeString(featDescription)}</p>
-        </text>
-      </id-${featId}>
-`;
-        
-        // Check for special feats that affect character stats (like legacy code)
-        if (featName === "Medium Armor Master") {
-          console.log('📜 Found Medium Armor Master feat');
-        } else if (featName === "Alert") {
-          console.log('📜 Found Alert feat');
-        } else if (featName === "Mobile") {
-          console.log('📜 Found Mobile feat');
-        } else if (featName === "Observant") {
-          console.log('📜 Found Observant feat');
-        }
-      });
-
-      console.log(`📜 Generated feats XML: ${feats.length} feats`);
-      return xml;
-      
-    } catch (error) {
-      console.error('Failed to generate feats XML:', error);
-      return '<!-- Feat processing failed -->';
-    }
-  }
 
   /**
    * Generate coins XML from character currency data

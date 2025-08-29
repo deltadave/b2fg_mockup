@@ -21,6 +21,7 @@ import { gameConfigService } from '../../../shared/services/GameConfigService';
 import { SafeAccess } from '../../../shared/utils/SafeAccess';
 import { AbilityScoreProcessor } from '../../character/services/AbilityScoreProcessor';
 import { SpellSlotCalculator } from '../../character/services/SpellSlotCalculator';
+import { FeatureProcessor } from '../../character/services/FeatureProcessor';
 import { featureFlags } from '../../../core/FeatureFlags';
 
 export class FantasyGroundsXMLFormatter implements OutputFormatter {
@@ -33,6 +34,7 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
   ];
 
   private spellSlotCalculator = new SpellSlotCalculator();
+  private featureProcessor = new FeatureProcessor();
 
   async generateOutput(
     processedData: ProcessedCharacterData, 
@@ -504,7 +506,37 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
 
   // Stub methods that will need full implementations
   private generateEncumbranceXML(characterData: CharacterData): string { return ''; }
-  private generateFeatsXML(characterData: CharacterData): string { return ''; }
+  private generateFeatsXML(characterData: CharacterData): string {
+    if (featureFlags.isEnabled('feature_processor')) {
+      try {
+        console.log('🎭 FantasyGroundsXMLFormatter: Using FeatureProcessor for feats');
+        
+        // Enable debug mode if feature flag is set
+        if (featureFlags.isEnabled('feature_processor_debug')) {
+          FeatureProcessor.setDebugMode(true);
+        }
+        
+        // Process character features to get feats
+        const processedFeatures = this.featureProcessor.processCharacterFeatures(characterData);
+        
+        // Generate feats XML
+        const featsXML = this.featureProcessor.generateFeatsXML(processedFeatures);
+        
+        // Reset debug mode
+        FeatureProcessor.setDebugMode(false);
+        
+        console.log(`🎭 FantasyGroundsXMLFormatter: Generated ${processedFeatures.debugInfo.featBreakdown.totalFeats} feats`);
+        return featsXML;
+        
+      } catch (error) {
+        console.error('FantasyGroundsXMLFormatter: Failed to generate feats XML:', error);
+        return '<!-- Feat generation failed -->';
+      }
+    } else {
+      console.log('🎭 FantasyGroundsXMLFormatter: FeatureProcessor disabled, using legacy feat processing');
+      return '<!-- Legacy feat processing not implemented -->';
+    }
+  }
   private generateFeaturesXML(characterData: CharacterData): string { return ''; }
   private generateInventoryXML(characterData: CharacterData): string { return ''; }
   private generateLanguagesXML(characterData: CharacterData): string { return ''; }

@@ -10,10 +10,12 @@
 import {
   ClassFeature,
   RacialTrait,
+  Feat,
   ProcessedFeatures,
   FeatureXMLOptions,
   CLASS_FEATURE_TYPES,
   RACIAL_TRAIT_TYPES,
+  FEAT_TYPES,
   FeatureValidator,
   FeatureLevel,
   FeatureUsage
@@ -24,6 +26,7 @@ import { StringSanitizer } from '@/shared/utils/StringSanitizer';
 export interface FeatureProcessingOptions {
   includeSubclassFeatures: boolean;
   includeRacialTraits: boolean;
+  includeFeats: boolean;
   includeDescriptions: boolean;
   filterByLevel: boolean;
   maxLevel: number;
@@ -61,6 +64,7 @@ export class FeatureProcessor {
       console.log('🎭 FeatureProcessor: Processing character features', {
         classCount: characterData.classes?.length || 0,
         raceName: characterData.race?.fullName,
+        featCount: characterData.feats?.length || 0,
         options
       });
     }
@@ -73,19 +77,27 @@ export class FeatureProcessor {
       ? this.processRacialTraits(characterData, options)
       : [];
 
+    const feats = options.includeFeats
+      ? this.processFeats(characterData, options)
+      : [];
+
     const featuresByClass = this.groupFeaturesByClass(classFeatures);
     const traitsByRace = this.groupTraitsByRace(racialTraits);
+    const featsByCategory = this.groupFeatsByCategory(feats);
 
     const result: ProcessedFeatures = {
       classFeatures,
       racialTraits,
-      totalFeatures: classFeatures.length + racialTraits.length,
+      feats,
+      totalFeatures: classFeatures.length + racialTraits.length + feats.length,
       featuresByClass,
       traitsByRace,
+      featsByCategory,
       debugInfo: {
         processingMethod: characterData.classes.length > 1 ? 'multiclass' : 'single_class',
         classBreakdown: this.buildClassBreakdown(characterData, classFeatures),
         raceBreakdown: this.buildRaceBreakdown(characterData, racialTraits),
+        featBreakdown: this.buildFeatBreakdown(characterData, feats),
         warnings: []
       }
     };
@@ -95,6 +107,7 @@ export class FeatureProcessor {
         totalFeatures: result.totalFeatures,
         classFeatureCount: classFeatures.length,
         racialTraitCount: racialTraits.length,
+        featCount: feats.length,
         processingMethod: result.debugInfo.processingMethod
       });
     }
@@ -327,6 +340,158 @@ export class FeatureProcessor {
   }
 
   /**
+   * Process feats from character data
+   */
+  processFeats(
+    characterData: CharacterData,
+    options: FeatureProcessingOptions
+  ): Feat[] {
+    const feats: Feat[] = [];
+    const seenFeats = new Set<string>(); // Track processed feats to avoid duplicates
+
+    if (!characterData.feats || !Array.isArray(characterData.feats)) {
+      if (FeatureProcessor.debugEnabled) {
+        console.log('No feats data found in character');
+      }
+      return feats;
+    }
+
+    if (FeatureProcessor.debugEnabled) {
+      console.log(`🔍 Processing ${characterData.feats.length} feats from character data`);
+    }
+
+    for (const featInfo of characterData.feats) {
+
+      // Handle different feat data structures
+      let id: number;
+      let name: string;
+      let description: string;
+      let prerequisite: string | undefined;
+      let isRepeatable: boolean;
+      let categories: any[] = [];
+
+      // Try different possible structures
+      if (featInfo.definition) {
+        // Standard structure: {componentTypeId, componentId, definition: {id, name, description, ...}}
+        id = featInfo.definition.id;
+        name = featInfo.definition.name;
+        description = featInfo.definition.description;
+        prerequisite = featInfo.definition.prerequisite || undefined;
+        isRepeatable = featInfo.definition.isRepeatable || false;
+        categories = featInfo.definition.categories || [];
+      } else if (featInfo.name) {
+        // Direct structure: {id, name, description, ...}
+        id = featInfo.id || 0;
+        name = featInfo.name;
+        description = featInfo.description || '';
+        prerequisite = featInfo.prerequisite || undefined;
+        isRepeatable = featInfo.isRepeatable || false;
+        categories = featInfo.categories || [];
+      } else {
+        if (FeatureProcessor.debugEnabled) {
+          console.log(`🚫 Skipping feat with unrecognized structure:`, featInfo);
+        }
+        continue;
+      }
+
+      // Create a unique key for this feat (use ID as primary, since same feat name can have different IDs for different levels/sources)
+      const featKey = id ? `id:${id}` : `name:${name}`;
+      
+      // Skip if we've already processed this exact feat (same ID)
+      if (seenFeats.has(featKey)) {
+        if (FeatureProcessor.debugEnabled) {
+          console.log(`🔄 Skipping duplicate feat: ${name} (ID: ${id})`);
+        }
+        continue;
+      }
+
+      // Skip explicitly excluded feats
+      if (this.shouldSkipFeat(name)) {
+        if (FeatureProcessor.debugEnabled) {
+          console.log(`🚫 Skipping excluded feat: ${name}`);
+        }
+        continue;
+      }
+      
+      // Mark this feat as seen
+      seenFeats.add(featKey);
+
+      const featType = this.determineFeatType(name, categories);
+      const featCategory = this.determineFeatCategory(name, categories);
+      const mechanics = this.extractFeatMechanics(name, description);
+
+      const feat: Feat = {
+        id: id,
+        name: name,
+        description: options.includeDescriptions ? description : '',
+        prerequisite: prerequisite,
+        category: featCategory,
+        type: featType,
+        isRepeatable: isRepeatable,
+        mechanics: mechanics
+      };
+
+      // Validate feat before adding
+      const validation = FeatureValidator.validateFeat(feat);
+      if (validation.isValid) {
+        feats.push(feat);
+        if (FeatureProcessor.debugEnabled) {
+          console.log(`✅ Added feat: ${name} (${featType} - ${featCategory})`);
+        }
+      } else {
+        console.warn(`Invalid feat: ${feat.name}`, validation.errors);
+      }
+    }
+
+    // Consolidate repeatable feats for display (group by name, keep only one instance)
+    const consolidatedFeats = this.consolidateRepeatableFeats(feats);
+
+    if (FeatureProcessor.debugEnabled) {
+      console.log(`🏁 Processed ${feats.length} raw feats, consolidated to ${consolidatedFeats.length} display feats${consolidatedFeats.length > 0 ? ': ' + consolidatedFeats.map(f => f.name).join(', ') : ''}`);
+    }
+
+    return consolidatedFeats;
+  }
+
+  /**
+   * Consolidate repeatable feats for display
+   * Groups feats by name and keeps only the first instance of each
+   */
+  private consolidateRepeatableFeats(feats: Feat[]): Feat[] {
+    const seenFeatNames = new Set<string>();
+    const consolidatedFeats: Feat[] = [];
+
+    for (const feat of feats) {
+      // Clean the feat name by removing level prefixes like "4: "
+      const cleanName = feat.name.replace(/^\d+:\s*/, '').trim();
+      
+      if (!seenFeatNames.has(cleanName)) {
+        // First time seeing this feat name - add it with cleaned name
+        const consolidatedFeat: Feat = {
+          ...feat,
+          name: cleanName,
+          // If this is repeatable, update the description to indicate multiple instances
+          description: feat.isRepeatable && feats.filter(f => f.name.replace(/^\d+:\s*/, '').trim() === cleanName).length > 1
+            ? `${feat.description}\n\n(This feat has been taken multiple times)`
+            : feat.description
+        };
+        
+        consolidatedFeats.push(consolidatedFeat);
+        seenFeatNames.add(cleanName);
+        
+        if (FeatureProcessor.debugEnabled) {
+          const instances = feats.filter(f => f.name.replace(/^\d+:\s*/, '').trim() === cleanName);
+          if (instances.length > 1) {
+            console.log(`🔄 Consolidated ${instances.length} instances of "${cleanName}" feat`);
+          }
+        }
+      }
+    }
+
+    return consolidatedFeats;
+  }
+
+  /**
    * Generate Fantasy Grounds XML for features (class features only)
    */
   generateFeaturesXML(features: ProcessedFeatures, options: FeatureXMLOptions = this.getDefaultXMLOptions()): string {
@@ -342,6 +507,16 @@ export class FeatureProcessor {
   generateTraitsXML(features: ProcessedFeatures, options: FeatureXMLOptions = this.getDefaultXMLOptions()): string {
     if (features.racialTraits.length > 0) {
       return this.generateRacialTraitsXML(features.racialTraits, options);
+    }
+    return '';
+  }
+
+  /**
+   * Generate Fantasy Grounds XML for feats (for featlist section)
+   */
+  generateFeatsXML(features: ProcessedFeatures, options: FeatureXMLOptions = this.getDefaultXMLOptions()): string {
+    if (features.feats.length > 0) {
+      return this.generateFeatListXML(features.feats, options);
     }
     return '';
   }
@@ -715,6 +890,33 @@ export class FeatureProcessor {
   }
 
   /**
+   * Generate XML for feats
+   */
+  private generateFeatListXML(feats: Feat[], options: FeatureXMLOptions): string {
+    let xml = '';
+    
+    feats.forEach((feat, index) => {
+      const featId = String(index + 2000).padStart(5, '0'); // Offset to avoid conflicts with features/traits
+      const sanitizedName = options.sanitizeText ? StringSanitizer.sanitizeForXML(feat.name) : feat.name;
+      const sanitizedDescription = options.sanitizeText && feat.description
+        ? StringSanitizer.sanitizeForXML(feat.description)
+        : feat.description || '';
+
+      xml += `      <id-${featId}>
+        <locked type="number">1</locked>
+        <name type="string">${sanitizedName}</name>
+        <text type="formattedtext">
+          <p>${sanitizedDescription}</p>
+        </text>
+        <source type="string">${feat.category}${feat.prerequisite ? ` (Prereq: ${feat.prerequisite})` : ''}</source>
+      </id-${featId}>
+`;
+    });
+
+    return xml;
+  }
+
+  /**
    * Group features by class
    */
   private groupFeaturesByClass(features: ClassFeature[]): Record<string, ClassFeature[]> {
@@ -747,6 +949,20 @@ export class FeatureProcessor {
   }
 
   /**
+   * Group feats by category
+   */
+  private groupFeatsByCategory(feats: Feat[]): Record<string, Feat[]> {
+    return feats.reduce((grouped, feat) => {
+      const key = feat.type || 'general';
+      if (!grouped[key]) {
+        grouped[key] = [];
+      }
+      grouped[key].push(feat);
+      return grouped;
+    }, {} as Record<string, Feat[]>);
+  }
+
+  /**
    * Build class breakdown for debug info
    */
   private buildClassBreakdown(characterData: CharacterData, features: ClassFeature[]): ProcessedFeatures['debugInfo']['classBreakdown'] {
@@ -770,12 +986,25 @@ export class FeatureProcessor {
   }
 
   /**
+   * Build feat breakdown for debug info
+   */
+  private buildFeatBreakdown(characterData: CharacterData, feats: Feat[]): ProcessedFeatures['debugInfo']['featBreakdown'] {
+    return {
+      totalFeats: feats.length,
+      originFeats: feats.filter(f => f.type === 'origin').length,
+      generalFeats: feats.filter(f => f.type === 'general').length,
+      featCount: feats.length
+    };
+  }
+
+  /**
    * Get default processing options
    */
   private getDefaultOptions(): FeatureProcessingOptions {
     return {
       includeSubclassFeatures: true,
       includeRacialTraits: true,
+      includeFeats: true,
       includeDescriptions: true,
       filterByLevel: true,
       maxLevel: 20
@@ -838,6 +1067,125 @@ export class FeatureProcessor {
     return excludedTraits.some(excluded => 
       traitNameLower.includes(excluded.toLowerCase())
     );
+  }
+
+  /**
+   * Check if a feat should be skipped based on exclusion rules
+   */
+  private shouldSkipFeat(featName: string): boolean {
+    if (!featName || typeof featName !== 'string') {
+      return false;
+    }
+
+    const excludedFeats = [
+      'Ability Score Improvement', // This is handled separately
+      'Core Class Traits',
+      'Fighting Style', // This might be handled as class features instead
+    ];
+
+    const featNameLower = featName.toLowerCase();
+    return excludedFeats.some(excluded => 
+      featNameLower.includes(excluded.toLowerCase())
+    );
+  }
+
+  /**
+   * Determine feat type based on name and categories
+   */
+  private determineFeatType(featName: string, categories: any[]): 'origin' | 'general' | 'fighting_style' | 'epic_boon' {
+    // Handle null/undefined featName
+    if (!featName || typeof featName !== 'string') {
+      return 'general';
+    }
+
+    // Check categories first for explicit type information
+    if (categories && Array.isArray(categories)) {
+      for (const category of categories) {
+        const tagName = category.tagName?.toLowerCase();
+        if (tagName === 'origin') return 'origin';
+        if (tagName === 'fighting style') return 'fighting_style';
+        if (tagName === 'epic boon' || tagName === 'epic') return 'epic_boon';
+      }
+    }
+
+    // Check predefined feat types
+    const featType = FEAT_TYPES[featName];
+    if (featType) {
+      return featType as 'origin' | 'general' | 'fighting_style' | 'epic_boon';
+    }
+
+    // Default categorization based on common patterns
+    const featNameLower = featName.toLowerCase();
+    if (featNameLower.includes('fighting style')) return 'fighting_style';
+    if (featNameLower.includes('epic') || featNameLower.includes('boon')) return 'epic_boon';
+    
+    return 'general'; // Default for most feats
+  }
+
+  /**
+   * Determine feat category based on name and categories
+   */
+  private determineFeatCategory(featName: string, categories: any[]): string {
+    // Handle null/undefined featName
+    if (!featName || typeof featName !== 'string') {
+      return 'General';
+    }
+
+    // Check categories for explicit category information
+    if (categories && Array.isArray(categories) && categories.length > 0) {
+      // Use the first category's tagName as the category
+      const firstCategory = categories[0];
+      if (firstCategory && firstCategory.tagName) {
+        return firstCategory.tagName;
+      }
+    }
+
+    // Default categorization based on feat type
+    const featType = this.determineFeatType(featName, categories);
+    switch (featType) {
+      case 'origin': return 'Origin';
+      case 'fighting_style': return 'Fighting Style';
+      case 'epic_boon': return 'Epic Boon';
+      default: return 'General';
+    }
+  }
+
+  /**
+   * Extract feat mechanics from description
+   */
+  private extractFeatMechanics(name: string, description: string): Feat['mechanics'] {
+    const mechanics: Feat['mechanics'] = {};
+    
+    if (!name || !description) {
+      return undefined;
+    }
+
+    const nameLower = name.toLowerCase();
+    const descLower = description.toLowerCase();
+
+    // Extract ability score increases
+    if (descLower.includes('increase') && descLower.includes('ability score')) {
+      mechanics.abilityScoreIncrease = {
+        count: 1, // Most feats give +1 to one or two scores
+        abilities: [] // Would need more complex parsing to determine which abilities
+      };
+    }
+
+    // Extract proficiency bonuses
+    if (descLower.includes('proficiency') && descLower.includes('add')) {
+      mechanics.initiative = nameLower.includes('alert');
+    }
+
+    // Extract specific feat mechanics based on name
+    if (nameLower.includes('alert')) {
+      mechanics.initiative = true;
+    }
+
+    if (nameLower.includes('tough')) {
+      mechanics.hitPoints = 2; // +2 HP per level
+    }
+
+    return Object.keys(mechanics).length > 0 ? mechanics : undefined;
   }
 
   /**
