@@ -321,6 +321,52 @@ export const defaultFeatureFlags: FeatureFlagConfig = {
       conditions: {
         environment: 'development'
       }
+    },
+    'error_service_debug': {
+      key: 'error_service_debug',
+      enabled: false,
+      description: 'Enable detailed debugging output for error service operations',
+      conditions: {
+        environment: 'development'
+      }
+    },
+    'recovery_strategies_debug': {
+      key: 'recovery_strategies_debug',
+      enabled: false,
+      description: 'Enable detailed debugging output for error recovery strategies',
+      conditions: {
+        environment: 'development'
+      }
+    },
+    'error_integration_debug': {
+      key: 'error_integration_debug',
+      enabled: false,
+      description: 'Enable detailed debugging output for error display integration',
+      conditions: {
+        environment: 'development'
+      }
+    },
+    'error_display_debug': {
+      key: 'error_display_debug',
+      enabled: false,
+      description: 'Enable detailed debugging output for error display component',
+      conditions: {
+        environment: 'development'
+      }
+    },
+    'error_feedback_logging': {
+      key: 'error_feedback_logging',
+      enabled: true,
+      description: 'Enable logging of user feedback for errors',
+      rolloutPercentage: 100
+    },
+    'performance_demos': {
+      key: 'performance_demos',
+      enabled: false,
+      description: 'Enable performance-heavy service demonstrations that slow down conversion',
+      conditions: {
+        environment: 'development'
+      }
     }
   }
 };

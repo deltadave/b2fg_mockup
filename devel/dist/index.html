@@ -6,8 +6,8 @@
     <title>D&D Beyond to Fantasy Grounds Converter v2.0</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-  <script type="module" crossorigin src="./assets/main-DrI5hVYZ.js"></script>
-  <link rel="modulepreload" crossorigin href="./assets/main-BfLamUMv.js">
+  <script type="module" crossorigin src="./assets/main-DfG1FPF2.js"></script>
+  <link rel="modulepreload" crossorigin href="./assets/main-BH3_nqXz.js">
   <link rel="stylesheet" crossorigin href="./assets/main-skqagdwi.css">
   <script type="module">import.meta.url;import("_").catch(()=>1);(async function*(){})().next();if(location.protocol!="file:"){window.__vite_is_modern_browser=true}</script>
   <script type="module">!function(){if(window.__vite_is_modern_browser)return;console.warn("vite: loading legacy chunks, syntax error above and the same error below should be ignored");var e=document.getElementById("vite-legacy-polyfill"),n=document.createElement("script");n.src=e.src,n.onload=function(){System.import(document.getElementById('vite-legacy-entry').getAttribute('data-src'))},document.body.appendChild(n)}();</script>
@@ -319,15 +319,28 @@
                         </p>
                     </div>
                     
-                    <!-- Progress Bar -->
-                    <div x-show="isConverting" class="space-y-2">
+                    <!-- Enhanced Progress Bar -->
+                    <div x-show="isConverting" class="space-y-3">
                         <div class="flex justify-between text-sm">
-                            <span x-text="currentStep"></span>
-                            <span x-text="progress + '%'"></span>
+                            <div class="space-y-1">
+                                <div x-text="currentStep" class="font-semibold text-white"></div>
+                                <div x-show="substep" x-text="substep" class="text-gray-400 text-xs"></div>
+                            </div>
+                            <div class="text-right space-y-1">
+                                <div x-text="progress + '%'" class="text-dnd-gold"></div>
+                                <div x-show="totalSteps > 0" 
+                                     x-text="`Step ${currentStepNumber}/${totalSteps}`" 
+                                     class="text-gray-400 text-xs"></div>
+                            </div>
                         </div>
                         <div class="w-full bg-gray-700 rounded-full h-2">
-                            <div class="bg-dnd-gold h-2 rounded-full transition-all duration-300" 
+                            <div class="bg-dnd-gold h-2 rounded-full transition-all duration-500" 
                                  :style="`width: ${progress}%`"></div>
+                        </div>
+                        <!-- Estimated Time Remaining -->
+                        <div x-show="estimatedTimeRemaining > 0" class="text-xs text-gray-500 text-center">
+                            <span>Estimated time remaining: </span>
+                            <span x-text="estimatedTimeRemaining < 60 ? estimatedTimeRemaining + 's' : Math.floor(estimatedTimeRemaining/60) + 'm ' + (estimatedTimeRemaining%60) + 's'"></span>
                         </div>
                     </div>
                     
@@ -684,6 +697,6 @@
 
   <script nomodule>!function(){var e=document,t=e.createElement("script");if(!("noModule"in t)&&"onbeforeload"in t){var n=!1;e.addEventListener("beforeload",(function(e){if(e.target===t)n=!0;else if(!e.target.hasAttribute("nomodule")||!n)return;e.preventDefault()}),!0),t.type="module",t.src=".",e.head.appendChild(t),t.remove()}}();</script>
   <script nomodule crossorigin id="vite-legacy-polyfill" src="./assets/polyfills-legacy-6a_QfSWW.js"></script>
-  <script nomodule crossorigin id="vite-legacy-entry" data-src="./assets/main-legacy-BPVw03lQ.js">System.import(document.getElementById('vite-legacy-entry').getAttribute('data-src'))</script>
+  <script nomodule crossorigin id="vite-legacy-entry" data-src="./assets/main-legacy-C7sw3xT0.js">System.import(document.getElementById('vite-legacy-entry').getAttribute('data-src'))</script>
 </body>
 </html>

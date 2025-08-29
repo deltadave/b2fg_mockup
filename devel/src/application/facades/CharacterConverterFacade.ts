@@ -102,7 +102,7 @@ export class CharacterConverterFacade {
       const fetchTime = performance.now() - performanceStart;
       
       // Debug logging if feature flag is enabled
-      if (featureFlags.isEnabled('debug_character_data')) {
+      if (featureFlags.isEnabled('debug_character_data') && featureFlags.isEnabled('performance_demos')) {
         console.group('🔍 Character Data Debug Info');
         console.log('📋 Basic Info:', {
           id: characterData.id,
@@ -136,10 +136,12 @@ export class CharacterConverterFacade {
           bonuses: characterData.bonuses ? Object.keys(characterData.bonuses) : []
         });
         
-        console.log('📄 Full Character Object:', characterData);
+        if (featureFlags.isEnabled('performance_demos')) {
+          console.log('📄 Full Character Object:', characterData);
+        }
         
         // Demonstrate ObjectSearch service if enabled
-        if (featureFlags.isEnabled('object_search_service')) {
+        if (featureFlags.isEnabled('object_search_service') && featureFlags.isEnabled('performance_demos')) {
           console.log('🔍 ObjectSearch Service Demo:');
           
           // Find proficiency modifiers
@@ -160,7 +162,7 @@ export class CharacterConverterFacade {
         }
         
         // Demonstrate StringSanitizer service if enabled
-        if (featureFlags.isEnabled('string_sanitizer_service')) {
+        if (featureFlags.isEnabled('string_sanitizer_service') && featureFlags.isEnabled('performance_demos')) {
           console.log('🧹 StringSanitizer Service Demo:');
           
           // Test with potentially dangerous content
@@ -185,7 +187,7 @@ export class CharacterConverterFacade {
         }
         
         // Demonstrate SafeAccess service if enabled
-        if (featureFlags.isEnabled('safe_access_service')) {
+        if (featureFlags.isEnabled('safe_access_service') && featureFlags.isEnabled('performance_demos')) {
           console.log('🛡️ SafeAccess Service Demo:');
           
           // Test various access patterns common in D&D Beyond data
@@ -258,7 +260,7 @@ export class CharacterConverterFacade {
         }
         
         // Demonstrate AbilityScoreProcessor if enabled
-        if (featureFlags.isEnabled('ability_score_processor')) {
+        if (featureFlags.isEnabled('ability_score_processor') && featureFlags.isEnabled('performance_demos')) {
           console.log('⚡ AbilityScoreProcessor Service Demo:');
           
           // Enable detailed debugging if flag is set
@@ -309,7 +311,7 @@ export class CharacterConverterFacade {
         }
         
         // Demonstrate SpellSlotCalculator if enabled
-        if (featureFlags.isEnabled('spell_slot_calculator')) {
+        if (featureFlags.isEnabled('spell_slot_calculator') && featureFlags.isEnabled('performance_demos')) {
           console.log('🪄 SpellSlotCalculator Service Demo:');
           
           // Enable detailed debugging if flag is set
@@ -353,14 +355,7 @@ export class CharacterConverterFacade {
         console.groupEnd();
       }
       
-      this.reportProgress('Processing character data', 25, 'Initializing character processors', 'Data processing', 3, 8);
-      
-      // Add more granular steps during processing
-      this.reportProgress('Processing abilities', 35, 'Calculating ability scores and modifiers', 'Ability processing', 4, 8);
-      
-      this.reportProgress('Processing spells and features', 45, 'Organizing spells, class features, and equipment', 'Feature processing', 5, 8);
-      
-      this.reportProgress('Generating output format', 65, 'Converting to Fantasy Grounds XML format', 'Format generation', 6, 8);
+      this.reportProgress('Processing character data', 25, 'Processing character data and generating XML', 'Data processing', 3, 8);
 
       // Debug: Log personality traits information
       if (featureFlags.isEnabled('debug_character_data')) {
@@ -373,9 +368,38 @@ export class CharacterConverterFacade {
         });
       }
 
-      // Step 2: Parse character data (legacy for now)
+      // Step 2: Generate Fantasy Grounds XML using modern formatter
       const parseStart = performance.now();
-      const xml = await this.parseCharacterToXML(characterData);
+      
+      // Prepare processed data for formatter
+      const processedData = await this.prepareProcessedCharacterData(characterData);
+      
+      // Use formatRegistry to generate Fantasy Grounds XML
+      const formatResult = await formatRegistry.generateOutput('fantasy-grounds-xml', processedData);
+      
+      if (!formatResult.success) {
+        const formatError = createProcessingError(
+          'Fantasy Grounds XML generation failed',
+          new Error('Format generation failed: ' + (formatResult.errors?.[0]?.message || 'Unknown error'))
+        );
+        
+        const handledError = errorService.handleError(formatError, {
+          characterName: characterData.name,
+          component: 'CharacterConverterFacade',
+          step: 'Fantasy Grounds XML Generation',
+          metadata: { 
+            formatErrors: formatResult.errors,
+            warnings: formatResult.warnings 
+          }
+        });
+
+        return {
+          success: false,
+          error: handledError.message
+        };
+      }
+      
+      const xml = formatResult.output || '';
       const parseTime = performance.now() - parseStart;
 
       this.reportProgress('Finalizing XML structure', 85, 'Building final XML document', 'XML finalization', 7, 8);
@@ -419,9 +443,23 @@ export class CharacterConverterFacade {
       await this.initializeGameConfig();
       this.reportProgress('Parsing character data', 50);
 
-      // Step 2: Parse character data to XML
+      // Step 2: Generate Fantasy Grounds XML using modern formatter
       const parseStart = performance.now();
-      const xml = await this.parseCharacterToXML(characterData);
+      
+      // Prepare processed data for formatter
+      const processedData = await this.prepareProcessedCharacterData(characterData);
+      
+      // Use formatRegistry to generate Fantasy Grounds XML
+      const formatResult = await formatRegistry.generateOutput('fantasy-grounds-xml', processedData);
+      
+      if (!formatResult.success) {
+        return {
+          success: false,
+          error: formatResult.errors?.[0]?.message || 'Fantasy Grounds XML generation failed'
+        };
+      }
+      
+      const xml = formatResult.output || '';
       const parseTime = performance.now() - parseStart;
 
       this.reportProgress('Conversion complete', 100);
@@ -544,147 +582,35 @@ export class CharacterConverterFacade {
   }
 
   /**
-   * Parse character data to XML (currently calls legacy logic)
-   * This will be replaced with new parsing services in future phases
+   * @deprecated This method has been replaced with formatRegistry.generateOutput()
+   * XML generation is now handled by FantasyGroundsXMLFormatter following the Strategy pattern.
+   * This method is kept for compatibility during the migration phase.
    */
   private async parseCharacterToXML(characterData: CharacterData): Promise<string> {
-    console.log('parseCharacterToXML called with:', {
-      characterId: characterData.id,
-      characterName: characterData.name,
-      dataKeys: Object.keys(characterData)
-    });
+    console.warn('parseCharacterToXML: DEPRECATED - Use formatRegistry.generateOutput("fantasy-grounds-xml") instead');
+    
+    // Redirect to the modern formatter system
+    try {
+      // Process character data for the formatter
+      const processedData = {
+        characterData: characterData,
+        totalLevel: this.calculateTotalLevel(characterData),
+        proficiencyBonus: gameConfigService.calculateProficiencyBonus(this.calculateTotalLevel(characterData))
+      };
 
-    // For now, we'll create a simple mock XML since the legacy parser isn't available
-    // This demonstrates that the data fetch is working correctly
-    const characterName = this.sanitizeString(characterData.name || 'Unknown Character');
-    const characterId = characterData.id || 0;
-    
-    // Generate Fantasy Grounds compatible XML using the proper template structure
-    const totalLevel = this.calculateTotalLevel(characterData);
-    const proficiencyBonus = gameConfigService.calculateProficiencyBonus(totalLevel);
-    
-    const mockXML = `<?xml version="1.0" encoding="UTF-8"?>
-<root version="4.7" dataversion="20241002" release="8.1|CoreRPG:7">
-  <character>
-    <name type="string">${characterName}</name>
-    <gender type="string">${this.sanitizeString(characterData.gender || '')}</gender>
-    <deity type="string">${this.sanitizeString(characterData.faith || '')}</deity>
-    <age type="string">${this.sanitizeString(characterData.age || '')}</age>
-    <appearance type="string">${this.sanitizeString(characterData.hair ? `Hair: ${characterData.hair}, Eyes: ${characterData.eyes || ''}, Skin: ${characterData.skin || ''}` : '')}</appearance>
-    <height type="string">${this.sanitizeString(characterData.height || '')}</height>
-    <weight type="string">${this.sanitizeString(characterData.weight ? characterData.weight.toString() : '')}</weight>
-    <size type="string">${gameConfigService.getDefaultSize()}</size>
-    <alignment type="string">${this.sanitizeString(gameConfigService.getAlignmentName(characterData.alignmentId))}</alignment>
-    <bonds type="string">${this.sanitizeString(characterData.traits?.bonds || '')}</bonds>
-    <flaws type="string">${this.sanitizeString(characterData.traits?.flaws || '')}</flaws>
-    <ideals type="string">${this.sanitizeString(characterData.traits?.ideals || '')}</ideals>
-    <personalitytraits type="string">${this.sanitizeString(characterData.traits?.personalityTraits || '')}</personalitytraits>
-    <race type="string">${this.sanitizeString(characterData.race?.fullName || 'Unknown')}</race>
-    <racelink type="windowreference">
-      <class>reference_race</class>
-      <recordname>reference.race.${this.sanitizeString((characterData.race?.fullName || 'unknown').toLowerCase().replace(/\s+/g, ''))}@*</recordname>
-    </racelink>
-    <background type="string">${this.sanitizeString(characterData.background?.definition?.name || '')}</background>
-    <backgroundlink type="windowreference">
-      <class>reference_background</class>
-      <recordname>reference.background.${this.sanitizeString((characterData.background?.definition?.name || 'unknown').toLowerCase().replace(/\s+/g, ''))}@*</recordname>
-    </backgroundlink>
-    <level type="number">${totalLevel}</level>
-    <profbonus type="number">${proficiencyBonus}</profbonus>
-    <notes type="string">${this.generateNotesText(characterData, characterId)}</notes>
-    <perception type="number">0</perception>
-    <perceptionmodifier type="number">0</perceptionmodifier>
-    <exp type="number">${characterData.currentXp || 0}</exp>
-    <expneeded type="number">0</expneeded>
-    
-    <!-- Abilities with proper template structure -->
-    <abilities>
-      ${this.generateAbilitiesXML(characterData)}
-    </abilities>
-    
-    <!-- Classes with template structure -->
-    <classes>
-      ${characterData.classes?.map((cls: any, index: number) => 
-        `<id-${String(index + 1).padStart(5, '0')}>
-        <casterpactmagic type="number">0</casterpactmagic>
-        <hddie type="dice">${cls.definition?.hitDie ? `d${cls.definition.hitDie}` : gameConfigService.getDefaultHitDie()}</hddie>
-        <hdused type="number">0</hdused>
-        <level type="number">${cls.level || 1}</level>
-        <name type="string">${this.sanitizeString(cls.definition?.name || 'Unknown')}</name>
-        <shortcut type="windowreference">
-          <class>reference_class</class>
-          <recordname>reference.class.${this.sanitizeString((cls.definition?.name || 'unknown').toLowerCase())}@*</recordname>
-        </shortcut>
-      </id-${String(index + 1).padStart(5, '0')}>`
-      ).join('\n      ') || ''}
-    </classes>
-    
-    <!-- Currency -->
-    <coins>
-      ${this.generateCoinsXML(characterData)}
-    </coins>
-    
-    <!-- Hit Points -->
-    <hp>
-      <total type="number">${this.calculateHP(characterData)}</total>
-      <wounds type="number">0</wounds>
-      <temporary type="number">0</temporary>
-    </hp>
-
-    <!-- Defenses -->
-    <defenses>
-      <ac>
-        ${this.generateACComponents(characterData)}
-      </ac>
-    </defenses>
-    
-    ${this.generateEncumbranceXML(characterData)}
-    
-    <!-- Placeholder sections for Phase 2 -->
-    <featlist>
-      ${this.generateFeatsXML(characterData)}
-    </featlist>
-    
-    <featurelist>
-      ${this.generateFeaturesXML(characterData)}
-    </featurelist>
-    
-    ${this.generateInventoryXML(characterData)}
-    
-    <languagelist>
-      ${this.generateLanguagesXML(characterData)}
-    </languagelist>
-    
-    <powergrouplist>
-      ${this.generatePowerGroupXML(characterData)}
-    </powergrouplist>
-    
-    <skilllist>
-      ${this.generateSkillsXML(characterData)}
-    </skilllist>
-    
-    <proficiencylist>
-      ${this.generateProficienciesXML(characterData)}
-    </proficiencylist>
-    
-    <traitlist>
-      ${this.generateTraitsXML(characterData)}
-    </traitlist>
-    
-    <weaponlist>
-      ${this.generateWeaponsXML(characterData)}
-    </weaponlist>
-    
-    <powers>
-      ${this.generateSpellsXML(characterData)}
-    </powers>
-    
-    ${this.generatePowerMetaXML(characterData)}
-  </character>
-</root>`;
-
-    console.log('Generated mock XML for character:', characterName);
-    return mockXML;
+      // Use the formatRegistry to generate Fantasy Grounds XML
+      const formatResult = await formatRegistry.generateOutput('fantasy-grounds-xml', processedData);
+      
+      if (formatResult.success && formatResult.output) {
+        console.log('Successfully redirected to modern formatter system');
+        return formatResult.output;
+      } else {
+        throw new Error('Format generation failed: ' + (formatResult.errors?.[0]?.message || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Failed to redirect to modern formatter system:', error);
+      throw new Error('Character XML generation failed');
+    }
   }
 
   /**
@@ -712,12 +638,14 @@ export class CharacterConverterFacade {
       estimatedTimeRemaining: this.calculateEstimatedTime(percentage)
     };
     
-    // Enhanced logging with substep information
-    const substepInfo = substep ? ` → ${substep}` : '';
-    const stepInfo = (currentStep && totalSteps) ? ` (${currentStep}/${totalSteps})` : '';
-    console.log(`Progress: ${step}${substepInfo} (${percentage}%)${stepInfo}${message ? ` - ${message}` : ''}`);
+    // Only log progress if performance_demos is enabled (to reduce console spam)
+    if (featureFlags.isEnabled('performance_demos')) {
+      const substepInfo = substep ? ` → ${substep}` : '';
+      const stepInfo = (currentStep && totalSteps) ? ` (${currentStep}/${totalSteps})` : '';
+      console.log(`Progress: ${step}${substepInfo} (${percentage}%)${stepInfo}${message ? ` - ${message}` : ''}`);
+    }
     
-    // Emit detailed progress event for UI components
+    // Emit progress event for UI components (lightweight)
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('conversionProgress', {
         detail: progressInfo

@@ -16,6 +16,7 @@ import {
 import { errorService, ErrorService, ErrorServiceEvent } from '@/shared/errors/ErrorService';
 import { RecoveryStrategies } from '@/shared/errors/RecoveryStrategies';
 import { featureFlags } from '@/core/FeatureFlags';
+import Alpine from 'alpinejs';
 
 /**
  * Error display component state interface
@@ -466,3 +467,9 @@ export const createErrorDisplay = (config?: Partial<ErrorDisplayConfig>) => {
   
   return component;
 };
+
+// Register Alpine.js component
+Alpine.data('errorDisplay', createErrorDisplay);
+
+// Support both names for backward compatibility
+Alpine.data('createErrorDisplay', createErrorDisplay);

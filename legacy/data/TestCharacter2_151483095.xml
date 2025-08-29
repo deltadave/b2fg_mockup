@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root version="4.7" dataversion="20241002" release="8.1|CoreRPG:7">
+  <character>
+    <name type="string">TestCharacter2</name>
+    <gender type="string">Male</gender>
+    <deity type="string">Corellian</deity>
+    <age type="string">102</age>
+    <appearance type="string">Hair: sandy, Eyes: green, Skin: pasty</appearance>
+    <height type="string">5'7"</height>
+    <weight type="string">140</weight>
+    <size type="string">Medium</size>
+    <alignment type="string">Chaotic Good</alignment>
+    <bonds type="string">yes</bonds>
+    <flaws type="string">whenever possible</flaws>
+    <ideals type="string">prefers bonds to ideals</ideals>
+    <personalitytraits type="string">windy, wild and wary</personalitytraits>
+    <race type="string">Goliath</race>
+    <racelink type="windowreference">
+      <class>reference_race</class>
+      <recordname>reference.race.goliath@*</recordname>
+    </racelink>
+    <background type="string">Criminal</background>
+    <backgroundlink type="windowreference">
+      <class>reference_background</class>
+      <recordname>reference.background.criminal@*</recordname>
+    </backgroundlink>
+    <level type="number">20</level>
+    <profbonus type="number">6</profbonus>
+    <notes type="string">Exported from D&amp;D Beyond (Character ID: 151483095)</notes>
+    <perception type="number">0</perception>
+    <perceptionmodifier type="number">0</perceptionmodifier>
+    <exp type="number">900</exp>
+    <expneeded type="number">0</expneeded>
+    
+    <!-- Abilities with proper template structure -->
+    <abilities>
+      <strength>
+        <bonus type="number">2</bonus>
+        <save type="number">2</save>
+        <savemodifier type="number">0</savemodifier>
+        <saveprof type="number">0</saveprof>
+        <score type="number">14</score>
+      </strength>
+      <dexterity>
+        <bonus type="number">2</bonus>
+        <save type="number">2</save>
+        <savemodifier type="number">0</savemodifier>
+        <saveprof type="number">0</saveprof>
+        <score type="number">15</score>
+      </dexterity>
+      <constitution>
+        <bonus type="number">4</bonus>
+        <save type="number">4</save>
+        <savemodifier type="number">0</savemodifier>
+        <saveprof type="number">0</saveprof>
+        <score type="number">18</score>
+      </constitution>
+      <intelligence>
+        <bonus type="number">5</bonus>
+        <save type="number">5</save>
+        <savemodifier type="number">0</savemodifier>
+        <saveprof type="number">0</saveprof>
+        <score type="number">20</score>
+      </intelligence>
+      <wisdom>
+        <bonus type="number">2</bonus>
+        <save type="number">2</save>
+        <savemodifier type="number">0</savemodifier>
+        <saveprof type="number">0</saveprof>
+        <score type="number">15</score>
+      </wisdom>
+      <charisma>
+        <bonus type="number">-1</bonus>
+        <save type="number">-1</save>
+        <savemodifier type="number">0</savemodifier>
+        <saveprof type="number">0</saveprof>
+        <score type="number">9</score>
+      </charisma>
+    </abilities>
+    
+    <!-- Classes with template structure -->
+    <classes>
+      <id-00001>
+        <casterpactmagic type="number">0</casterpactmagic>
+        <hddie type="dice">d8</hddie>
+        <hdused type="number">0</hdused>
+        <level type="number">4</level>
+        <name type="string">Barbarian</name>
+        <shortcut type="windowreference">
+          <class>reference_class</class>
+          <recordname>reference.class.barbarian@*</recordname>
+        </shortcut>
+      </id-00001>
+      <id-00002>
+        <casterpactmagic type="number">0</casterpactmagic>
+        <hddie type="dice">d8</hddie>
+        <hdused type="number">0</hdused>
+        <level type="number">4</level>
+        <name type="string">Cleric</name>
+        <shortcut type="windowreference">
+          <class>reference_class</class>
+          <recordname>reference.class.cleric@*</recordname>
+        </shortcut>
+      </id-00002>
+      <id-00003>
+        <casterpactmagic type="number">0</casterpactmagic>
+        <hddie type="dice">d8</hddie>
+        <hdused type="number">0</hdused>
+        <level type="number">4</level>
+        <name type="string">Rogue</name>
+        <shortcut type="windowreference">
+          <class>reference_class</class>
+          <recordname>reference.class.rogue@*</recordname>
+        </shortcut>
+      </id-00003>
+      <id-00004>
+        <casterpactmagic type="number">0</casterpactmagic>
+        <hddie type="dice">d8</hddie>
+        <hdused type="number">0</hdused>
+        <level type="number">4</level>
+        <name type="string">Wizard</name>
+        <shortcut type="windowreference">
+          <class>reference_class</class>
+          <recordname>reference.class.wizard@*</recordname>
+        </shortcut>
+      </id-00004>
+      <id-00005>
+        <casterpactmagic type="number">0</casterpactmagic>
+        <hddie type="dice">d8</hddie>
+        <hdused type="number">0</hdused>
+        <level type="number">4</level>
+        <name type="string">Monk</name>
+        <shortcut type="windowreference">
+          <class>reference_class</class>
+          <recordname>reference.class.monk@*</recordname>
+        </shortcut>
+      </id-00005>
+    </classes>
+    
+    <!-- Currency -->
+    <coins>
+      <pp type="number">0</pp>
+      <gp type="number">0</gp>
+      <ep type="number">0</ep>
+      <sp type="number">0</sp>
+      <cp type="number">0</cp>
+    </coins>
+    
+    <!-- Hit Points -->
+    <hp>
+      <total type="number">169</total>
+      <wounds type="number">0</wounds>
+      <temporary type="number">0</temporary>
+    </hp>
+
+    <!-- Defenses -->
+    <defenses>
+      <ac>
+        <armor type="number">0</armor>
+        <misc type="number">0</misc>
+        <prof type="number">0</prof>
+        <shield type="number">0</shield>
+        <stat type="number">2</stat>
+        <stat2 type="string">dexterity</stat2>
+        <temporary type="number">0</temporary>
+        <total type="number">12</total>
+      </ac>
+      <special type="string">Bludgeoning Resistance, Piercing Resistance, Slashing Resistance</special>
+    </defenses>
+    
+    <!-- Speed -->
+    <speed>
+      <armor type="number">0</armor>
+      <base type="number">35</base>
+      <misc type="number">10</misc>
+      <temporary type="number">0</temporary>
+      <total type="number">45</total>
+    </speed>
+    
+    
+    
+    <!-- Features and Traits -->
+    <featlist>
+      
+    </featlist>
+    
+    <featurelist>
+      
+    </featurelist>
+    
+    
+    
+    <languagelist>
+      
+    </languagelist>
+    
+    <powergrouplist>
+      
+    </powergrouplist>
+    
+    <skilllist>
+            <id-00001>
+        <misc type="number">0</misc>
+        <name type="string">Animal Handling</name>
+        <prof type="number">6</prof>
+        <shortcut type="number">0</shortcut>
+        <stat type="string">wisdom</stat>
+        <total type="number">8</total>
+      </id-00001>
+      <id-00002>
+        <misc type="number">0</misc>
+        <name type="string">Athletics</name>
+        <prof type="number">6</prof>
+        <shortcut type="number">0</shortcut>
+        <stat type="string">strength</stat>
+        <total type="number">8</total>
+      </id-00002>
+      <id-00003>
+        <misc type="number">0</misc>
+        <name type="string">History</name>
+        <prof type="number">6</prof>
+        <shortcut type="number">0</shortcut>
+        <stat type="string">intelligence</stat>
+        <total type="number">11</total>
+      </id-00003>
+      <id-00004>
+        <misc type="number">0</misc>
+        <name type="string">Insight</name>
+        <prof type="number">6</prof>
+        <shortcut type="number">0</shortcut>
+        <stat type="string">wisdom</stat>
+        <total type="number">8</total>
+      </id-00004>
+      <id-00005>
+        <misc type="number">0</misc>
+        <name type="string">Sleight Of Hand</name>
+        <prof type="number">6</prof>
+        <shortcut type="number">0</shortcut>
+        <stat type="string">dexterity</stat>
+        <total type="number">8</total>
+      </id-00005>
+      <id-00006>
+        <misc type="number">0</misc>
+        <name type="string">Stealth</name>
+        <prof type="number">6</prof>
+        <shortcut type="number">0</shortcut>
+        <stat type="string">dexterity</stat>
+        <total type="number">8</total>
+      </id-00006>
+    </skilllist>
+    
+    <proficiencylist>
+      
+    </proficiencylist>
+    
+    <traitlist>
+      
+    </traitlist>
+    
+    <weaponlist>
+      
+    </weaponlist>
+    
+    <powers>
+      
+    </powers>
+    
+    
+  </character>
+</root>

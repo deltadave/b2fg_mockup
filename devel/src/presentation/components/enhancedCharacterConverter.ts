@@ -20,6 +20,12 @@ export interface EnhancedCharacterConverterData {
   progress: number;
   currentStep: string;
   
+  // Extended progress tracking
+  substep: string;
+  currentStepNumber: number;
+  totalSteps: number;
+  estimatedTimeRemaining: number;
+  
   // Character data
   characterData: CharacterData | null;
   
@@ -61,6 +67,12 @@ Alpine.data('enhancedCharacterConverter', (): EnhancedCharacterConverterData => 
   isConverting: false,
   progress: 0,
   currentStep: '',
+  
+  // Extended progress tracking
+  substep: '',
+  currentStepNumber: 0,
+  totalSteps: 8,
+  estimatedTimeRemaining: 0,
   
   // Character data
   characterData: null,
@@ -191,7 +203,6 @@ Alpine.data('enhancedCharacterConverter', (): EnhancedCharacterConverterData => 
       // Step 1: Validate and sanitize ID
       this.currentStep = 'Validating character ID...';
       this.progress = 10;
-      await this.delay(200);
       
       console.log('Converting character:', sanitizedId);
       
@@ -212,8 +223,24 @@ Alpine.data('enhancedCharacterConverter', (): EnhancedCharacterConverterData => 
         this.currentStep = step;
         this.progress = percentage;
       };
+      
+      // Listen for detailed progress events
+      const handleProgressEvent = (event) => {
+        const { step, percentage, substep, currentStep, totalSteps, estimatedTimeRemaining } = event.detail;
+        this.currentStep = step;
+        this.progress = percentage;
+        this.substep = substep || '';
+        this.currentStepNumber = currentStep || 0;
+        this.totalSteps = totalSteps || 8;
+        this.estimatedTimeRemaining = estimatedTimeRemaining || 0;
+      };
+      
+      window.addEventListener('conversionProgress', handleProgressEvent);
 
       const result = await facade.convertFromDNDBeyond(sanitizedId);
+      
+      // Clean up event listener
+      window.removeEventListener('conversionProgress', handleProgressEvent);
       
       if (!result.success) {
         throw new Error(result.error || 'Conversion failed');
@@ -290,8 +317,7 @@ Alpine.data('enhancedCharacterConverter', (): EnhancedCharacterConverterData => 
       });
       window.dispatchEvent(event);
       
-      // Small delay to allow format analysis
-      await this.delay(500);
+      // Format analysis complete
       
       this.formatSelectionAnalyzed = true;
       

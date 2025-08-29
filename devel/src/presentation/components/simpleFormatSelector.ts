@@ -43,7 +43,8 @@ export interface SimpleFormatSelectorData {
 
 // Get formats from registry with fallback compatibility assessment
 function getAvailableFormats(): SimpleFormat[] {
-  const supportedFormats = formatRegistry.getSupportedFormats();
+  try {
+    const supportedFormats = formatRegistry.getSupportedFormats();
   
   const formats: SimpleFormat[] = supportedFormats.map(formatInfo => {
     // Map format IDs to compatibility levels (default assessment)
@@ -73,9 +74,11 @@ function getAvailableFormats(): SimpleFormat[] {
     };
   });
   
-  // Add Fantasy Grounds as a special case since it's our primary format
-  // but handled outside the registry system
-  formats.unshift({
+  // Ensure Fantasy Grounds is prioritized (remove duplicates if it already exists from registry)
+  const filteredFormats = formats.filter(f => f.id !== 'fantasy-grounds-xml');
+  
+  // Add Fantasy Grounds as the primary format
+  filteredFormats.unshift({
     id: 'fantasy-grounds-xml',
     name: 'Fantasy Grounds',
     description: 'Unity & Classic compatible XML format (primary)',
@@ -85,7 +88,32 @@ function getAvailableFormats(): SimpleFormat[] {
     message: 'Fully supported with complete feature set - our primary output format'
   });
   
-  return formats;
+  return filteredFormats;
+  } catch (error) {
+    console.warn('Failed to get formats from registry, using fallback:', error);
+    
+    // Fallback format list if registry is not available
+    return [
+      {
+        id: 'fantasy-grounds-xml',
+        name: 'Fantasy Grounds',
+        description: 'Unity & Classic compatible XML format',
+        icon: '🏰',
+        compatibility: 'excellent' as const,
+        available: true,
+        message: 'Fully supported with complete feature set'
+      },
+      {
+        id: 'foundry-vtt-json',
+        name: 'Foundry VTT',
+        description: 'FoundryVTT Actor format with Active Effects',
+        icon: '⚔️',
+        compatibility: 'good' as const,
+        available: true,
+        message: 'Most features supported, some manual setup required'
+      }
+    ];
+  }
 }
 
 // Character compatibility analysis using FormatRegistry when available
