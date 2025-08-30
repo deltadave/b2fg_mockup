@@ -22,6 +22,7 @@ import {
 } from '@/domain/character/models/Features';
 import { featureFlags } from '@/core/FeatureFlags';
 import { StringSanitizer } from '@/shared/utils/StringSanitizer';
+import { TraitProcessor } from './TraitProcessor';
 
 export interface FeatureProcessingOptions {
   includeSubclassFeatures: boolean;
@@ -37,12 +38,14 @@ import type { CharacterData } from '@/domain/character/services/CharacterFetcher
 
 export class FeatureProcessor {
   private static debugEnabled: boolean = false;
+  private traitProcessor: TraitProcessor;
 
   constructor() {
     // Enable debug mode if feature flag is set
     if (featureFlags.isEnabled('feature_processor_debug')) {
       FeatureProcessor.debugEnabled = true;
     }
+    this.traitProcessor = new TraitProcessor();
   }
 
   /**
@@ -514,13 +517,11 @@ export class FeatureProcessor {
   }
 
   /**
-   * Generate Fantasy Grounds XML for racial traits (for traitlist section)
+   * Generate Fantasy Grounds XML for all character traits (racial, background, feat)
    */
-  generateTraitsXML(features: ProcessedFeatures, options: FeatureXMLOptions = this.getDefaultXMLOptions()): string {
-    if (features.racialTraits.length > 0) {
-      return this.generateRacialTraitsXML(features.racialTraits, options);
-    }
-    return '';
+  generateTraitsXML(characterData: CharacterData): string {
+    const traits = this.traitProcessor.processAllTraits(characterData);
+    return this.traitProcessor.generateTraitsXML(traits);
   }
 
   /**

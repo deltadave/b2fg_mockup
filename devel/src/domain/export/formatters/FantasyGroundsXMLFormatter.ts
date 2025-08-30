@@ -552,11 +552,8 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
 
   private generateTraitsXML(characterData: CharacterData): string {
     try {
-      // Process character features using our FeatureProcessor
-      const processedFeatures = this.featureProcessor.processCharacterFeatures(characterData);
-      
-      // Generate the traits XML using our implemented methods
-      return this.featureProcessor.generateTraitsXML(processedFeatures);
+      // Generate the traits XML directly from character data using new TraitProcessor
+      return this.featureProcessor.generateTraitsXML(characterData);
     } catch (error) {
       console.warn('Failed to generate traits XML:', error);
       return '<!-- Trait processing failed -->';
@@ -656,7 +653,6 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
     return skillEntries.join('\n');
   }
   private generateProficienciesXML(characterData: CharacterData): string { return ''; }
-  private generateTraitsXML(characterData: CharacterData): string { return ''; }
   private generateWeaponsXML(characterData: CharacterData): string { return ''; }
   private generateSpellsXML(characterData: CharacterData): string { return ''; }
   private generatePowerMetaXML(characterData: CharacterData): string { return ''; }
