@@ -537,7 +537,32 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
       return '<!-- Legacy feat processing not implemented -->';
     }
   }
-  private generateFeaturesXML(characterData: CharacterData): string { return ''; }
+  private generateFeaturesXML(characterData: CharacterData): string {
+    try {
+      // Process character features using our FeatureProcessor
+      const processedFeatures = this.featureProcessor.processCharacterFeatures(characterData);
+      
+      // Generate the features XML using our implemented methods
+      return this.featureProcessor.generateFeaturesXML(processedFeatures);
+    } catch (error) {
+      console.warn('Failed to generate features XML:', error);
+      return '<!-- Feature processing failed -->';
+    }
+  }
+
+  private generateTraitsXML(characterData: CharacterData): string {
+    try {
+      // Process character features using our FeatureProcessor
+      const processedFeatures = this.featureProcessor.processCharacterFeatures(characterData);
+      
+      // Generate the traits XML using our implemented methods
+      return this.featureProcessor.generateTraitsXML(processedFeatures);
+    } catch (error) {
+      console.warn('Failed to generate traits XML:', error);
+      return '<!-- Trait processing failed -->';
+    }
+  }
+
   private generateInventoryXML(characterData: CharacterData): string { return ''; }
   private generateLanguagesXML(characterData: CharacterData): string { return ''; }
   private generateRegularSpellPowerGroupXML(spellSlots: any, debugInfo: any): string { return ''; }

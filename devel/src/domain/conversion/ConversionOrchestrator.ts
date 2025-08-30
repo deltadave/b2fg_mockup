@@ -395,26 +395,37 @@ class FeatureProcessingStep extends CharacterProcessor {
     context.currentStep = 'Processing class features and traits';
     context.progress = 80;
     
-    const result = this.processor.processFeatures(context.originalCharacter, {
-      includeClassFeatures: true,
+    const result = this.processor.processCharacterFeatures(context.originalCharacter, {
+      includeSubclassFeatures: true,
       includeRacialTraits: true,
       includeFeats: true,
-      includeBackgroundFeatures: true,
-      includeOptionalClassFeatures: false,
-      resolveFeatureDetails: true
+      includeDescriptions: true,
+      filterByLevel: true,
+      maxLevel: 20
     });
     
     const warnings: ConversionWarning[] = [];
-    if (result.skippedFeatures.length > 0) {
+    
+    // Add warnings if any features were excluded or had issues
+    if (result.debugInfo.warnings.length > 0) {
       warnings.push({
         step: 'features',
         type: 'feature_unsupported',
-        message: `${result.skippedFeatures.length} features were skipped`,
+        message: `${result.debugInfo.warnings.length} feature processing warnings`,
         impact: 'low'
       });
     }
     
-    return ProcessingResult.success(result, warnings);
+    if (result.totalFeatures === 0) {
+      warnings.push({
+        step: 'features',
+        type: 'data_missing',
+        message: 'No features found in character data',
+        impact: 'medium'
+      });
+    }
+    
+    return ProcessingResult.success({ features: result }, warnings);
   }
   
   protected getStepName(): string {

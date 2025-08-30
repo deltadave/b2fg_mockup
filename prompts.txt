@@ -41,8 +41,14 @@ follow a methodical approach - 3 agents in use in a looping process. typescript-
 
 `invoke the typescript-pro agent. The inputs for this agent are any of the necessary configuration files found in the main root project directory, as well as the details found in project/project-documentation/system-architecture-analysis.md and project/project-documentation/design-documentation/features/. we are only building the features for the next action item. use the implementation-guide.md as a checklist of items to address, in order. show me the item you intend to address before starting, with a list of alternates to choose from. Do not start work until I ok it.`
 
-invoke the typescript-pro agent with tech-stack-pref.md, design-documentation, and project-documentation as context. use the implementation-guide.md as a checklist of items to address, in order. lets work on the next unfinished
-  item. show me the item you intend to address before starting with a list of alternates to choose from. Do not start work until I ok it.
+
+invoke the typescript-pro agent with tech-stack-pref.md, design-documentation, and project-documentation as context. use the implementation-guide.md as a checklist of items to address, in order. lets work on the next unfinished item. show me the item you intend to address before starting with a list of alternates to choose from. Do not start work until I ok it.
+
+
+invoke the typescript-pro agent with tech-stack-pref.md, project-documentation and current codebase as context, especially the system-architecture-analysis.md. We are working on the implementation of the unfinished features translation from D&D beyond json to Fantasy Grounds XML. You can use legacy/data/TestCharacter2_151483095_v05.json as your input file and legacy/data/testCharacter1.xml as an output template. Follow the system architecture, current code patterns, SOLID and best practices to implement translation of Feats from json to FGU XML and json to FoundryVTT json. If you have any questions, please ask before implementing anything. Show me what you intend to implement before starting work.
+
+
+does the current processedfeatures have multiple types of things that it processes? would extending it conform with our project documentation?
 
 https://youtu.be/X5UN2LrRK48?t=4603
 

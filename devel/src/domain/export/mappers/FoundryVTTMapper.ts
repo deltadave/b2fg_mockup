@@ -18,6 +18,7 @@ import type { CharacterData } from '@/domain/character/services/CharacterFetcher
 import { StringSanitizer } from '@/shared/utils/StringSanitizer';
 import { SafeAccess } from '@/shared/utils/SafeAccess';
 import { AbilityScoreUtils, ABILITY_NAMES } from '@/domain/character/constants/AbilityConstants';
+import { FoundryVTTFeatureMapper } from './FoundryVTTFeatureMapper';
 import { featureFlags } from '@/core/FeatureFlags';
 
 // Foundry VTT D&D 5e System Interfaces
@@ -316,6 +317,7 @@ export class FoundryVTTMapper {
   private itemMapper = new FoundryItemMapper();
   private effectMapper = new FoundryEffectMapper();
   private tokenMapper = new FoundryTokenMapper();
+  private featureMapper = new FoundryVTTFeatureMapper();
 
   /**
    * Convert processed character data to complete Foundry VTT Actor
@@ -344,7 +346,10 @@ export class FoundryVTTMapper {
         bonuses: this.mapBonuses(originalData),
         resources: this.mapResources(processedData.features, originalData)
       },
-      items: this.itemMapper.mapItems(processedData.inventory, originalData),
+      items: [
+        ...this.itemMapper.mapItems(processedData.inventory, originalData),
+        ...this.featureMapper.mapFeaturesToFoundryItems(processedData.features)
+      ],
       effects: this.effectMapper.mapEffects(processedData, originalData),
       prototypeToken: this.tokenMapper.mapToken(processedData, originalData),
       ownership: { default: 0 },

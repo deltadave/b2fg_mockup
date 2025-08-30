@@ -132,7 +132,8 @@ export class ErrorService {
     // Step 1: Create or classify the error
     let conversionError: ConversionError;
     
-    if (ErrorUtils.isConversionError(error)) {
+    // Check if it's already a ConversionError (duck typing)
+    if (error && typeof error === 'object' && 'code' in error && 'severity' in error) {
       conversionError = error as ConversionError;
     } else {
       // Classify and convert generic Error to ConversionError
@@ -140,10 +141,10 @@ export class ErrorService {
     }
 
     // Step 2: Create error context
-    const errorContext = ErrorUtils.createContext(
-      context.characterId, 
-      context.characterName
-    );
+    const errorContext = {
+      characterId: context.characterId,
+      characterName: context.characterName
+    };
     
     if (context.metadata) {
       errorContext.metadata = context.metadata;

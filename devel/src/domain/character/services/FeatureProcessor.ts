@@ -124,6 +124,7 @@ export class FeatureProcessor {
   ): ClassFeature[] {
     const features: ClassFeature[] = [];
     const seenFeatures = new Set<string>(); // Track processed features to avoid duplicates
+    const seenFeatureNames = new Set<string>(); // Track feature names to avoid name-based duplicates
 
     if (!characterData.classes || !Array.isArray(characterData.classes)) {
       return features;
@@ -160,7 +161,8 @@ export class FeatureProcessor {
           'class',
           options,
           undefined,
-          seenFeatures
+          seenFeatures,
+          seenFeatureNames
         );
         features.push(...classFeatures);
       }
@@ -178,7 +180,8 @@ export class FeatureProcessor {
           'subclass',
           options,
           subclassName,
-          seenFeatures
+          seenFeatures,
+          seenFeatureNames
         );
         features.push(...subclassFeatures);
       }
@@ -195,7 +198,8 @@ export class FeatureProcessor {
           'class',
           options,
           undefined,
-          seenFeatures
+          seenFeatures,
+          seenFeatureNames
         );
         features.push(...additionalFeatures);
       }
@@ -212,7 +216,8 @@ export class FeatureProcessor {
           'class',
           options,
           undefined,
-          seenFeatures
+          seenFeatures,
+          seenFeatureNames
         );
         features.push(...grantedFeatures);
       }
@@ -492,13 +497,20 @@ export class FeatureProcessor {
   }
 
   /**
-   * Generate Fantasy Grounds XML for features (class features only)
+   * Generate Fantasy Grounds XML for features (class features and racial traits for featurelist section)
    */
   generateFeaturesXML(features: ProcessedFeatures, options: FeatureXMLOptions = this.getDefaultXMLOptions()): string {
+    let xml = '';
+
+    // Generate class features XML only (racial traits are handled separately in traitlist section)
     if (features.classFeatures.length > 0) {
-      return this.generateClassFeaturesXML(features.classFeatures, options);
+      xml += this.generateClassFeaturesXML(features.classFeatures, options);
     }
-    return '';
+
+    // Note: Racial traits are no longer included in featurelist section per user request
+    // They are still processed and available via generateTraitsXML() for the traitlist section
+
+    return xml;
   }
 
   /**
@@ -536,7 +548,8 @@ export class FeatureProcessor {
     source: 'class' | 'subclass',
     options: FeatureProcessingOptions,
     subclassName?: string,
-    seenFeatures?: Set<string>
+    seenFeatures?: Set<string>,
+    seenFeatureNames?: Set<string>
   ): ClassFeature[] {
     const features: ClassFeature[] = [];
 
@@ -558,7 +571,16 @@ export class FeatureProcessor {
       // Skip if we've already processed this feature by ID
       if (seenFeatures && seenFeatures.has(featureKey)) {
         if (FeatureProcessor.debugEnabled) {
-          console.log(`🔄 Skipping duplicate feature: ${featureInfo.name} (${featureKey})`);
+          console.log(`🔄 Skipping duplicate feature by ID: ${featureInfo.name} (${featureKey})`);
+        }
+        continue;
+      }
+      
+      // Skip if we've already processed a feature with this name (name-based deduplication)
+      const normalizedName = this.normalizeFeatureName(featureInfo.name);
+      if (seenFeatureNames && seenFeatureNames.has(normalizedName)) {
+        if (FeatureProcessor.debugEnabled) {
+          console.log(`🔄 Skipping duplicate feature by name: ${featureInfo.name} (normalized: ${normalizedName})`);
         }
         continue;
       }
@@ -581,9 +603,12 @@ export class FeatureProcessor {
         continue;
       }
       
-      // Mark this feature as seen
+      // Mark this feature as seen (both by ID and name)
       if (seenFeatures) {
         seenFeatures.add(featureKey);
+      }
+      if (seenFeatureNames) {
+        seenFeatureNames.add(normalizedName);
       }
 
       const featureType = this.determineFeatureType(featureInfo.name, className);
@@ -845,16 +870,41 @@ export class FeatureProcessor {
       const featureId = String(index + 1).padStart(5, '0');
       const sanitizedName = options.sanitizeText ? StringSanitizer.sanitizeForXML(feature.name) : feature.name;
       const sanitizedDescription = options.sanitizeText && feature.description
-        ? StringSanitizer.sanitizeForXML(feature.description)
+        ? StringSanitizer.sanitizeForXML(feature.description, { maxLength: 10000 }) // Allow longer descriptions
         : feature.description || '';
 
-      xml += `      <id-${featureId}>
+      xml += `      <id-${featureId}>`;
+
+      // Add level if available
+      if (feature.requiredLevel && feature.requiredLevel > 0) {
+        xml += `
+        <level type="number">${feature.requiredLevel}</level>`;
+      }
+
+      xml += `
         <locked type="number">1</locked>
-        <name type="string">${sanitizedName}</name>
+        <name type="string">${sanitizedName}</name>`;
+
+      // Add specialization for subclass features
+      if (feature.subclassName && feature.source === 'subclass') {
+        xml += `
+        <specialization type="string">${feature.subclassName}</specialization>`;
+      }
+
+      xml += `
         <text type="formattedtext">
           <p>${sanitizedDescription}</p>
-        </text>
-        <source type="string">${feature.className}${feature.subclassName ? ` (${feature.subclassName})` : ''}</source>
+        </text>`;
+
+      // Add group information for better organization
+      const groupName = feature.subclassName 
+        ? `Class (${this.capitalizeFirst(feature.className)} - ${feature.subclassName})`
+        : `Class (${this.capitalizeFirst(feature.className)})`;
+      
+      xml += `
+        <group type="string">${groupName}</group>`;
+
+      xml += `
       </id-${featureId}>
 `;
     });
@@ -863,7 +913,42 @@ export class FeatureProcessor {
   }
 
   /**
-   * Generate XML for racial traits
+   * Generate XML for racial traits (for featurelist section)
+   */
+  private generateRacialTraitsForFeatureList(traits: RacialTrait[], options: FeatureXMLOptions): string {
+    let xml = '';
+    
+    traits.forEach((trait, index) => {
+      const traitId = String(index + 500).padStart(5, '0'); // Different offset for featurelist
+      const sanitizedName = options.sanitizeText ? StringSanitizer.sanitizeForXML(trait.name) : trait.name;
+      const sanitizedDescription = options.sanitizeText && trait.description
+        ? StringSanitizer.sanitizeForXML(trait.description, { maxLength: 10000 })
+        : trait.description || '';
+
+      xml += `      <id-${traitId}>
+        <level type="number">1</level>
+        <locked type="number">1</locked>
+        <name type="string">${sanitizedName}</name>`;
+
+      // Add specialization if it's a subrace trait
+      if (trait.suraceName) {
+        xml += `
+        <specialization type="string">${trait.suraceName}</specialization>`;
+      }
+
+      xml += `
+        <text type="formattedtext">
+          <p>${sanitizedDescription}</p>
+        </text>
+      </id-${traitId}>
+`;
+    });
+
+    return xml;
+  }
+
+  /**
+   * Generate XML for racial traits (for traitlist section)
    */
   private generateRacialTraitsXML(traits: RacialTrait[], options: FeatureXMLOptions): string {
     let xml = '';
@@ -872,7 +957,7 @@ export class FeatureProcessor {
       const traitId = String(index + 1000).padStart(5, '0'); // Offset to avoid conflicts
       const sanitizedName = options.sanitizeText ? StringSanitizer.sanitizeForXML(trait.name) : trait.name;
       const sanitizedDescription = options.sanitizeText && trait.description
-        ? StringSanitizer.sanitizeForXML(trait.description)
+        ? StringSanitizer.sanitizeForXML(trait.description, { maxLength: 10000 })
         : trait.description || '';
 
       xml += `      <id-${traitId}>
@@ -899,7 +984,7 @@ export class FeatureProcessor {
       const featId = String(index + 2000).padStart(5, '0'); // Offset to avoid conflicts with features/traits
       const sanitizedName = options.sanitizeText ? StringSanitizer.sanitizeForXML(feat.name) : feat.name;
       const sanitizedDescription = options.sanitizeText && feat.description
-        ? StringSanitizer.sanitizeForXML(feat.description)
+        ? StringSanitizer.sanitizeForXML(feat.description, { maxLength: 10000 })
         : feat.description || '';
 
       xml += `      <id-${featId}>
@@ -1024,6 +1109,19 @@ export class FeatureProcessor {
   }
 
   /**
+   * Normalize feature name for duplicate detection
+   * Removes level prefixes like "4: Weapon Mastery" -> "Weapon Mastery"
+   */
+  private normalizeFeatureName(featureName: string): string {
+    if (!featureName || typeof featureName !== 'string') {
+      return '';
+    }
+    
+    // Remove level prefixes like "4: ", "10: ", etc.
+    return featureName.replace(/^\d+:\s*/, '').trim();
+  }
+
+  /**
    * Check if a feature should be skipped based on exclusion rules
    */
   private shouldSkipFeature(featureName: string): boolean {
@@ -1034,8 +1132,24 @@ export class FeatureProcessor {
     const excludedFeatures = [
       'Proficiencies',
       'Ability Score Increase',
+      'Ability Score Improvement',
       'Core Sorcerer Traits',
-      'Metamagic Options'
+      'Core Barbarian Traits',
+      'Core Bard Traits',
+      'Core Cleric Traits',
+      'Core Druid Traits',
+      'Core Fighter Traits',
+      'Core Monk Traits',
+      'Core Paladin Traits',
+      'Core Ranger Traits',
+      'Core Rogue Traits',
+      'Core Warlock Traits',
+      'Core Wizard Traits',
+      'Metamagic Options',
+      'Creature Type',
+      'Hit Points',
+      'Bonus Proficiency',
+      'Subclass'
     ];
 
     const featureNameLower = featureName.toLowerCase();
@@ -1186,6 +1300,14 @@ export class FeatureProcessor {
     }
 
     return Object.keys(mechanics).length > 0 ? mechanics : undefined;
+  }
+
+  /**
+   * Capitalize the first letter of a string
+   */
+  private capitalizeFirst(str: string): string {
+    if (!str || typeof str !== 'string') return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
   }
 
   /**
