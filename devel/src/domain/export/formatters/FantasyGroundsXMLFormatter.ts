@@ -22,6 +22,7 @@ import { SafeAccess } from '../../../shared/utils/SafeAccess';
 import { AbilityScoreProcessor } from '../../character/services/AbilityScoreProcessor';
 import { SpellSlotCalculator } from '../../character/services/SpellSlotCalculator';
 import { FeatureProcessor } from '../../character/services/FeatureProcessor';
+import { ProficiencyProcessor } from '../../character/services/ProficiencyProcessor';
 import { featureFlags } from '../../../core/FeatureFlags';
 
 export class FantasyGroundsXMLFormatter implements OutputFormatter {
@@ -35,6 +36,7 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
 
   private spellSlotCalculator = new SpellSlotCalculator();
   private featureProcessor = new FeatureProcessor();
+  private proficiencyProcessor = new ProficiencyProcessor();
 
   async generateOutput(
     processedData: ProcessedCharacterData, 
@@ -652,7 +654,61 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
     
     return skillEntries.join('\n');
   }
-  private generateProficienciesXML(characterData: CharacterData): string { return ''; }
+  /**
+   * Generate proficiencies XML for weapons, armor, and tools
+   */
+  private generateProficienciesXML(characterData: CharacterData): string {
+    try {
+      const proficiencies = this.proficiencyProcessor.processProficiencies(characterData);
+      
+      if (featureFlags.isEnabled('fantasy_grounds_proficiency_debug')) {
+        console.log('Fantasy Grounds proficiencies:', {
+          totalFound: proficiencies.debugInfo.totalFound,
+          totalMapped: proficiencies.debugInfo.totalMapped,
+          weapons: proficiencies.weapons.length,
+          armor: proficiencies.armor.length,
+          tools: proficiencies.tools.length,
+          skipped: proficiencies.skippedProficiencies.length
+        });
+      }
+
+      const xmlEntries: string[] = [];
+      let entryIndex = 1;
+      
+      // Add weapon proficiencies
+      for (const weapon of proficiencies.weapons) {
+        const id = `id-${entryIndex.toString().padStart(5, '0')}`;
+        xmlEntries.push(
+          `\t\t\t<${id}>\n\t\t\t\t<name type="string">${weapon.display}</name>\n\t\t\t</${id}>`
+        );
+        entryIndex++;
+      }
+      
+      // Add armor proficiencies
+      for (const armorProf of proficiencies.armor) {
+        const id = `id-${entryIndex.toString().padStart(5, '0')}`;
+        xmlEntries.push(
+          `\t\t\t<${id}>\n\t\t\t\t<name type="string">${armorProf.display}</name>\n\t\t\t</${id}>`
+        );
+        entryIndex++;
+      }
+      
+      // Add tool proficiencies
+      for (const tool of proficiencies.tools) {
+        const id = `id-${entryIndex.toString().padStart(5, '0')}`;
+        xmlEntries.push(
+          `\t\t\t<${id}>\n\t\t\t\t<name type="string">${tool.display}</name>\n\t\t\t</${id}>`
+        );
+        entryIndex++;
+      }
+      
+      return xmlEntries.join('\n');
+      
+    } catch (error) {
+      console.error('Error generating proficiencies XML:', error);
+      return '\t\t\t<!-- Error processing proficiencies -->';
+    }
+  }
   private generateWeaponsXML(characterData: CharacterData): string { return ''; }
   private generateSpellsXML(characterData: CharacterData): string { return ''; }
   private generatePowerMetaXML(characterData: CharacterData): string { return ''; }
