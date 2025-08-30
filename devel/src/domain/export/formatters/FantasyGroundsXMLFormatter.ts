@@ -25,6 +25,7 @@ import { FeatureProcessor } from '../../character/services/FeatureProcessor';
 import { ProficiencyProcessor } from '../../character/services/ProficiencyProcessor';
 import { LanguageProcessor } from '../../character/services/LanguageProcessor';
 import { InventoryProcessor } from '../../character/services/InventoryProcessor';
+import { CurrencyProcessor } from '../../character/services/CurrencyProcessor';
 import { featureFlags } from '../../../core/FeatureFlags';
 
 export class FantasyGroundsXMLFormatter implements OutputFormatter {
@@ -440,11 +441,31 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
   }
 
   private generateCoinsXML(characterData: CharacterData): string {
-    return `<pp type="number">0</pp>
-      <gp type="number">0</gp>
-      <ep type="number">0</ep>
-      <sp type="number">0</sp>
-      <cp type="number">0</cp>`;
+    try {
+      const currencyResult = CurrencyProcessor.processCurrency(characterData);
+      
+      if (!currencyResult.success || !currencyResult.processedCurrency) {
+        console.warn('CurrencyProcessor failed, using default empty currency:', currencyResult.errors);
+        return `      <id-00001>
+        <amount type="number">0</amount>
+        <name type="string">GP</name>
+      </id-00001>`;
+      }
+
+      // Log any warnings from currency processing
+      if (currencyResult.warnings && currencyResult.warnings.length > 0) {
+        console.warn('Currency processing warnings:', currencyResult.warnings);
+      }
+
+      return CurrencyProcessor.generateFantasyGroundsXML(currencyResult.processedCurrency);
+
+    } catch (error) {
+      console.error('Failed to process currency, using empty currency:', error);
+      return `      <id-00001>
+        <amount type="number">0</amount>
+        <name type="string">GP</name>
+      </id-00001>`;
+    }
   }
 
   private calculateHP(characterData: CharacterData, totalLevel: number): number {
