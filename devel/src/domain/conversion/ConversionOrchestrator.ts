@@ -14,6 +14,7 @@ import { SpellSlotCalculator, type SpellSlotCalculationResult } from '@/domain/c
 import { InventoryProcessor, type ProcessedInventory } from '@/domain/character/services/InventoryProcessor';
 import { FeatureProcessor, type ProcessedFeatures } from '@/domain/character/services/FeatureProcessor';
 import { EncumbranceCalculator, type EncumbranceResult } from '@/domain/character/services/EncumbranceCalculator';
+import { LanguageProcessor, type ProcessedLanguages } from '@/domain/character/services/LanguageProcessor';
 import { featureFlags } from '@/core/FeatureFlags';
 import { errorService, createProcessingError } from '@/shared/errors/ErrorService';
 import { type ConversionError as CentralizedError } from '@/shared/errors/ConversionErrors';
@@ -62,6 +63,7 @@ export interface ProcessedCharacterData {
   spellSlots: SpellSlotCalculationResult;
   inventory: ProcessedInventory;
   features: ProcessedFeatures;
+  languages: ProcessedLanguages;
   encumbrance: EncumbranceResult;
   
   // Metadata
@@ -393,7 +395,7 @@ class FeatureProcessingStep extends CharacterProcessor {
   
   protected async doProcess(context: ConversionContext): Promise<ProcessingResult> {
     context.currentStep = 'Processing class features and traits';
-    context.progress = 80;
+    context.progress = 70;
     
     const result = this.processor.processCharacterFeatures(context.originalCharacter, {
       includeSubclassFeatures: true,
@@ -438,6 +440,82 @@ class FeatureProcessingStep extends CharacterProcessor {
 }
 
 /**
+ * Language Processing Step
+ */
+class LanguageProcessingStep extends CharacterProcessor {
+  private processor: LanguageProcessor;
+  
+  constructor() {
+    super();
+    this.processor = new LanguageProcessor();
+  }
+  
+  protected async doProcess(context: ConversionContext): Promise<ProcessingResult> {
+    context.currentStep = 'Processing character languages';
+    context.progress = 80;
+    
+    const validation = LanguageProcessor.validateCharacterData(context.originalCharacter);
+    if (!validation.isValid) {
+      return ProcessingResult.error(
+        'languages',
+        `Language validation failed: ${validation.issues.join(', ')}`,
+        true // Languages are recoverable - can continue with empty list
+      );
+    }
+    
+    const warnings: ConversionWarning[] = validation.warnings.map(warning => ({
+      step: 'languages',
+      type: 'data_missing' as const,
+      message: warning,
+      impact: 'low' as const
+    }));
+    
+    const result = this.processor.processCharacterLanguages(context.originalCharacter, {
+      includeChoicesInOutput: context.processingOptions.includeDebugInfo,
+      includeRacialOnly: false
+    });
+    
+    // Add warnings for language choices (these should go to the choices section, not language list)
+    if (result.choices.length > 0) {
+      warnings.push({
+        step: 'languages',
+        type: 'feature_unsupported',
+        message: `${result.choices.length} language choices found - these will be added to character choices`,
+        impact: 'low'
+      });
+    }
+    
+    if (result.skipped.length > 0) {
+      warnings.push({
+        step: 'languages',
+        type: 'data_missing',
+        message: `${result.skipped.length} languages were skipped (not granted or duplicates)`,
+        impact: 'low'
+      });
+    }
+    
+    if (result.totalLanguages === 0) {
+      warnings.push({
+        step: 'languages',
+        type: 'data_missing',
+        message: 'No languages found - character may not speak any languages',
+        impact: 'medium'
+      });
+    }
+    
+    return ProcessingResult.success({ languages: result }, warnings);
+  }
+  
+  protected getStepName(): string {
+    return 'languages';
+  }
+  
+  protected isRecoverable(error: any): boolean {
+    return true; // Can continue without languages
+  }
+}
+
+/**
  * Main Conversion Orchestrator
  */
 export class ConversionOrchestrator {
@@ -456,7 +534,8 @@ export class ConversionOrchestrator {
     this.processingChain = new AbilityScoreProcessingStep()
       .setNext(new SpellSlotProcessingStep())
       .setNext(new InventoryProcessingStep())
-      .setNext(new FeatureProcessingStep());
+      .setNext(new FeatureProcessingStep())
+      .setNext(new LanguageProcessingStep());
   }
   
   /**
@@ -517,6 +596,7 @@ export class ConversionOrchestrator {
         spellSlots: processingResult.data.spellSlots || {},
         inventory: processingResult.data.inventory || {},
         features: processingResult.data.features || {},
+        languages: processingResult.data.languages || { languages: [], choices: [], skipped: [], totalLanguages: 0 },
         encumbrance: encumbranceResult,
         processing: {
           timestamp: new Date(),

@@ -19,6 +19,7 @@ import { StringSanitizer } from '@/shared/utils/StringSanitizer';
 import { SafeAccess } from '@/shared/utils/SafeAccess';
 import { AbilityScoreUtils, ABILITY_NAMES } from '@/domain/character/constants/AbilityConstants';
 import { FoundryVTTFeatureMapper } from './FoundryVTTFeatureMapper';
+import { LanguageProcessor } from '@/domain/character/services/LanguageProcessor';
 import { featureFlags } from '@/core/FeatureFlags';
 
 // Foundry VTT D&D 5e System Interfaces
@@ -751,6 +752,7 @@ export class FoundrySpellMapper {
  * Specialized mapper for traits (proficiencies, resistances, etc.)
  */
 export class FoundryTraitMapper {
+  private languageProcessor = new LanguageProcessor();
   mapTraits(character: CharacterData): FoundryTraits {
     return {
       size: this.getSize(character),
@@ -802,24 +804,25 @@ export class FoundryTraitMapper {
   }
 
   private getLanguages(character: CharacterData) {
-    const languages: string[] = [];
-    
-    // Extract from modifiers
-    if (character.modifiers) {
-      const sources = ['race', 'class', 'background', 'feat'];
-      sources.forEach(source => {
-        const modifiers = character.modifiers[source];
-        if (modifiers && Array.isArray(modifiers)) {
-          modifiers.forEach(mod => {
-            if (mod.type === 'language') {
-              languages.push(mod.friendlySubtypeName || mod.subType || '');
-            }
-          });
-        }
+    try {
+      // Use LanguageProcessor for proper language handling
+      const result = this.languageProcessor.processCharacterLanguages(character, {
+        includeChoicesInOutput: false,
+        includeRacialOnly: false
       });
-    }
 
-    return { value: languages.filter(Boolean), custom: '' };
+      // Generate FoundryVTT languages data
+      const foundryLanguages = this.languageProcessor.generateFoundryVTTLanguages(result.languages);
+
+      return {
+        value: foundryLanguages.value,
+        custom: foundryLanguages.custom
+      };
+
+    } catch (error) {
+      console.warn('Failed to process languages for FoundryVTT:', error);
+      return { value: [], custom: '' };
+    }
   }
 
   private getWeaponProficiencies(character: CharacterData) {

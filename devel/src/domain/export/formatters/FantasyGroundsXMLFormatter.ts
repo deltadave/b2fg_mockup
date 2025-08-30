@@ -23,6 +23,7 @@ import { AbilityScoreProcessor } from '../../character/services/AbilityScoreProc
 import { SpellSlotCalculator } from '../../character/services/SpellSlotCalculator';
 import { FeatureProcessor } from '../../character/services/FeatureProcessor';
 import { ProficiencyProcessor } from '../../character/services/ProficiencyProcessor';
+import { LanguageProcessor } from '../../character/services/LanguageProcessor';
 import { featureFlags } from '../../../core/FeatureFlags';
 
 export class FantasyGroundsXMLFormatter implements OutputFormatter {
@@ -31,12 +32,13 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
   readonly supportedFeatures = [
     'abilities', 'skills', 'saving-throws', 'combat', 'spells', 'spell-slots',
     'equipment', 'weapons', 'armor', 'features', 'feats', 'proficiencies',
-    'multiclass', 'homebrew-support', 'pact-magic', 'encumbrance'
+    'languages', 'multiclass', 'homebrew-support', 'pact-magic', 'encumbrance'
   ];
 
   private spellSlotCalculator = new SpellSlotCalculator();
   private featureProcessor = new FeatureProcessor();
   private proficiencyProcessor = new ProficiencyProcessor();
+  private languageProcessor = new LanguageProcessor();
 
   async generateOutput(
     processedData: ProcessedCharacterData, 
@@ -563,7 +565,29 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
   }
 
   private generateInventoryXML(characterData: CharacterData): string { return ''; }
-  private generateLanguagesXML(characterData: CharacterData): string { return ''; }
+  /**
+   * Generate languages XML for Fantasy Grounds
+   */
+  private generateLanguagesXML(characterData: CharacterData): string {
+    try {
+      // Process character languages using LanguageProcessor
+      const result = this.languageProcessor.processCharacterLanguages(characterData, {
+        includeChoicesInOutput: false,
+        includeRacialOnly: false
+      });
+
+      if (result.languages.length === 0) {
+        return '<!-- No languages found -->';
+      }
+
+      // Generate XML using the processor's built-in XML generation
+      return this.languageProcessor.generateLanguagesXML(result.languages);
+
+    } catch (error) {
+      console.warn('Failed to generate languages XML:', error);
+      return '<!-- Language processing failed -->';
+    }
+  }
   private generateRegularSpellPowerGroupXML(spellSlots: any, debugInfo: any): string { return ''; }
   private generatePactMagicPowerGroupXML(characterData: CharacterData, classInfo: any[]): string { return ''; }
   /**
