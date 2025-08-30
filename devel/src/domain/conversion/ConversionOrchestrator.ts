@@ -18,6 +18,7 @@ import { LanguageProcessor, type ProcessedLanguages } from '@/domain/character/s
 import { featureFlags } from '@/core/FeatureFlags';
 import { errorService, createProcessingError } from '@/shared/errors/ErrorService';
 import { type ConversionError as CentralizedError } from '@/shared/errors/ConversionErrors';
+import { SafeAccess } from '@/shared/utils/SafeAccess';
 
 export interface ConversionContext {
   originalCharacter: CharacterData;
@@ -57,6 +58,9 @@ export interface ProcessedCharacterData {
   id: number;
   name: string;
   level: number;
+  
+  // Original character data (needed by formatters)
+  characterData: CharacterData;
   
   // Processed components
   abilities: ProcessedAbilityScores;
@@ -111,7 +115,19 @@ export abstract class CharacterProcessor {
     let result: ProcessingResult;
     
     try {
+      if (featureFlags.isEnabled('conversion_orchestrator_debug')) {
+        console.log(`🔗 CharacterProcessor.process(): Starting step ${this.getStepName()}`);
+      }
+      
       result = await this.doProcess(context);
+      
+      if (featureFlags.isEnabled('conversion_orchestrator_debug')) {
+        console.log(`🔗 CharacterProcessor.process(): Completed step ${this.getStepName()}`, {
+          success: result.success,
+          hasData: !!result.data,
+          shouldContinue: result.shouldContinue
+        });
+      }
       
       // Track processing step
       const duration = performance.now() - stepStartTime;
@@ -205,6 +221,17 @@ export class ProcessingResult {
     // If either has an error, use the first error
     const error = this.error || other.error;
     
+    if (featureFlags.isEnabled('conversion_orchestrator_debug')) {
+      console.log('🔄 ProcessingResult.merge() debug', {
+        thisData: this.data ? Object.keys(this.data) : 'no data',
+        otherData: other.data ? Object.keys(other.data) : 'no data',
+        combinedData: combinedData ? Object.keys(combinedData) : 'no combined data',
+        hasInventoryInThis: !!this.data?.inventory,
+        hasInventoryInOther: !!other.data?.inventory,
+        hasInventoryInCombined: !!combinedData?.inventory
+      });
+    }
+    
     return new ProcessingResult(success, combinedData, error, combinedWarnings, shouldContinue);
   }
 }
@@ -224,6 +251,10 @@ class AbilityScoreProcessingStep extends CharacterProcessor {
     context.currentStep = 'Processing ability scores';
     context.progress = 20;
     
+    if (featureFlags.isEnabled('conversion_orchestrator_debug')) {
+      console.log('🎯 AbilityScoreProcessingStep: Starting ability score processing');
+    }
+    
     const validation = AbilityScoreProcessor.validateCharacterData(context.originalCharacter);
     if (!validation.isValid) {
       return ProcessingResult.error(
@@ -242,7 +273,7 @@ class AbilityScoreProcessingStep extends CharacterProcessor {
     
     const result = AbilityScoreProcessor.processAbilityScoreBonuses(context.originalCharacter);
     
-    return ProcessingResult.success(result.totalScores, warnings);
+    return ProcessingResult.success({ abilities: result.totalScores }, warnings);
   }
   
   protected getStepName(): string {
@@ -270,6 +301,10 @@ class SpellSlotProcessingStep extends CharacterProcessor {
     context.currentStep = 'Calculating spell slots';
     context.progress = 40;
     
+    if (featureFlags.isEnabled('conversion_orchestrator_debug')) {
+      console.log('✨ SpellSlotProcessingStep: Starting spell slot calculation');
+    }
+    
     // Convert character classes to the format expected by SpellSlotCalculator
     const classes = this.extractCharacterClasses(context.originalCharacter);
     
@@ -287,7 +322,7 @@ class SpellSlotProcessingStep extends CharacterProcessor {
         }
       };
       
-      return ProcessingResult.success(emptyResult);
+      return ProcessingResult.success({ spellSlots: emptyResult });
     }
     
     const validation = SpellSlotCalculator.validateClassData(classes);
@@ -306,7 +341,7 @@ class SpellSlotProcessingStep extends CharacterProcessor {
       includePactMagicInMainSlots: false
     });
     
-    return ProcessingResult.success(result);
+    return ProcessingResult.success({ spellSlots: result });
   }
   
   private extractCharacterClasses(character: CharacterData): any[] {
@@ -353,24 +388,85 @@ class InventoryProcessingStep extends CharacterProcessor {
     context.currentStep = 'Processing inventory and equipment';
     context.progress = 60;
     
-    const result = this.processor.processInventory(context.originalCharacter, {
-      includeContainers: true,
-      calculateWeight: true,
-      resolveItemDetails: true,
-      groupSimilarItems: false
-    });
+    if (featureFlags.isEnabled('conversion_orchestrator_debug')) {
+      console.log('📦 InventoryProcessingStep: Starting inventory processing');
+    }
+    
+    // Extract inventory from character data
+    const rawInventory = SafeAccess.get(context.originalCharacter, 'inventory', []) as any[];
+    
+    if (featureFlags.isEnabled('conversion_orchestrator_debug')) {
+      console.log('📦 InventoryProcessingStep: Processing character inventory', {
+        characterId: context.originalCharacter.id,
+        inventoryItemCount: rawInventory.length,
+        sampleInventoryItem: rawInventory[0] ? { id: rawInventory[0].id, name: rawInventory[0].definition?.name } : null
+      });
+    }
+    
+    // Use the new orchestrator-compatible method
+    const result = this.processor.processInventoryForOrchestrator(
+      rawInventory,
+      context.originalCharacter.id,
+      context.originalCharacter
+    );
     
     const warnings: ConversionWarning[] = [];
-    if (result.skippedItems.length > 0) {
+    
+    // Add warnings from inventory processing
+    if (result.processing.warnings.length > 0) {
       warnings.push({
         step: 'inventory',
         type: 'feature_unsupported',
-        message: `${result.skippedItems.length} items were skipped due to missing data`,
+        message: `${result.processing.warnings.length} inventory processing warnings`,
+        impact: 'low'
+      });
+    }
+    
+    if (result.processing.itemsSkipped > 0) {
+      warnings.push({
+        step: 'inventory',
+        type: 'data_missing',
+        message: `${result.processing.itemsSkipped} items were skipped`,
         impact: 'medium'
       });
     }
     
-    return ProcessingResult.success(result, warnings);
+    if (result.processing.errors.length > 0) {
+      warnings.push({
+        step: 'inventory',
+        type: 'data_missing',
+        message: `${result.processing.errors.length} inventory processing errors occurred`,
+        impact: 'high'
+      });
+    }
+    
+    if (featureFlags.isEnabled('conversion_orchestrator_debug')) {
+      console.log('📦 InventoryProcessingStep: Inventory processing complete', {
+        itemsProcessed: result.processing.itemsProcessed,
+        itemsSkipped: result.processing.itemsSkipped,
+        totalItems: result.statistics.totalItems,
+        containers: result.statistics.containerCount,
+        warnings: warnings.length,
+        resultStructure: {
+          hasItems: !!result.items,
+          itemsLength: result.items?.length || 0,
+          hasContainers: !!result.containers,
+          containersLength: result.containers?.length || 0
+        }
+      });
+    }
+    
+    const returnData = { inventory: result };
+    
+    if (featureFlags.isEnabled('conversion_orchestrator_debug')) {
+      console.log('📦 InventoryProcessingStep: Returning data', {
+        returnDataKeys: Object.keys(returnData),
+        inventoryInReturnData: !!returnData.inventory,
+        inventoryItemsCount: returnData.inventory?.items?.length || 0
+      });
+    }
+    
+    return ProcessingResult.success(returnData, warnings);
   }
   
   protected getStepName(): string {
@@ -531,11 +627,18 @@ export class ConversionOrchestrator {
    * Build the processing chain using Chain of Responsibility pattern
    */
   private buildProcessingChain(): void {
-    this.processingChain = new AbilityScoreProcessingStep()
-      .setNext(new SpellSlotProcessingStep())
-      .setNext(new InventoryProcessingStep())
-      .setNext(new FeatureProcessingStep())
-      .setNext(new LanguageProcessingStep());
+    const abilityStep = new AbilityScoreProcessingStep();
+    const spellSlotStep = new SpellSlotProcessingStep();
+    const inventoryStep = new InventoryProcessingStep();
+    const featureStep = new FeatureProcessingStep();
+    const languageStep = new LanguageProcessingStep();
+    
+    abilityStep.setNext(spellSlotStep);
+    spellSlotStep.setNext(inventoryStep);
+    inventoryStep.setNext(languageStep); // Skip features for now
+    // featureStep.setNext(languageStep);
+    
+    this.processingChain = abilityStep;
   }
   
   /**
@@ -567,7 +670,21 @@ export class ConversionOrchestrator {
     
     try {
       // Run the processing chain
+      if (featureFlags.isEnabled('conversion_orchestrator_debug')) {
+        console.log('🔗 ConversionOrchestrator: Starting processing chain...');
+      }
+      
       const processingResult = await this.processingChain.process(context);
+      
+      if (featureFlags.isEnabled('conversion_orchestrator_debug')) {
+        console.log('🔗 ConversionOrchestrator: Processing chain result', {
+          success: processingResult.success,
+          hasData: !!processingResult.data,
+          inventoryInData: !!processingResult.data?.inventory,
+          contextErrors: context.errors.length,
+          contextWarnings: context.warnings.length
+        });
+      }
       
       if (!processingResult.success) {
         return {
@@ -585,13 +702,21 @@ export class ConversionOrchestrator {
       context.currentStep = 'Calculating encumbrance';
       context.progress = 90;
       
-      const encumbranceResult = this.calculateEncumbrance(character, processingResult.data);
+      // Calculate encumbrance (temporarily simplified to debug inventory)
+      const encumbranceResult: EncumbranceResult = {
+        totalWeight: processingResult.data.inventory?.encumbrance?.totalWeight || 0,
+        carryingCapacity: processingResult.data.inventory?.encumbrance?.carryingCapacity || 150,
+        encumbranceLevel: processingResult.data.inventory?.encumbrance?.encumbranceLevel || 'unencumbered',
+        speedPenalty: 0,
+        disadvantageOnChecks: false
+      };
       
       // Build final processed character data
       const processedCharacter: ProcessedCharacterData = {
         id: character.id,
         name: character.name,
         level: this.calculateTotalLevel(character),
+        characterData: character, // Include original character data for formatters
         abilities: processingResult.data.abilities || {},
         spellSlots: processingResult.data.spellSlots || {},
         inventory: processingResult.data.inventory || {},
@@ -669,7 +794,19 @@ export class ConversionOrchestrator {
   private calculateEncumbrance(character: CharacterData, processedData: any): EncumbranceResult {
     // Get strength score from processed abilities
     const strengthScore = processedData.abilities?.strength?.total || 10;
-    const inventory = processedData.inventory?.items || [];
+    
+    // Handle the new ProcessedInventory structure
+    const inventory = Array.isArray(processedData.inventory?.items) 
+      ? processedData.inventory.items 
+      : [];
+    
+    if (featureFlags.isEnabled('conversion_orchestrator_debug')) {
+      console.log('🏋️ ConversionOrchestrator: Calculating encumbrance', {
+        strengthScore,
+        inventoryItemCount: inventory.length,
+        inventoryStructure: typeof processedData.inventory
+      });
+    }
     
     return this.encumbranceCalculator.calculateEncumbrance({
       strengthScore,

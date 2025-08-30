@@ -97,7 +97,7 @@ export class FeatureProcessor {
       traitsByRace,
       featsByCategory,
       debugInfo: {
-        processingMethod: characterData.classes.length > 1 ? 'multiclass' : 'single_class',
+        processingMethod: (characterData.classes?.length || 0) > 1 ? 'multiclass' : 'single_class',
         classBreakdown: this.buildClassBreakdown(characterData, classFeatures),
         raceBreakdown: this.buildRaceBreakdown(characterData, racialTraits),
         featBreakdown: this.buildFeatBreakdown(characterData, feats),

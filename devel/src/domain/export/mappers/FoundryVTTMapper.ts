@@ -19,6 +19,7 @@ import { StringSanitizer } from '@/shared/utils/StringSanitizer';
 import { SafeAccess } from '@/shared/utils/SafeAccess';
 import { AbilityScoreUtils, ABILITY_NAMES } from '@/domain/character/constants/AbilityConstants';
 import { FoundryVTTFeatureMapper } from './FoundryVTTFeatureMapper';
+import { FoundryVTTInventoryMapper } from './FoundryVTTInventoryMapper';
 import { LanguageProcessor } from '@/domain/character/services/LanguageProcessor';
 import { featureFlags } from '@/core/FeatureFlags';
 
@@ -936,9 +937,56 @@ export class FoundryDetailMapper {
  * Placeholder mappers - will be implemented in subsequent phases
  */
 export class FoundryItemMapper {
+  private inventoryMapper: FoundryVTTInventoryMapper;
+
+  constructor() {
+    this.inventoryMapper = new FoundryVTTInventoryMapper();
+  }
+
   mapItems(inventory: ProcessedInventory, character: CharacterData): FoundryItem[] {
-    // TODO: Full item mapping implementation
-    return [];
+    if (featureFlags.isEnabled('foundry_mapper_debug')) {
+      console.log('🎒 FoundryItemMapper: Mapping inventory to Foundry items', {
+        itemCount: inventory.items.length,
+        containerCount: inventory.containers.length
+      });
+    }
+
+    try {
+      // Use our comprehensive inventory mapper
+      const foundryItems = this.inventoryMapper.mapInventoryToFoundryItems(inventory);
+
+      if (featureFlags.isEnabled('foundry_mapper_debug')) {
+        console.log('🎒 FoundryItemMapper: Successfully mapped items', {
+          foundryItemCount: foundryItems.length,
+          itemsProcessed: inventory.statistics.totalItems,
+          warnings: inventory.processing.warnings.length,
+          errors: inventory.processing.errors.length
+        });
+
+        // Log any processing issues from the inventory
+        if (inventory.processing.warnings.length > 0) {
+          console.warn('⚠️  Inventory processing warnings:', inventory.processing.warnings);
+        }
+        if (inventory.processing.errors.length > 0) {
+          console.error('❌ Inventory processing errors:', inventory.processing.errors);
+        }
+      }
+
+      return foundryItems;
+
+    } catch (error) {
+      console.error('❌ FoundryItemMapper: Failed to map inventory items:', error);
+      
+      // Return empty array on error - don't break the entire conversion
+      return [];
+    }
+  }
+
+  /**
+   * Reset the internal ID counter for testing purposes
+   */
+  resetForTesting(): void {
+    this.inventoryMapper.resetIdCounter();
   }
 }
 

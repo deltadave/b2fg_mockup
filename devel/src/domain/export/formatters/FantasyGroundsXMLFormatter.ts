@@ -24,6 +24,7 @@ import { SpellSlotCalculator } from '../../character/services/SpellSlotCalculato
 import { FeatureProcessor } from '../../character/services/FeatureProcessor';
 import { ProficiencyProcessor } from '../../character/services/ProficiencyProcessor';
 import { LanguageProcessor } from '../../character/services/LanguageProcessor';
+import { InventoryProcessor } from '../../character/services/InventoryProcessor';
 import { featureFlags } from '../../../core/FeatureFlags';
 
 export class FantasyGroundsXMLFormatter implements OutputFormatter {
@@ -39,6 +40,7 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
   private featureProcessor = new FeatureProcessor();
   private proficiencyProcessor = new ProficiencyProcessor();
   private languageProcessor = new LanguageProcessor();
+  private inventoryProcessor = new InventoryProcessor();
 
   async generateOutput(
     processedData: ProcessedCharacterData, 
@@ -188,7 +190,7 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
       ${this.generateFeaturesXML(characterData)}
     </featurelist>
     
-    ${this.generateInventoryXML(characterData)}
+    ${this.generateInventoryXML(characterData, processedData)}
     
     <languagelist>
       ${this.generateLanguagesXML(characterData)}
@@ -564,7 +566,40 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
     }
   }
 
-  private generateInventoryXML(characterData: CharacterData): string { return ''; }
+  private generateInventoryXML(characterData: CharacterData, processedData?: ProcessedCharacterData): string {
+    try {
+      // If we have processed data with inventory, use that
+      if (processedData && processedData.inventory) {
+        return this.inventoryProcessor.generateFantasyGroundsXML(processedData.inventory);
+      }
+      
+      // Fallback to direct processing (should not happen in normal flow)
+      const rawInventory = SafeAccess.get(characterData, 'inventory', []) as any[];
+      if (rawInventory.length === 0) {
+        return '<inventorylist></inventorylist>';
+      }
+      
+      if (featureFlags.isEnabled('fantasy_grounds_formatter_debug')) {
+        console.warn('🔄 FantasyGroundsXMLFormatter: Using fallback inventory processing', {
+          characterId: characterData.id,
+          inventoryItemCount: rawInventory.length
+        });
+      }
+      
+      // Process inventory directly for fallback
+      const processedInventory = this.inventoryProcessor.processInventoryForOrchestrator(
+        rawInventory,
+        characterData.id,
+        characterData
+      );
+      
+      return this.inventoryProcessor.generateFantasyGroundsXML(processedInventory);
+      
+    } catch (error) {
+      console.error('❌ FantasyGroundsXMLFormatter: Failed to generate inventory XML:', error);
+      return '<inventorylist></inventorylist>'; // Return empty inventory list on error
+    }
+  }
   /**
    * Generate languages XML for Fantasy Grounds
    */

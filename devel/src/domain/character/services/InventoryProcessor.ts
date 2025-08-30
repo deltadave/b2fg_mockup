@@ -21,8 +21,10 @@ import {
   Weight,
   Quantity 
 } from '@/domain/character/models/Inventory';
+import type { CharacterData } from '@/domain/character/services/CharacterFetcher';
 import { featureFlags } from '@/core/FeatureFlags';
 import { StringSanitizer } from '@/shared/utils/StringSanitizer';
+import { SafeAccess } from '@/shared/utils/SafeAccess';
 
 export interface InventoryProcessingOptions {
   includeZeroQuantityItems: boolean;
@@ -32,6 +34,91 @@ export interface InventoryProcessingOptions {
   includeCostInformation: boolean;
   markItemsAsIdentified: boolean;
 }
+
+// Interface for ConversionOrchestrator integration
+export interface ProcessedInventory {
+  items: ProcessedInventoryItem[];
+  containers: ProcessedContainer[];
+  currency: ProcessedCurrency;
+  encumbrance: {
+    totalWeight: number;
+    carryingCapacity: number;
+    encumbranceLevel: 'unencumbered' | 'encumbered' | 'heavily_encumbered' | 'overloaded';
+  };
+  statistics: {
+    totalItems: number;
+    containerCount: number;
+    magicContainers: string[];
+    totalValue: { gp: number; };
+  };
+  processing: {
+    timestamp: Date;
+    itemsProcessed: number;
+    itemsSkipped: number;
+    errors: string[];
+    warnings: string[];
+  };
+}
+
+export interface ProcessedInventoryItem {
+  id: string;
+  name: string;
+  type: ItemType;
+  subtype?: string;
+  quantity: number;
+  weight: number;
+  value?: { amount: number; currency: CurrencyType };
+  description?: string;
+  properties: string[];
+  isEquipped: boolean;
+  isAttuned: boolean;
+  isMagical: boolean;
+  containerLocation?: string;
+  charges?: {
+    current: number;
+    maximum: number;
+  };
+  // Format-specific data
+  fantasyGrounds: {
+    xmlId: string;
+    isIdentified: boolean;
+    isLocked: boolean;
+    location?: string;
+  };
+  foundryVtt: {
+    itemType: FoundryItemType;
+    systemData: Record<string, any>;
+  };
+}
+
+export interface ProcessedContainer {
+  id: string;
+  name: string;
+  weight: number;
+  capacity: number;
+  currentWeight: number;
+  isMagical: boolean;
+  contents: string[]; // IDs of contained items
+}
+
+export interface ProcessedCurrency {
+  pp: number;
+  gp: number;
+  ep: number;
+  sp: number;
+  cp: number;
+}
+
+export type ItemType = 
+  | 'weapon' | 'armor' | 'shield' | 'adventuring-gear' 
+  | 'tool' | 'mount' | 'trade-good' | 'consumable'
+  | 'treasure' | 'magic-item';
+
+export type FoundryItemType = 
+  | 'weapon' | 'equipment' | 'consumable' | 'tool' 
+  | 'loot' | 'class' | 'spell' | 'feat' | 'backpack';
+
+export type CurrencyType = 'cp' | 'sp' | 'ep' | 'gp' | 'pp';
 
 export interface InventoryProcessingResult {
   nestedStructure: NestedInventoryStructure;
@@ -154,6 +241,111 @@ export class InventoryProcessor {
   constructor(xmlStrategy: XMLGenerationStrategy = new FantasyGroundsXMLStrategy()) {
     this.xmlStrategy = xmlStrategy;
     this.xmlBuilder = new InventoryXMLBuilder(xmlStrategy);
+  }
+
+  /**
+   * Process inventory for ConversionOrchestrator integration
+   * Creates format-agnostic processed inventory data
+   */
+  processInventoryForOrchestrator(
+    inventory: InventoryItem[], 
+    characterId: number,
+    characterData: CharacterData,
+    options: InventoryProcessingOptions = this.getDefaultOptions()
+  ): ProcessedInventory {
+    const timestamp = new Date();
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    
+    if (featureFlags.isEnabled('inventory_processor_debug')) {
+      console.log('📦 InventoryProcessor: Processing inventory for orchestrator', {
+        characterId,
+        itemCount: inventory.length
+      });
+    }
+
+    // Process all items into format-agnostic structure
+    const processedItems: ProcessedInventoryItem[] = [];
+    const processedContainers: ProcessedContainer[] = [];
+    let itemsProcessed = 0;
+    let itemsSkipped = 0;
+
+    // Build container map first
+    const containerMap = new Map<string, InventoryItem>();
+    inventory.forEach(item => {
+      if (item.definition.isContainer) {
+        containerMap.set(item.id.toString(), item);
+      }
+    });
+
+    // Process each item
+    inventory.forEach(item => {
+      try {
+        if (!options.includeZeroQuantityItems && item.quantity <= 0) {
+          itemsSkipped++;
+          return;
+        }
+
+        const processed = this.translateItemToProcessedFormat(item, containerMap, characterId, errors, warnings);
+        
+        if (item.definition.isContainer) {
+          processedContainers.push(this.createProcessedContainer(item));
+        } else {
+          processedItems.push(processed);
+        }
+        
+        itemsProcessed++;
+      } catch (error) {
+        errors.push(`Failed to process item ${item.definition.name}: ${error}`);
+        itemsSkipped++;
+      }
+    });
+
+    // Calculate encumbrance (simplified for now)
+    const totalWeight = processedItems.reduce((sum, item) => sum + (item.weight * item.quantity), 0);
+    const strScore = SafeAccess.get<number>(characterData, 'stats.0.value', 10) || 10; // STR is first ability
+    const carryingCapacity = strScore * 15;
+    
+    let encumbranceLevel: 'unencumbered' | 'encumbered' | 'heavily_encumbered' | 'overloaded' = 'unencumbered';
+    if (totalWeight > carryingCapacity * 2) encumbranceLevel = 'overloaded';
+    else if (totalWeight > carryingCapacity) encumbranceLevel = 'heavily_encumbered';
+    else if (totalWeight > carryingCapacity * 0.5) encumbranceLevel = 'encumbered';
+
+    // Process currency (simplified - would need currency data from character)
+    const currency: ProcessedCurrency = { pp: 0, gp: 0, ep: 0, sp: 0, cp: 0 };
+    
+    // Calculate statistics
+    const magicContainers = processedContainers
+      .filter(container => container.isMagical)
+      .map(container => container.name);
+
+    const totalValue = processedItems.reduce((sum, item) => {
+      return sum + (item.value?.amount || 0) * item.quantity;
+    }, 0);
+
+    return {
+      items: processedItems,
+      containers: processedContainers,
+      currency,
+      encumbrance: {
+        totalWeight,
+        carryingCapacity,
+        encumbranceLevel
+      },
+      statistics: {
+        totalItems: processedItems.length,
+        containerCount: processedContainers.length,
+        magicContainers,
+        totalValue: { gp: totalValue }
+      },
+      processing: {
+        timestamp,
+        itemsProcessed,
+        itemsSkipped,
+        errors,
+        warnings
+      }
+    };
   }
 
   /**
@@ -473,5 +665,283 @@ export class InventoryProcessor {
   setXMLStrategy(strategy: XMLGenerationStrategy): void {
     this.xmlStrategy = strategy;
     this.xmlBuilder = new InventoryXMLBuilder(strategy);
+  }
+
+  /**
+   * Translate D&D Beyond item to ProcessedInventoryItem format
+   */
+  private translateItemToProcessedFormat(
+    item: InventoryItem, 
+    containerMap: Map<string, InventoryItem>,
+    characterId: number,
+    errors: string[], 
+    warnings: string[]
+  ): ProcessedInventoryItem {
+    // Determine item type and subtype
+    const itemType = this.mapDnDBeyondItemType(item.definition.filterType, item.definition.subType);
+    
+    // Find container location
+    let containerLocation: string | undefined;
+    const containerEntityIdStr = item.containerEntityId.toString();
+    
+    // If container ID is different from character ID, it's in a container
+    if (containerEntityIdStr !== characterId.toString()) {
+      const container = containerMap.get(containerEntityIdStr);
+      if (container) {
+        containerLocation = container.definition.name;
+      } else {
+        warnings.push(`Item ${item.definition.name} references unknown container ${item.containerEntityId}`);
+      }
+    }
+
+    // Generate Fantasy Grounds XML ID
+    const fantasyGroundsXmlId = `id-${String(item.id).padStart(5, '0')}`;
+
+    // Map to Foundry VTT item type
+    const foundryItemType = this.mapToFoundryItemType(itemType);
+
+    return {
+      id: item.id.toString(),
+      name: item.customName || item.definition.name,
+      type: itemType,
+      subtype: item.definition.subType,
+      quantity: item.quantity,
+      weight: (item.customWeight || item.definition.weight) / (item.definition.bundleSize || 1),
+      value: item.definition.cost ? {
+        amount: item.definition.cost.quantity,
+        currency: item.definition.cost.unit as CurrencyType
+      } : undefined,
+      description: item.definition.description,
+      properties: this.extractItemProperties(item),
+      isEquipped: item.equipped,
+      isAttuned: item.isAttuned,
+      isMagical: item.definition.magic,
+      containerLocation,
+      charges: item.limitedUse ? {
+        current: item.limitedUse.maxUses - item.chargesUsed,
+        maximum: item.limitedUse.maxUses
+      } : undefined,
+      fantasyGrounds: {
+        xmlId: fantasyGroundsXmlId,
+        isIdentified: true, // Most items are identified by default
+        isLocked: true, // FGU default
+        location: containerLocation
+      },
+      foundryVtt: {
+        itemType: foundryItemType,
+        systemData: this.buildFoundrySystemData(item, itemType)
+      }
+    };
+  }
+
+  /**
+   * Create ProcessedContainer from InventoryItem
+   */
+  private createProcessedContainer(item: InventoryItem): ProcessedContainer {
+    return {
+      id: item.id.toString(),
+      name: item.definition.name,
+      weight: item.definition.weight,
+      capacity: item.definition.capacityWeight || 0,
+      currentWeight: 0, // Would need to calculate from contents
+      isMagical: item.definition.magic || item.definition.weightMultiplier === 0,
+      contents: [] // Would need to populate from inventory relationships
+    };
+  }
+
+  /**
+   * Map D&D Beyond item types to our ItemType enum
+   */
+  private mapDnDBeyondItemType(filterType: string, subType?: string): ItemType {
+    const type = filterType.toLowerCase();
+    
+    if (type.includes('weapon')) return 'weapon';
+    if (type.includes('armor')) return 'armor';
+    if (type.includes('shield')) return 'shield';
+    if (type.includes('wondrous') || type.includes('magic')) return 'magic-item';
+    if (type.includes('consumable') || type.includes('potion')) return 'consumable';
+    if (type.includes('tool')) return 'tool';
+    if (type.includes('gear')) return 'adventuring-gear';
+    if (type.includes('treasure') || type.includes('valuable')) return 'treasure';
+    
+    // Default fallback
+    return 'adventuring-gear';
+  }
+
+  /**
+   * Map ItemType to Foundry VTT item type
+   */
+  private mapToFoundryItemType(itemType: ItemType): FoundryItemType {
+    switch (itemType) {
+      case 'weapon': return 'weapon';
+      case 'armor': 
+      case 'shield': return 'equipment';
+      case 'consumable': return 'consumable';
+      case 'tool': return 'tool';
+      case 'treasure': 
+      case 'trade-good': return 'loot';
+      case 'adventuring-gear':
+      case 'magic-item':
+      default: return 'equipment';
+    }
+  }
+
+  /**
+   * Extract item properties from D&D Beyond data
+   */
+  private extractItemProperties(item: InventoryItem): string[] {
+    const properties: string[] = [];
+    
+    // Add tags from definition
+    if (item.definition.tags) {
+      properties.push(...item.definition.tags);
+    }
+    
+    // Add weapon properties
+    if (item.definition.weaponBehaviors && item.definition.weaponBehaviors.length > 0) {
+      item.definition.weaponBehaviors.forEach(behavior => {
+        if (behavior.properties) {
+          properties.push(...behavior.properties);
+        }
+      });
+    }
+    
+    // Add magic property if magical
+    if (item.definition.magic) {
+      properties.push('Magic');
+    }
+    
+    // Add attunement requirement
+    if (item.definition.canAttune) {
+      properties.push('Requires Attunement');
+    }
+    
+    return properties;
+  }
+
+  /**
+   * Build Foundry VTT system data for an item
+   */
+  private buildFoundrySystemData(item: InventoryItem, itemType: ItemType): Record<string, any> {
+    const baseData = {
+      description: {
+        value: item.definition.description || '',
+        chat: '',
+        unidentified: ''
+      },
+      quantity: item.quantity,
+      weight: (item.customWeight || item.definition.weight) / (item.definition.bundleSize || 1),
+      price: {
+        value: item.definition.cost?.quantity || 0,
+        denomination: this.mapCurrencyToFoundry(item.definition.cost?.unit || 'gp')
+      },
+      equipped: item.equipped,
+      attuned: item.isAttuned,
+      identified: !item.definition.magic || item.equipped, // Assume equipped magic items are identified
+      rarity: this.mapRarityToFoundry(item.definition.rarity || 'common'),
+      properties: this.extractItemProperties(item)
+    };
+
+    // Add type-specific data
+    if (itemType === 'weapon' && item.definition.damage) {
+      return {
+        ...baseData,
+        damage: {
+          parts: [[item.definition.damage, item.definition.damageType || 'bludgeoning']]
+        },
+        range: {
+          value: item.definition.range || null,
+          long: item.definition.longRange || null,
+          units: 'ft'
+        }
+      };
+    }
+
+    if ((itemType === 'armor' || itemType === 'shield') && item.definition.armorClass !== null) {
+      return {
+        ...baseData,
+        armor: {
+          value: item.definition.armorClass,
+          type: itemType
+        }
+      };
+    }
+
+    return baseData;
+  }
+
+  /**
+   * Map D&D Beyond currency to Foundry VTT format
+   */
+  private mapCurrencyToFoundry(currency: string): string {
+    const currencyMap: Record<string, string> = {
+      'cp': 'cp',
+      'sp': 'sp', 
+      'ep': 'ep',
+      'gp': 'gp',
+      'pp': 'pp'
+    };
+    return currencyMap[currency.toLowerCase()] || 'gp';
+  }
+
+  /**
+   * Map D&D Beyond rarity to Foundry VTT format
+   */
+  private mapRarityToFoundry(rarity: string): string {
+    return rarity.toLowerCase();
+  }
+
+  /**
+   * Generate Fantasy Grounds XML from ProcessedInventory
+   * Used by formatters to create final XML output
+   */
+  generateFantasyGroundsXML(processedInventory: ProcessedInventory): string {
+    this.xmlBuilder.reset().addInventoryHeader();
+    
+    let itemIndex = 1;
+    
+    // Add all regular items first
+    processedInventory.items.forEach(item => {
+      if (item.quantity <= 0) return; // Skip zero quantity items
+      
+      const xmlItem: ItemXMLGeneration = {
+        id: item.fantasyGrounds.xmlId,
+        name: StringSanitizer.sanitizeForXML(item.name),
+        type: item.type,
+        weight: item.weight,
+        count: item.quantity,
+        isIdentified: item.fantasyGrounds.isIdentified,
+        isLocked: item.fantasyGrounds.isLocked,
+        cost: item.value ? {
+          value: item.value.amount,
+          denomination: item.value.currency
+        } : undefined,
+        description: item.description,
+        properties: item.properties,
+        location: item.fantasyGrounds.location
+      };
+      
+      this.xmlBuilder.addItem(xmlItem);
+      itemIndex++;
+    });
+    
+    // Add containers as regular items (FGU uses flat structure with location tags)
+    processedInventory.containers.forEach(container => {
+      const xmlContainer: ItemXMLGeneration = {
+        id: `id-${String(container.id).padStart(5, '0')}`,
+        name: StringSanitizer.sanitizeForXML(container.name),
+        type: 'Container',
+        weight: container.weight,
+        count: 1,
+        isIdentified: true,
+        isLocked: true
+      };
+      
+      this.xmlBuilder.addItem(xmlContainer);
+      itemIndex++;
+    });
+    
+    const { xml } = this.xmlBuilder.addInventoryFooter().build();
+    return xml;
   }
 }
