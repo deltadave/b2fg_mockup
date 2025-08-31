@@ -239,6 +239,27 @@ export class AbilityScoreUtils {
 }
 
 /**
+ * D&D 5E Damage Types
+ */
+export const DAMAGE_TYPES = [
+  'acid',
+  'bludgeoning',
+  'cold',
+  'fire',
+  'force',
+  'lightning',
+  'necrotic',
+  'piercing',
+  'poison',
+  'psychic',
+  'radiant',
+  'slashing',
+  'thunder'
+] as const;
+
+export type DamageType = typeof DAMAGE_TYPES[number];
+
+/**
  * Type definitions for ability-related data structures
  */
 export type AbilityName = typeof ABILITY_NAMES[number];

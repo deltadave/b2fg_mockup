@@ -139,11 +139,26 @@
     
     <!-- Currency -->
     <coins>
-      <pp type="number">0</pp>
-      <gp type="number">0</gp>
-      <ep type="number">0</ep>
-      <sp type="number">0</sp>
-      <cp type="number">0</cp>
+            <id-00001>
+        <amount type="number">6</amount>
+        <name type="string">PP</name>
+      </id-00001>
+      <id-00002>
+        <amount type="number">43</amount>
+        <name type="string">GP</name>
+      </id-00002>
+      <id-00003>
+        <amount type="number">3</amount>
+        <name type="string">EP</name>
+      </id-00003>
+      <id-00004>
+        <amount type="number">2</amount>
+        <name type="string">SP</name>
+      </id-00004>
+      <id-00005>
+        <amount type="number">12</amount>
+        <name type="string">CP</name>
+      </id-00005>
     </coins>
     
     <!-- Hit Points -->
@@ -230,7 +245,7 @@
         <locked type="number">1</locked>
         <name type="string">Rage</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;You can imbue yourself with a primal power called Rage, a force that grants you extraordinary might and resilience. You can enter it as a Bonus Action if you aren’t wearing Heavy armor.&lt;&#x2F;p&gt;  &lt;p&gt;You can enter your Rage the number of times shown for your Barbarian level in the Rages column of the Barbarian Features table. You regain one expended use when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest.&lt;&#x2F;p&gt;  &lt;p&gt;While active, your Rage follows the rules below.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Damage Resistance.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; You have Resistance to Bludgeoning, Piercing, and Slashing damage.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Rage Damage.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; When you make an attack using Strength&amp;mdash;with either a weapon or an Unarmed Strike&amp;mdash;and deal damage to the target, you gain a bonus to the damage that increases as you gain levels as a Barbarian, as shown in the Rage Damage column of the Barbarian Features table.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Strength Advantage.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; You have Advantage on Strength checks and Strength saving throws.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;No Concentration or Spells.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; You can’t maintain Concentration, and you can’t cast spells.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Duration.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; The Rage lasts until the end of your next turn, and it ends early if you don Heavy armor or have the Incapacitated condition. If your Rage is still active on your next turn, you can extend the Rage for another round by doing one of the following:&lt;&#x2F;p&gt;  &lt;ul&gt;  &lt;li&gt;Make an attack roll against an enemy.&lt;&#x2F;li&gt;  &lt;li&gt;Force an enemy to make a saving throw.&lt;&#x2F;li&gt;  &lt;li&gt;Take a Bonus Action to extend your Rage.&lt;&#x2F;li&gt;  &lt;&#x2F;ul&gt;  &lt;p&gt;Each time the Rage is extended, it lasts until the end of your next turn. You can maintain a Rage for up to 10 minutes.&lt;&#x2F;p&gt;</p>
+          <p>&lt;p&gt;You can imbue yourself with a primal power called Rage, a force that grants you extraordinary might and resilience. You can enter it as a Bonus Action if you aren’t wearing Heavy armor.&lt;&#x2F;p&gt;  &lt;p&gt;You can enter your Rage the number of times shown for your Barbarian level in the Rages column of the Barbarian Features table. You regain one expended use when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest.&lt;&#x2F;p&gt;  &lt;p&gt;While active, your Rage follows the rules below.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Damage Resistance.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; You have Resistance to Bludgeoning, Piercing, and Slashing damage.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Rage Damage.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; When you make an attack using Strength&amp;with either a weapon or an Unarmed Strike&amp;and deal damage to the target, you gain a bonus to the damage that increases as you gain levels as a Barbarian, as shown in the Rage Damage column of the Barbarian Features table.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Strength Advantage.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; You have Advantage on Strength checks and Strength saving throws.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;No Concentration or Spells.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; You can’t maintain Concentration, and you can’t cast spells.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Duration.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; The Rage lasts until the end of your next turn, and it ends early if you don Heavy armor or have the Incapacitated condition. If your Rage is still active on your next turn, you can extend the Rage for another round by doing one of the following:&lt;&#x2F;p&gt;  &lt;ul&gt;  &lt;li&gt;Make an attack roll against an enemy.&lt;&#x2F;li&gt;  &lt;li&gt;Force an enemy to make a saving throw.&lt;&#x2F;li&gt;  &lt;li&gt;Take a Bonus Action to extend your Rage.&lt;&#x2F;li&gt;  &lt;&#x2F;ul&gt;  &lt;p&gt;Each time the Rage is extended, it lasts until the end of your next turn. You can maintain a Rage for up to 10 minutes.&lt;&#x2F;p&gt;</p>
         </text>
         <group type="string">Class (Barbarian)</group>
       </id-00001>
@@ -293,7 +308,7 @@
         <locked type="number">1</locked>
         <name type="string">Divine Domain</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;Choose one domain related to your deity. Your choice grants you domain spells and other features when you choose it at 1st level. It also grants you additional ways to use Channel Divinity when you gain that feature at 2nd level, and additional benefits at 6th, 8th, and 17th levels.&lt;&#x2F;p&gt;  &lt;h5&gt;Domain Spells&lt;&#x2F;h5&gt;  &lt;p&gt;Each domain has a list of spells &amp;mdash; its domain spells &amp;mdash; that you gain at the cleric levels noted in the domain description. Once you gain a domain spell, you always have it prepared, and it doesn’t count against the number of spells you can prepare each day.&lt;&#x2F;p&gt;  &lt;p&gt;If you have a domain spell that doesn’t appear on the cleric spell list, the spell is nonetheless a cleric spell for you.&lt;&#x2F;p&gt;</p>
+          <p>&lt;p&gt;Choose one domain related to your deity. Your choice grants you domain spells and other features when you choose it at 1st level. It also grants you additional ways to use Channel Divinity when you gain that feature at 2nd level, and additional benefits at 6th, 8th, and 17th levels.&lt;&#x2F;p&gt;  &lt;h5&gt;Domain Spells&lt;&#x2F;h5&gt;  &lt;p&gt;Each domain has a list of spells &amp; its domain spells &amp; that you gain at the cleric levels noted in the domain description. Once you gain a domain spell, you always have it prepared, and it doesn’t count against the number of spells you can prepare each day.&lt;&#x2F;p&gt;  &lt;p&gt;If you have a domain spell that doesn’t appear on the cleric spell list, the spell is nonetheless a cleric spell for you.&lt;&#x2F;p&gt;</p>
         </text>
         <group type="string">Class (Cleric)</group>
       </id-00008>
@@ -455,10 +470,387 @@
 
     </featurelist>
     
-    
+    <inventorylist>
+			<id-00001>
+				<count type="number">1</count>
+				<name type="string">Traveler&#39;s Clothes</name>
+				<weight type="number">4</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">adventuring-gear</type>
+				<cost type="string">undefined undefined</cost>
+				<description type="formattedtext">
+					<p><p>Traveler’s Clothes are resilient garments designed for travel in various environments.</p></p>
+				</description>
+				<properties type="string">Social, Outerwear</properties>
+			</id-00001>
+			<id-00002>
+				<count type="number">1</count>
+				<name type="string">Maul, +2</name>
+				<weight type="number">10</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">weapon</type>
+				<description type="formattedtext">
+					<p><p>You have a +2 bonus to attack and damage rolls made with this magic weapon.</p></p>
+				</description>
+				<properties type="string">Damage, Combat, Magic</properties>
+				<location type="string">Quiver of Ehlonna</location>
+			</id-00002>
+			<id-00003>
+				<count type="number">1</count>
+				<name type="string">Oathbow Longbow</name>
+				<weight type="number">2</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">weapon</type>
+				<description type="formattedtext">
+					<p><p>When you nock an arrow on this bow, it whispers in Elvish, Swift defeat to my enemies. When you use this weapon to make a ranged attack, you can utter or sign the following command words: Swift death to you who have wronged me. The target of your attack becomes your sworn enemy until it dies or until dawn 7 days later. You can have only one such sworn enemy at a time. When your sworn enemy dies, you can choose a new one after the next dawn.</p>
+          <p>When you make a ranged attack roll with this weapon against your sworn enemy, you have Advantage on the roll. In addition, your target gains no benefit from Half Cover or Three-Quarters Cover, and you suffer no Disadvantage due to long range. If the attack hits, your sworn enemy takes an extra 3d6 Piercing damage.</p>
+          <p>While your sworn enemy lives, you have Disadvantage on attack rolls with all other weapons.</p></p>
+				</description>
+				<properties type="string">Damage, Combat, Bane, Magic, Requires Attunement</properties>
+				<location type="string">Quiver of Ehlonna</location>
+			</id-00003>
+			<id-00004>
+				<count type="number">1</count>
+				<name type="string">Dagger</name>
+				<weight type="number">1</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">weapon</type>
+				<cost type="string">undefined undefined</cost>
+				<description type="formattedtext">
+					<p><p>Proficiency with a Dagger allows you to add your proficiency bonus to the attack roll for any attack you make with it.</p>
+          <div class="mastery-container"><hr />
+          <p>This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.</p>
+          <p><strong><em>Nick.</em></strong> When you make the extra attack of the Light property, you can make it as part of the Attack action instead of as a Bonus Action. You can make this extra attack only once per turn.</p>
+          </div></p>
+				</description>
+				<properties type="string">Damage, Combat</properties>
+				<location type="string">Quiver of Ehlonna</location>
+			</id-00004>
+			<id-00005>
+				<count type="number">1</count>
+				<name type="string">Dagger</name>
+				<weight type="number">1</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">weapon</type>
+				<cost type="string">undefined undefined</cost>
+				<description type="formattedtext">
+					<p><p>Proficiency with a Dagger allows you to add your proficiency bonus to the attack roll for any attack you make with it.</p>
+          <div class="mastery-container"><hr />
+          <p>This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.</p>
+          <p><strong><em>Nick.</em></strong> When you make the extra attack of the Light property, you can make it as part of the Attack action instead of as a Bonus Action. You can make this extra attack only once per turn.</p>
+          </div></p>
+				</description>
+				<properties type="string">Damage, Combat</properties>
+				<location type="string">Quiver of Ehlonna</location>
+			</id-00005>
+			<id-00006>
+				<count type="number">1</count>
+				<name type="string">Handaxe</name>
+				<weight type="number">2</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">weapon</type>
+				<cost type="string">undefined undefined</cost>
+				<description type="formattedtext">
+					<p><p>Proficiency with a Handaxe allows you to add your proficiency bonus to the attack roll for any attack you make with it.</p>
+          <div class="mastery-container"><hr />
+          <p>This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.</p>
+          <p><strong><em>Vex.</em></strong> If you hit a creature with this weapon and deal damage to the creature, you have Advantage on your next attack roll against that creature before the end of your next turn.</p>
+          </div></p>
+				</description>
+				<properties type="string">Damage, Combat</properties>
+				<location type="string">Quiver of Ehlonna</location>
+			</id-00006>
+			<id-00007>
+				<count type="number">1</count>
+				<name type="string">Handaxe</name>
+				<weight type="number">2</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">weapon</type>
+				<cost type="string">undefined undefined</cost>
+				<description type="formattedtext">
+					<p><p>Proficiency with a Handaxe allows you to add your proficiency bonus to the attack roll for any attack you make with it.</p>
+            <div class="mastery-container"><hr />
+            <p>This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.</p>
+            <p><strong><em>Vex.</em></strong> If you hit a creature with this weapon and deal damage to the creature, you have Advantage on your next attack roll against that creature before the end of your next turn.</p>
+          </div></p>
+				</description>
+				<properties type="string">Damage, Combat</properties>
+				<location type="string">Quiver of Ehlonna</location>
+			</id-00007>
+			<id-00008>
+				<count type="number">1</count>
+				<name type="string">Handaxe</name>
+				<weight type="number">2</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">weapon</type>
+				<cost type="string">undefined undefined</cost>
+				<description type="formattedtext">
+					<p><p>Proficiency with a Handaxe allows you to add your proficiency bonus to the attack roll for any attack you make with it.</p>
+          <div class="mastery-container"><hr />
+          <p>This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.</p>
+          <p><strong><em>Vex.</em></strong> If you hit a creature with this weapon and deal damage to the creature, you have Advantage on your next attack roll against that creature before the end of your next turn.</p>
+          </div></p>
+				</description>
+				<properties type="string">Damage, Combat</properties>
+				<location type="string">Quiver of Ehlonna</location>
+			</id-00008>
+			<id-00009>
+				<count type="number">1</count>
+				<name type="string">Handaxe</name>
+				<weight type="number">2</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">weapon</type>
+				<cost type="string">undefined undefined</cost>
+				<description type="formattedtext">
+					<p><p>Proficiency with a Handaxe allows you to add your proficiency bonus to the attack roll for any attack you make with it.</p>
+          <div class="mastery-container"><hr />
+          <p>This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.</p>
+          <p><strong><em>Vex.</em></strong> If you hit a creature with this weapon and deal damage to the creature, you have Advantage on your next attack roll against that creature before the end of your next turn.</p>
+          </div></p>
+				</description>
+				<properties type="string">Damage, Combat</properties>
+				<location type="string">Quiver of Ehlonna</location>
+			</id-00009>
+			<id-00010>
+				<count type="number">1</count>
+				<name type="string">Javelin</name>
+				<weight type="number">2</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">weapon</type>
+				<cost type="string">undefined undefined</cost>
+				<description type="formattedtext">
+					<p><p>Proficiency with a Javelin allows you to add your proficiency bonus to the attack roll for any attack you make with it.</p>
+          <div class="mastery-container"><hr />
+          <p>This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.</p>
+          <p><em><strong>Slow.</strong></em> If you hit a creature with this weapon and deal damage to it, you can reduce its Speed by 10 feet until the start of your next turn. If the creature is hit more than once by weapons that have this property, the Speed reduction doesn’t exceed 10 feet.</p>
+          </div></p>
+				</description>
+				<properties type="string">Damage, Combat</properties>
+				<location type="string">Quiver of Ehlonna</location>
+			</id-00010>
+			<id-00011>
+				<count type="number">20</count>
+				<name type="string">Arrows</name>
+				<weight type="number">0.05</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">adventuring-gear</type>
+				<cost type="string">undefined undefined</cost>
+				<description type="formattedtext">
+					<p><p>Arrows are used with a weapon that has the ammunition property to make a ranged attack. Each time you attack with the weapon, you expend one piece of ammunition. Drawing the ammunition from a quiver, case, or other container is part of the attack (you need a free hand to load a one-handed weapon). At the end of the battle, you can recover half your expended ammunition by taking a minute to search the battlefield.</p></p>
+				</description>
+				<properties type="string">Damage, Combat</properties>
+				<location type="string">Quiver of Ehlonna</location>
+			</id-00011>
+			<id-00012>
+				<count type="number">1</count>
+				<name type="string">Greataxe</name>
+				<weight type="number">7</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">weapon</type>
+				<cost type="string">undefined undefined</cost>
+				<description type="formattedtext">
+					<p><p>Proficiency with a Greataxe allows you to add your proficiency bonus to the attack roll for any attack you make with it.</p>
+          <div class="mastery-container"><hr />
+          <p>This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.</p>
+          <p><em><strong>Cleave.</strong></em> If you hit a creature with a melee attack roll using this weapon, you can make a melee attack roll with the weapon against a second creature within 5 feet of the first that is also within your reach. On a hit, the second creature takes the weapon’s damage, but don’t add your ability modifier to that damage unless that modifier is negative. You can make this extra attack only once per turn.</p>
+          </div></p>
+				</description>
+				<properties type="string">Damage, Combat</properties>
+				<location type="string">Heward's Handy Haversack</location>
+			</id-00012>
+			<id-00013>
+				<count type="number">1</count>
+				<name type="string">Crowbar</name>
+				<weight type="number">5</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">adventuring-gear</type>
+				<cost type="string">undefined undefined</cost>
+				<description type="formattedtext">
+					<p><p>Using a Crowbar gives you Advantage on Strength checks where the Crowbar’s leverage can be applied.</p></p>
+				</description>
+				<properties type="string">Utility, Exploration</properties>
+				<location type="string">Heward's Handy Haversack</location>
+			</id-00013>
+			<id-00014>
+				<count type="number">2</count>
+				<name type="string">Oil</name>
+				<weight type="number">1</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">adventuring-gear</type>
+				<cost type="string">undefined undefined</cost>
+				<description type="formattedtext">
+					<p><p>You can douse a creature, object, or space with Oil or use it as fuel, as detailed below.</p>
+          <p><strong><em>Dousing a Creature or an Object.</em></strong> When you take the Attack action, you can replace one of your attacks with throwing an Oil flask. Target one creature or object within 20 feet of yourself. The target must succeed on a Dexterity saving throw (DC 8 plus your Dexterity modifier and Proficiency Bonus) or be covered in oil. If the target takes Fire damage before the oil dries (after 1 minute), the target takes an extra 5 Fire damage from burning oil.</p>
+          <p><strong><em>Dousing a Space.</em></strong> You can take the Utilize action to pour an Oil flask on level ground to cover a 5-foot-square area within 5 feet of yourself. If lit, the oil burns until the end of the turn 2 rounds from when the oil was lit (or 12 seconds) and deals 5 Fire damage to any creature that enters the area or ends its turn there. A creature can take this damage only once per turn.</p>
+          <p><strong><em>Fuel.</em></strong> Oil serves as fuel for Lamps and Lanterns. Once lit, a flask of Oil burns for 6 hours in a Lamp or Lantern. That duration doesn’t need to be consecutive; you can extinguish the burning Oil (as a Utilize action) and rekindle it again until it has burned for a total of 6 hours.</p></p>
+				</description>
+				<properties type="string">Damage, Utility, Combat</properties>
+				<location type="string">Backpack</location>
+			</id-00014>
+			<id-00015>
+				<count type="number">10</count>
+				<name type="string">Rations</name>
+				<weight type="number">2</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">adventuring-gear</type>
+				<cost type="string">undefined undefined</cost>
+				<description type="formattedtext">
+					<p><p>Rations consist of travel-ready food, including jerky, dried fruit, hardtack, and nuts. See Malnutrition for the risks of not eating.</p></p>
+				</description>
+				<properties type="string">Social, Utility, Consumable</properties>
+				<location type="string">Backpack</location>
+			</id-00015>
+			<id-00016>
+				<count type="number">1</count>
+				<name type="string">Rope</name>
+				<weight type="number">5</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">adventuring-gear</type>
+				<cost type="string">undefined undefined</cost>
+				<description type="formattedtext">
+					<p><p>As a Utilize action, you can tie a knot with Rope if you succeed on a DC 10 Dexterity (Sleight of Hand) check. The Rope can be burst with a successful DC 20 Strength (Athletics) check.</p>
+          <p>You can bind an unwilling creature with the Rope only if the creature has the Grappled, Incapacitated, or Restrained condition. If the creature’s legs are bound, the creature has the Restrained condition until it escapes. Escaping the Rope requires the creature to make a successful DC 15 Dexterity (Acrobatics) check as an action.</p></p>
+				</description>
+				<location type="string">Backpack</location>
+			</id-00016>
+			<id-00017>
+				<count type="number">1</count>
+				<name type="string">Bedroll</name>
+				<weight type="number">7</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">adventuring-gear</type>
+				<cost type="string">undefined undefined</cost>
+				<description type="formattedtext">
+					<p><p>A Bedroll sleeps one Small or Medium creature. While in a Bedroll, you automatically succeed on saving throws against extreme cold (see the <em>Dungeon Master’s Guide</em>).</p></p>
+				</description>
+				<properties type="string">Utility</properties>
+				<location type="string">Backpack</location>
+			</id-00017>
+			<id-00018>
+				<count type="number">1</count>
+				<name type="string">Tinderbox</name>
+				<weight type="number">1</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">adventuring-gear</type>
+				<cost type="string">undefined undefined</cost>
+				<description type="formattedtext">
+					<p><p>A Tinderbox is a small container holding flint, fire steel, and tinder (usually dry cloth soaked in light oil) used to kindle a fire. Using it to light a Candle, Lamp, Lantern, or Torch or anything else with exposed fuel takes a Bonus Action. Lighting any other fire takes 1 minute.</p></p>
+				</description>
+				<properties type="string">Utility, Exploration</properties>
+				<location type="string">Backpack</location>
+			</id-00018>
+			<id-00019>
+				<count type="number">10</count>
+				<name type="string">Torch</name>
+				<weight type="number">1</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">adventuring-gear</type>
+				<cost type="string">undefined undefined</cost>
+				<description type="formattedtext">
+					<p><p>A Torch burns for 1 hour, casting Bright Light in a 20-foot radius and Dim Light for an additional 20 feet. When you take the Attack action, you can attack with the Torch, using it as a Simple Melee weapon. On a hit, the target takes 1 Fire damage.</p></p>
+				</description>
+				<properties type="string">Damage, Utility, Exploration, Combat</properties>
+				<location type="string">Backpack</location>
+			</id-00019>
+			<id-00020>
+				<count type="number">1</count>
+				<name type="string">Waterskin</name>
+				<weight type="number">5</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">adventuring-gear</type>
+				<cost type="string">undefined undefined</cost>
+				<description type="formattedtext">
+					<p><p>A Waterskin holds up to 4 pints. If you don’t drink sufficient water, you risk dehydration.</p></p>
+				</description>
+				<properties type="string">Container</properties>
+				<location type="string">Backpack</location>
+			</id-00020>
+			<id-00021>
+				<count type="number">1</count>
+				<name type="string">Thieves&#39; Tools</name>
+				<weight type="number">1</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">adventuring-gear</type>
+				<cost type="string">undefined undefined</cost>
+				<description type="formattedtext">
+					<p><p><strong>Ability:</strong> Dexterity <br /><strong>Utilize:</strong> Pick a lock (DC 15), or disarm a trap (DC 15)</p>
+          <hr />
+          <p>If you have proficiency with a tool, add your Proficiency Bonus to any ability check you make that uses the tool. If you have proficiency in a skill that’s used with that check, you have Advantage on the check too.</p></p>
+				</description>
+				<properties type="string">Utility, Exploration</properties>
+				<location type="string">Pouch</location>
+			</id-00021>
+			<id-00022>
+				<count type="number">1</count>
+				<name type="string">Quiver of Ehlonna</name>
+				<weight type="number">2</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">Container</type>
+			</id-00022>
+			<id-00023>
+				<count type="number">1</count>
+				<name type="string">Heward&#39;s Handy Haversack</name>
+				<weight type="number">5</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">Container</type>
+			</id-00023>
+			<id-00024>
+				<count type="number">1</count>
+				<name type="string">Backpack</name>
+				<weight type="number">5</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">Container</type>
+			</id-00024>
+			<id-00025>
+				<count type="number">1</count>
+				<name type="string">Pouch</name>
+				<weight type="number">1</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">Container</type>
+			</id-00025>
+			<id-00026>
+				<count type="number">1</count>
+				<name type="string">Pouch</name>
+				<weight type="number">1</weight>
+				<locked type="number">1</locked>
+				<isidentified type="number">1</isidentified>
+				<type type="string">Container</type>
+			</id-00026>
+	</inventorylist>
     
     <languagelist>
       
+			<id-00001>
+				<name type="string">Common</name>
+			</id-00001>
+			<id-00002>
+				<name type="string">Thieves&apos; Cant</name>
+			</id-00002>
     </languagelist>
     
     <powergrouplist>
@@ -517,11 +909,61 @@
     </skilllist>
     
     <proficiencylist>
-      
+      			<id-00001>
+				<name type="string">Simple Weapons</name>
+			</id-00001>
+			<id-00002>
+				<name type="string">Martial Weapons</name>
+			</id-00002>
+			<id-00003>
+				<name type="string">Light Armor</name>
+			</id-00003>
+			<id-00004>
+				<name type="string">Heavy Armor</name>
+			</id-00004>
+			<id-00005>
+				<name type="string">Medium Armor</name>
+			</id-00005>
+			<id-00006>
+				<name type="string">Shields</name>
+			</id-00006>
+			<id-00007>
+				<name type="string">Thieves' tools</name>
+			</id-00007>
+			<id-00008>
+				<name type="string">Forgery kit</name>
+			</id-00008>
     </proficiencylist>
     
     <traitlist>
       
+			<id-00001>
+				<locked type="number">1</locked>
+				<name type="string">Giant Ancestry</name>
+				<text type="formattedtext">
+					<p>You are descended from Giants. Choose one of the following benefits&amp;a supernatural boon from your ancestry; you can use the chosen benefit a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest:</p>
+					<p>**Cloud’s Jaunt (Cloud Giant).** As a Bonus Action, you magically teleport up to 30 feet to an unoccupied space you can see.</p>
+					<p>**Fire’s Burn (Fire Giant).** When you hit a target with an attack roll and deal damage to it, you can also deal 1d10 Fire damage to that target.</p>
+					<p>**Frost’s Chill (Frost Giant).** When you hit a target with an attack roll and deal damage to it, you can also deal 1d6 Cold damage to that target and reduce its Speed by 10 feet until the start of your next turn.</p>
+					<p>**Hill’s Tumble (Hill Giant).** When you hit a Large or smaller creature with an attack roll and deal damage to it, you can give that target the Prone condition.</p>
+					<p>**Stone’s Endurance (Stone Giant).** When you take damage, you can take a Reaction to roll 1d12. Add your Constitution modifier to the number rolled and reduce the damage by that total.</p>
+					<p>**Storm’s Thunder (Storm Giant).** When you take damage from a creature within 60 feet of you, you can take a Reaction to deal 1d8 Thunder damage to that creature.</p>
+				</text>
+			</id-00001>
+			<id-00002>
+				<locked type="number">1</locked>
+				<name type="string">Large Form</name>
+				<text type="formattedtext">
+					<p>Starting at character level 5, you can change your size to Large as a Bonus Action if you’re in a big enough space. This transformation lasts for 10 minutes or until you end it (no action required). For that duration, you have Advantage on Strength checks, and your Speed increases by 10 feet. Once you use this trait, you can’t use it again until you finish a Long Rest.</p>
+				</text>
+			</id-00002>
+			<id-00003>
+				<locked type="number">1</locked>
+				<name type="string">Powerful Build</name>
+				<text type="formattedtext">
+					<p>You have Advantage on any ability check you make to end the Grappled condition. You also count as one size larger when determining your carrying capacity.</p>
+				</text>
+			</id-00003>
     </traitlist>
     
     <weaponlist>

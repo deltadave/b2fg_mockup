@@ -18,6 +18,7 @@ import type {
 } from '../interfaces/OutputFormatter';
 import type { CharacterData } from '../../character/services/CharacterFetcher';
 import { gameConfigService } from '../../../shared/services/GameConfigService';
+import { WeaponListGenerator } from '../generators/WeaponListGenerator';
 import { SafeAccess } from '../../../shared/utils/SafeAccess';
 import { AbilityScoreProcessor } from '../../character/services/AbilityScoreProcessor';
 import { SpellSlotCalculator } from '../../character/services/SpellSlotCalculator';
@@ -39,6 +40,7 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
 
   private spellSlotCalculator = new SpellSlotCalculator();
   private featureProcessor = new FeatureProcessor();
+  private weaponListGenerator = new WeaponListGenerator();
   private proficiencyProcessor = new ProficiencyProcessor();
   private languageProcessor = new LanguageProcessor();
   private inventoryProcessor = new InventoryProcessor();
@@ -192,6 +194,8 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
     </featurelist>
     
     ${this.generateInventoryXML(characterData, processedData)}
+    
+    ${this.weaponListGenerator.generateWeaponListXML(characterData)}
     
     <languagelist>
       ${this.generateLanguagesXML(characterData)}
@@ -789,7 +793,59 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
       return '\t\t\t<!-- Error processing proficiencies -->';
     }
   }
-  private generateWeaponsXML(characterData: CharacterData): string { return ''; }
+  private generateWeaponsXML(characterData: CharacterData): string {
+    try {
+      const rawInventory = SafeAccess.get(characterData, 'inventory', []) as any[];
+      if (rawInventory.length === 0) {
+        return '<!-- No weapons found -->';
+      }
+
+      // Extract weapons from inventory
+      const weaponItems = rawInventory.filter((item: any) => 
+        item.definition?.filterType === 'Weapon' && item.quantity > 0
+      );
+
+      if (weaponItems.length === 0) {
+        return '<!-- No weapons in inventory -->';
+      }
+
+      // Get ability scores and character level for weapon calculations
+      const abilities = this.getAbilityScores(characterData);
+      const totalLevel = this.calculateTotalLevel(characterData);
+      const proficiencyBonus = Math.ceil(totalLevel / 4) + 1;
+
+      // Get weapon proficiencies
+      const weaponProficiencies = this.getWeaponProficiencies(characterData);
+
+      const weaponEntries: string[] = [];
+      let weaponIndex = 1;
+
+      weaponItems.forEach((weapon: any) => {
+        try {
+          const weaponXML = this.generateIndividualWeaponXML(
+            weapon, 
+            weaponIndex, 
+            abilities, 
+            proficiencyBonus, 
+            weaponProficiencies
+          );
+          
+          if (weaponXML) {
+            weaponEntries.push(weaponXML);
+            weaponIndex++;
+          }
+        } catch (error) {
+          console.warn(`Failed to process weapon ${weapon.definition?.name}:`, error);
+        }
+      });
+
+      return weaponEntries.join('\n\t\t');
+
+    } catch (error) {
+      console.error('❌ FantasyGroundsXMLFormatter: Failed to generate weapons XML:', error);
+      return '<!-- Weapon processing failed -->';
+    }
+  }
   private generateSpellsXML(characterData: CharacterData): string { return ''; }
   private generatePowerMetaXML(characterData: CharacterData): string { return ''; }
 
@@ -856,6 +912,228 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
     // Examples: Wild Shape resistances, spell-based resistances, etc.
     
     return false; // This is a permanent resistance
+  }
+
+  /**
+   * Get weapon proficiencies from character data
+   */
+  private getWeaponProficiencies(characterData: CharacterData): Set<string> {
+    const proficiencies = new Set<string>();
+    
+    if (characterData.modifiers) {
+      Object.values(characterData.modifiers).flat().forEach(mod => {
+        if (mod.type === 'proficiency' && mod.subType) {
+          const subType = mod.subType.toLowerCase();
+          if (subType.includes('weapon')) {
+            // Extract weapon name or type
+            if (subType.includes('simple weapons')) {
+              proficiencies.add('simple');
+            } else if (subType.includes('martial weapons')) {
+              proficiencies.add('martial');
+            } else if (subType.includes('-weapon')) {
+              // Specific weapon like "longsword-weapon"
+              const weaponName = subType.replace('-weapon', '');
+              proficiencies.add(weaponName);
+            }
+          }
+        }
+      });
+    }
+    
+    return proficiencies;
+  }
+
+  /**
+   * Generate XML for individual weapon
+   */
+  private generateIndividualWeaponXML(
+    weapon: any, 
+    index: number, 
+    abilities: Record<string, number>, 
+    proficiencyBonus: number,
+    weaponProficiencies: Set<string>
+  ): string {
+    const weaponDef = weapon.definition;
+    const paddedId = String(index).padStart(5, '0');
+    
+    // Calculate attack bonus and damage
+    const weaponStats = this.calculateWeaponStats(weapon, abilities, proficiencyBonus, weaponProficiencies);
+    
+    // Format weapon properties
+    const properties = this.formatWeaponProperties(weaponDef);
+    
+    // Determine weapon subtype for Fantasy Grounds
+    const subtype = this.getWeaponSubtype(weaponDef);
+    
+    return `<id-${paddedId}>
+\t\t\t<attackbonus type="number">${weaponStats.attackBonus}</attackbonus>
+\t\t\t<carried type="number">${weapon.equipped ? 2 : 1}</carried>
+\t\t\t<count type="number">${weapon.quantity}</count>
+\t\t\t<damage type="string">${weaponStats.damageFormula}</damage>
+\t\t\t<damagelist>
+\t\t\t\t<id-00001>
+\t\t\t\t\t<bonus type="number">${weaponStats.damageBonus}</bonus>
+\t\t\t\t\t<dice type="string">${weaponStats.damageDice}</dice>
+\t\t\t\t\t<stat type="string">${weaponStats.damageAbility}</stat>
+\t\t\t\t\t<type type="string">${weaponDef.damageType?.toLowerCase() || 'bludgeoning'}</type>
+\t\t\t\t</id-00001>
+\t\t\t</damagelist>
+\t\t\t<isidentified type="number">1</isidentified>
+\t\t\t<locked type="number">1</locked>
+\t\t\t<name type="string">${this.sanitizeString(weaponDef.name)}</name>
+\t\t\t<properties type="string">${properties}</properties>
+\t\t\t<subtype type="string">${subtype}</subtype>
+\t\t\t<type type="string">Weapon</type>
+\t\t\t<weight type="number">${weaponDef.weight || 0}</weight>
+\t\t</id-${paddedId}>`;
+  }
+
+  /**
+   * Calculate weapon combat statistics
+   */
+  private calculateWeaponStats(
+    weapon: any, 
+    abilities: Record<string, number>, 
+    proficiencyBonus: number,
+    weaponProficiencies: Set<string>
+  ) {
+    const weaponDef = weapon.definition;
+    
+    // Determine primary ability (STR vs DEX for finesse weapons)
+    let primaryAbility = 'strength';
+    let damageAbility = 'strength';
+    
+    const isFinesse = weaponDef.properties?.some((p: any) => 
+      p.name?.toLowerCase() === 'finesse'
+    );
+    const isRanged = weaponDef.attackType === 2;
+    
+    if (isRanged) {
+      primaryAbility = 'dexterity';
+      damageAbility = 'dexterity';
+    } else if (isFinesse) {
+      // Use higher of STR or DEX for finesse weapons
+      primaryAbility = abilities.dexterity >= abilities.strength ? 'dexterity' : 'strength';
+      damageAbility = primaryAbility;
+    }
+    
+    const abilityModifier = Math.floor((abilities[primaryAbility] - 10) / 2);
+    
+    // Check proficiency
+    const weaponName = weaponDef.name?.toLowerCase();
+    const weaponCategory = weaponDef.categoryId === 1 ? 'simple' : 'martial';
+    const isProficient = weaponProficiencies.has(weaponCategory) || 
+                        weaponProficiencies.has(weaponName) ||
+                        weaponProficiencies.has(weaponName?.replace(/\s+/g, ''));
+    
+    // Extract magic bonus from modifiers
+    let magicBonus = 0;
+    if (weapon.grantedModifiers) {
+      weapon.grantedModifiers.forEach((mod: any) => {
+        if (mod.type === 'bonus' && mod.subType === 'magic' && mod.fixedValue) {
+          magicBonus += mod.fixedValue;
+        }
+      });
+    }
+    
+    // Calculate final bonuses
+    const profBonus = isProficient ? proficiencyBonus : 0;
+    const attackBonus = abilityModifier + profBonus + magicBonus;
+    const damageBonus = abilityModifier + magicBonus;
+    
+    // Build damage formula
+    const damage = weaponDef.damage;
+    const damageDice = `${damage.diceCount}d${damage.diceValue}`;
+    const damageFormula = damageBonus > 0 ? 
+      `${damageDice}+${damageBonus}` : 
+      damageDice;
+    
+    return {
+      attackBonus,
+      damageBonus,
+      damageFormula,
+      damageDice,
+      damageAbility: primaryAbility.substring(0, 3) // FG uses 3-letter abbreviations
+    };
+  }
+
+  /**
+   * Format weapon properties for Fantasy Grounds display
+   */
+  private formatWeaponProperties(weaponDef: any): string {
+    const properties: string[] = [];
+    
+    if (weaponDef.properties) {
+      weaponDef.properties.forEach((prop: any) => {
+        const propName = prop.name?.toLowerCase();
+        
+        switch (propName) {
+          case 'finesse':
+            properties.push('Finesse');
+            break;
+          case 'light':
+            properties.push('Light');
+            break;
+          case 'heavy':
+            properties.push('Heavy');
+            break;
+          case 'reach':
+            properties.push('Reach');
+            break;
+          case 'thrown':
+            // Try to extract range from description
+            const rangeMatch = prop.description?.match(/(\d+)\/(\d+)/);
+            if (rangeMatch) {
+              properties.push(`Thrown (range ${rangeMatch[1]}/${rangeMatch[2]})`);
+            } else {
+              properties.push('Thrown');
+            }
+            break;
+          case 'versatile':
+            // Try to extract versatile damage from description
+            const versatileMatch = prop.description?.match(/\(([^)]+)\)/);
+            if (versatileMatch) {
+              properties.push(`Versatile ${versatileMatch[1]}`);
+            } else {
+              properties.push('Versatile');
+            }
+            break;
+          case 'two-handed':
+            properties.push('Two-handed');
+            break;
+          case 'ammunition':
+            if (weaponDef.range && weaponDef.longRange) {
+              properties.push(`Ammunition (range ${weaponDef.range}/${weaponDef.longRange})`);
+            } else {
+              properties.push('Ammunition');
+            }
+            break;
+          case 'loading':
+            properties.push('Loading');
+            break;
+          default:
+            if (prop.name) {
+              properties.push(prop.name);
+            }
+        }
+      });
+    }
+    
+    return properties.join(', ');
+  }
+
+  /**
+   * Get weapon subtype for Fantasy Grounds categorization
+   */
+  private getWeaponSubtype(weaponDef: any): string {
+    const isSimple = weaponDef.categoryId === 1;
+    const isMelee = weaponDef.attackType === 1;
+    
+    if (isSimple) {
+      return isMelee ? 'Simple Melee Weapons' : 'Simple Ranged Weapons';
+    } else {
+      return isMelee ? 'Martial Melee Weapons' : 'Martial Ranged Weapons';
+    }
   }
 
   /**

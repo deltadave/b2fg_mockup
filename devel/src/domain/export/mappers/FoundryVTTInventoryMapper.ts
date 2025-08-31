@@ -14,6 +14,7 @@ import type {
   ItemType,
   FoundryItemType 
 } from '@/domain/character/services/InventoryProcessor';
+import type { ProcessedWeapon, ProcessedWeaponsResult } from '@/domain/character/models/Weapons';
 import { StringSanitizer } from '@/shared/utils/StringSanitizer';
 
 export interface FoundryItem {
@@ -43,8 +44,11 @@ export interface FoundryItemSystem {
   attuned: boolean;
   identified: boolean;
   rarity: string;
-  properties?: string[];
-  // Type-specific properties
+  properties?: Record<string, boolean>; // D&D 5e weapon/armor properties
+  
+  // Weapon-specific properties (D&D 5e system)
+  weaponType?: string; // simple, martial
+  baseItem?: string;
   damage?: {
     parts: [string, string][];
     versatile?: string;
@@ -54,20 +58,57 @@ export interface FoundryItemSystem {
     long: number | null;
     units: string;
   };
+  ability?: string; // str, dex, etc.
+  actionType?: string; // mwak, rwak, save, etc.
+  attackBonus?: number;
+  chatFlavor?: string;
+  critical?: {
+    threshold: number | null;
+    damage: string;
+  };
+  proficient?: boolean;
+  
+  // Armor-specific properties
   armor?: {
     value: number;
     type: string;
+    dex?: number;
   };
+  
+  // Container properties
   capacity?: {
     type: string;
     value: number;
     weightless: boolean;
   };
+  
+  // Consumable properties
   uses?: {
     value: number;
     max: number | string;
     per: string;
     recovery: string;
+  };
+  
+  // Activation properties
+  activation?: {
+    type: string;
+    cost: number;
+    condition: string;
+  };
+  
+  // Duration properties
+  duration?: {
+    value: number;
+    units: string;
+  };
+  
+  // Target properties
+  target?: {
+    value: number | null;
+    width: number | null;
+    units: string;
+    type: string;
   };
 }
 
@@ -80,9 +121,18 @@ export class FoundryVTTInventoryMapper {
   mapInventoryToFoundryItems(processedInventory: ProcessedInventory): FoundryItem[] {
     const foundryItems: FoundryItem[] = [];
     
-    // Process regular inventory items
+    // Process enhanced weapons first with detailed combat data
+    if (processedInventory.weapons) {
+      processedInventory.weapons.weapons.forEach(weapon => {
+        const foundryWeapon = this.convertWeaponToFoundryFormat(weapon);
+        foundryItems.push(foundryWeapon);
+      });
+    }
+    
+    // Process regular inventory items (excluding weapons as they're handled above)
     processedInventory.items.forEach(item => {
       if (item.quantity <= 0) return; // Skip zero quantity items
+      if (item.type === 'weapon') return; // Skip weapons as they're handled specially
       
       const foundryItem = this.convertToFoundryFormat(item);
       foundryItems.push(foundryItem);
@@ -117,6 +167,38 @@ export class FoundryVTTInventoryMapper {
           originalType: item.type,
           isMagical: item.isMagical,
           containerLocation: item.containerLocation
+        }
+      },
+      sort: this.itemIdCounter * 100
+    };
+  }
+
+  /**
+   * Convert ProcessedWeapon to Foundry VTT format with D&D 5e system data
+   */
+  private convertWeaponToFoundryFormat(weapon: ProcessedWeapon): FoundryItem {
+    const foundryId = this.generateFoundryId();
+    const iconPath = this.getWeaponIcon(weapon);
+    
+    return {
+      _id: foundryId,
+      name: StringSanitizer.sanitizeText(weapon.name),
+      type: 'weapon',
+      img: iconPath,
+      system: this.buildWeaponSystemDataFromProcessed(weapon),
+      effects: [], // Active effects for magic weapons could be added here
+      flags: {
+        'dnd5e': {
+          sourceId: weapon.baseItemId?.toString() || ''
+        },
+        'dnd-beyond-import': {
+          originalId: weapon.id,
+          attackType: weapon.attackType,
+          weaponCategory: weapon.weaponCategory,
+          magicBonus: weapon.magicBonus,
+          isMagical: weapon.isMagical,
+          proficient: weapon.proficient,
+          primaryAbility: weapon.primaryAbility
         }
       },
       sort: this.itemIdCounter * 100
@@ -240,7 +322,64 @@ export class FoundryVTTInventoryMapper {
   }
 
   /**
-   * Build weapon-specific system data
+   * Build comprehensive D&D 5e weapon system data from ProcessedWeapon
+   */
+  private buildWeaponSystemDataFromProcessed(weapon: ProcessedWeapon): FoundryItemSystem {
+    // Map weapon properties to D&D 5e system format
+    const properties = this.mapWeaponPropertiesToFoundry(weapon.properties);
+    
+    // Build damage parts array
+    const damageParts: [string, string][] = [[
+      weapon.damageFormula,
+      weapon.damage.damageType.toLowerCase()
+    ]];
+    
+    const baseSystemData: FoundryItemSystem = {
+      description: {
+        value: this.buildWeaponDescription(weapon),
+        chat: '',
+        unidentified: weapon.isMagical ? 'An unidentified magical weapon.' : ''
+      },
+      quantity: weapon.quantity,
+      weight: weapon.weight,
+      price: {
+        value: this.estimateWeaponValue(weapon),
+        denomination: 'gp'
+      },
+      equipped: weapon.equipped,
+      attuned: weapon.isAttuned,
+      identified: !weapon.isMagical || weapon.equipped,
+      rarity: weapon.isMagical ? 'uncommon' : 'common',
+      
+      // D&D 5e weapon-specific properties
+      weaponType: weapon.weaponCategory, // simple, martial
+      baseItem: weapon.baseItemId?.toString() || '',
+      damage: {
+        parts: damageParts,
+        versatile: weapon.versatileDamageFormula || ''
+      },
+      range: weapon.range ? {
+        value: weapon.range.normal,
+        long: weapon.range.long || null,
+        units: weapon.range.units
+      } : null,
+      ability: this.mapAbilityToFoundry(weapon.primaryAbility),
+      actionType: weapon.attackType === 'melee' ? 'mwak' : 'rwak',
+      attackBonus: weapon.magicBonus || 0, // Only magic bonus, not total
+      chatFlavor: '',
+      critical: {
+        threshold: null,
+        damage: ''
+      },
+      proficient: weapon.proficient,
+      properties
+    };
+    
+    return baseSystemData;
+  }
+
+  /**
+   * Build weapon-specific system data (fallback for basic items)
    */
   private buildWeaponSystemData(item: ProcessedInventoryItem, originalData: any): Partial<FoundryItemSystem> {
     const weaponData: Partial<FoundryItemSystem> = {};
@@ -259,7 +398,7 @@ export class FoundryVTTInventoryMapper {
     );
     
     if (weaponProperties.length > 0) {
-      weaponData.properties = [...(weaponData.properties || []), ...weaponProperties];
+      weaponData.properties = this.mapArrayPropertiesToFoundry(weaponProperties);
     }
     
     return weaponData;
@@ -407,6 +546,212 @@ export class FoundryVTTInventoryMapper {
     }
     this.itemIdCounter++;
     return result;
+  }
+
+  /**
+   * Map weapon properties to Foundry VTT D&D 5e system format
+   */
+  private mapWeaponPropertiesToFoundry(properties: ReadonlyArray<import('@/domain/character/models/Weapons').WeaponProperty>): Record<string, boolean> {
+    const foundryProperties: Record<string, boolean> = {};
+    
+    properties.forEach(prop => {
+      switch (prop) {
+        case 'ammunition':
+          foundryProperties.amm = true;
+          break;
+        case 'finesse':
+          foundryProperties.fin = true;
+          break;
+        case 'heavy':
+          foundryProperties.hvy = true;
+          break;
+        case 'light':
+          foundryProperties.lgt = true;
+          break;
+        case 'loading':
+          foundryProperties.lod = true;
+          break;
+        case 'reach':
+          foundryProperties.rch = true;
+          break;
+        case 'thrown':
+          foundryProperties.thr = true;
+          break;
+        case 'two-handed':
+          foundryProperties.two = true;
+          break;
+        case 'versatile':
+          foundryProperties.ver = true;
+          break;
+        case 'special':
+          foundryProperties.spe = true;
+          break;
+      }
+    });
+    
+    return foundryProperties;
+  }
+
+  /**
+   * Map array of property strings to Foundry format (fallback)
+   */
+  private mapArrayPropertiesToFoundry(properties: string[]): Record<string, boolean> {
+    const foundryProperties: Record<string, boolean> = {};
+    
+    properties.forEach(prop => {
+      const propLower = prop.toLowerCase();
+      if (propLower.includes('ammunition')) foundryProperties.amm = true;
+      if (propLower.includes('finesse')) foundryProperties.fin = true;
+      if (propLower.includes('heavy')) foundryProperties.hvy = true;
+      if (propLower.includes('light')) foundryProperties.lgt = true;
+      if (propLower.includes('loading')) foundryProperties.lod = true;
+      if (propLower.includes('reach')) foundryProperties.rch = true;
+      if (propLower.includes('thrown')) foundryProperties.thr = true;
+      if (propLower.includes('two-handed')) foundryProperties.two = true;
+      if (propLower.includes('versatile')) foundryProperties.ver = true;
+      if (propLower.includes('special')) foundryProperties.spe = true;
+    });
+    
+    return foundryProperties;
+  }
+
+  /**
+   * Map ability name to Foundry VTT format
+   */
+  private mapAbilityToFoundry(ability: import('@/domain/character/constants/AbilityConstants').AbilityName): string {
+    const abilityMap = {
+      'strength': 'str',
+      'dexterity': 'dex',
+      'constitution': 'con',
+      'intelligence': 'int',
+      'wisdom': 'wis',
+      'charisma': 'cha'
+    };
+    
+    return abilityMap[ability] || 'str';
+  }
+
+  /**
+   * Build weapon description with properties and stats
+   */
+  private buildWeaponDescription(weapon: ProcessedWeapon): string {
+    const parts: string[] = [];
+    
+    // Basic weapon info
+    parts.push(`<p><strong>${weapon.weaponCategory.charAt(0).toUpperCase() + weapon.weaponCategory.slice(1)} ${weapon.attackType} weapon</strong></p>`);
+    
+    // Properties
+    if (weapon.properties.length > 0) {
+      const propertyNames = weapon.properties.map(prop => {
+        switch (prop) {
+          case 'two-handed': return 'Two-handed';
+          case 'light': return 'Light';
+          case 'heavy': return 'Heavy';
+          case 'finesse': return 'Finesse';
+          case 'versatile': return `Versatile${weapon.versatileDamageFormula ? ` (${weapon.versatileDamageFormula})` : ''}`;
+          case 'thrown': return 'Thrown';
+          case 'ammunition': return 'Ammunition';
+          case 'loading': return 'Loading';
+          case 'reach': return 'Reach';
+          default: return prop.charAt(0).toUpperCase() + prop.slice(1);
+        }
+      });
+      parts.push(`<p><strong>Properties:</strong> ${propertyNames.join(', ')}</p>`);
+    }
+    
+    // Range for ranged weapons or thrown weapons
+    if (weapon.range) {
+      parts.push(`<p><strong>Range:</strong> ${weapon.range.normal}${weapon.range.long ? `/${weapon.range.long}` : ''} ft.</p>`);
+    }
+    
+    // Magic properties
+    if (weapon.isMagical && weapon.magicBonus > 0) {
+      parts.push(`<p><strong>Enhancement:</strong> +${weapon.magicBonus} magical weapon</p>`);
+    }
+    
+    if (weapon.requiresAttunement) {
+      parts.push(`<p><em>Requires attunement</em></p>`);
+    }
+    
+    return parts.join('\n');
+  }
+
+  /**
+   * Estimate weapon value based on type and magic bonus
+   */
+  private estimateWeaponValue(weapon: ProcessedWeapon): number {
+    // Base weapon values (simplified)
+    let baseValue = weapon.weaponCategory === 'simple' ? 2 : 25;
+    
+    // Adjust for weapon type
+    if (weapon.attackType === 'ranged') {
+      baseValue *= 2;
+    }
+    
+    // Magic weapon pricing
+    if (weapon.isMagical && weapon.magicBonus > 0) {
+      const magicMultiplier = Math.pow(10, weapon.magicBonus); // +1 = 10x, +2 = 100x, etc.
+      baseValue *= magicMultiplier;
+    }
+    
+    return Math.round(baseValue);
+  }
+
+  /**
+   * Get appropriate icon for weapon type
+   */
+  private getWeaponIcon(weapon: ProcessedWeapon): string {
+    // Basic weapon type mapping
+    const weaponName = weapon.name.toLowerCase();
+    
+    // Sword icons
+    if (weaponName.includes('sword') || weaponName.includes('rapier') || weaponName.includes('scimitar')) {
+      return 'icons/weapons/swords/sword-broad-silver.webp';
+    }
+    
+    // Bow icons
+    if (weaponName.includes('bow')) {
+      return 'icons/weapons/bows/bow-recurve-leather.webp';
+    }
+    
+    // Crossbow icons
+    if (weaponName.includes('crossbow')) {
+      return 'icons/weapons/crossbows/crossbow-simple-brown.webp';
+    }
+    
+    // Dagger icons
+    if (weaponName.includes('dagger') || weaponName.includes('knife')) {
+      return 'icons/weapons/daggers/dagger-straight-steel.webp';
+    }
+    
+    // Axe icons
+    if (weaponName.includes('axe') || weaponName.includes('hatchet')) {
+      return 'icons/weapons/axes/axe-battle-steel.webp';
+    }
+    
+    // Mace/hammer icons
+    if (weaponName.includes('mace') || weaponName.includes('hammer') || weaponName.includes('club')) {
+      return 'icons/weapons/maces/mace-round-spiked.webp';
+    }
+    
+    // Spear/polearm icons
+    if (weaponName.includes('spear') || weaponName.includes('pike') || weaponName.includes('halberd') || weaponName.includes('glaive')) {
+      return 'icons/weapons/polearms/spear-simple-wood.webp';
+    }
+    
+    // Staff icons
+    if (weaponName.includes('staff') || weaponName.includes('quarterstaff')) {
+      return 'icons/weapons/staves/staff-simple-wood.webp';
+    }
+    
+    // Default based on attack type
+    if (weapon.attackType === 'ranged') {
+      return 'icons/weapons/ammunition/arrows-bundle-leather-brown.webp';
+    } else if (weapon.weaponCategory === 'simple') {
+      return 'icons/weapons/clubs/club-simple-wood.webp';
+    } else {
+      return 'icons/weapons/swords/sword-broad-silver.webp';
+    }
   }
 
   /**
