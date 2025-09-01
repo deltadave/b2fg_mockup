@@ -20,6 +20,7 @@ import type { CharacterData } from '../../character/services/CharacterFetcher';
 import { gameConfigService } from '../../../shared/services/GameConfigService';
 import { WeaponListGenerator } from '../generators/WeaponListGenerator';
 import { SafeAccess } from '../../../shared/utils/SafeAccess';
+import { StringSanitizer } from '../../../shared/utils/StringSanitizer';
 import { AbilityScoreProcessor } from '../../character/services/AbilityScoreProcessor';
 import { SpellSlotCalculator } from '../../character/services/SpellSlotCalculator';
 import { FeatureProcessor } from '../../character/services/FeatureProcessor';
@@ -74,7 +75,7 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
       }
 
       // Generate filename
-      const sanitizedName = this.sanitizeString(character.name || 'character')
+      const sanitizedName = StringSanitizer.sanitizeForXML(character.name || 'character')
         .replace(/[^a-zA-Z0-9_-]/g, '_');
       const characterId = character.id || 'unknown';
       const filename = `${sanitizedName}_${characterId}.xml`;
@@ -108,7 +109,7 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
     processedData: ProcessedCharacterData,
     options?: FormatOptions
   ): string {
-    const characterName = this.sanitizeString(characterData.name || 'Unknown Character');
+    const characterName = StringSanitizer.sanitizeForXML(characterData.name || 'Unknown Character');
     const characterId = characterData.id || 0;
     const totalLevel = processedData.totalLevel || this.calculateTotalLevel(characterData);
     const proficiencyBonus = gameConfigService.calculateProficiencyBonus(totalLevel);
@@ -117,27 +118,27 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
 <root version="4.7" dataversion="20241002" release="8.1|CoreRPG:7">
   <character>
     <name type="string">${characterName}</name>
-    <gender type="string">${this.sanitizeString(characterData.gender || '')}</gender>
-    <deity type="string">${this.sanitizeString(characterData.faith || '')}</deity>
-    <age type="string">${this.sanitizeString(characterData.age || '')}</age>
-    <appearance type="string">${this.sanitizeString(characterData.hair ? `Hair: ${characterData.hair}, Eyes: ${characterData.eyes || ''}, Skin: ${characterData.skin || ''}` : '')}</appearance>
-    <height type="string">${this.sanitizeString(characterData.height || '')}</height>
-    <weight type="string">${this.sanitizeString(characterData.weight ? characterData.weight.toString() : '')}</weight>
+    <gender type="string">${StringSanitizer.sanitizeForXML(characterData.gender || '')}</gender>
+    <deity type="string">${StringSanitizer.sanitizeForXML(characterData.faith || '')}</deity>
+    <age type="string">${StringSanitizer.sanitizeForXML(characterData.age || '')}</age>
+    <appearance type="string">${StringSanitizer.sanitizeForXML(characterData.hair ? `Hair: ${characterData.hair}, Eyes: ${characterData.eyes || ''}, Skin: ${characterData.skin || ''}` : '')}</appearance>
+    <height type="string">${StringSanitizer.sanitizeForXML(characterData.height || '')}</height>
+    <weight type="string">${StringSanitizer.sanitizeForXML(characterData.weight ? characterData.weight.toString() : '')}</weight>
     <size type="string">${gameConfigService.getDefaultSize()}</size>
-    <alignment type="string">${this.sanitizeString(gameConfigService.getAlignmentName(characterData.alignmentId))}</alignment>
-    <bonds type="string">${this.sanitizeString(characterData.traits?.bonds || '')}</bonds>
-    <flaws type="string">${this.sanitizeString(characterData.traits?.flaws || '')}</flaws>
-    <ideals type="string">${this.sanitizeString(characterData.traits?.ideals || '')}</ideals>
-    <personalitytraits type="string">${this.sanitizeString(characterData.traits?.personalityTraits || '')}</personalitytraits>
-    <race type="string">${this.sanitizeString(characterData.race?.fullName || 'Unknown')}</race>
+    <alignment type="string">${StringSanitizer.sanitizeForXML(gameConfigService.getAlignmentName(characterData.alignmentId))}</alignment>
+    <bonds type="string">${StringSanitizer.sanitizeForXML(characterData.traits?.bonds || '')}</bonds>
+    <flaws type="string">${StringSanitizer.sanitizeForXML(characterData.traits?.flaws || '')}</flaws>
+    <ideals type="string">${StringSanitizer.sanitizeForXML(characterData.traits?.ideals || '')}</ideals>
+    <personalitytraits type="string">${StringSanitizer.sanitizeForXML(characterData.traits?.personalityTraits || '')}</personalitytraits>
+    <race type="string">${StringSanitizer.sanitizeForXML(characterData.race?.fullName || 'Unknown')}</race>
     <racelink type="windowreference">
       <class>reference_race</class>
-      <recordname>reference.race.${this.sanitizeString((characterData.race?.fullName || 'unknown').toLowerCase().replace(/\s+/g, ''))}@*</recordname>
+      <recordname>reference.race.${StringSanitizer.sanitizeForXML((characterData.race?.fullName || 'unknown').toLowerCase().replace(/\s+/g, ''))}@*</recordname>
     </racelink>
-    <background type="string">${this.sanitizeString(characterData.background?.definition?.name || '')}</background>
+    <background type="string">${StringSanitizer.sanitizeForXML(characterData.background?.definition?.name || '')}</background>
     <backgroundlink type="windowreference">
       <class>reference_background</class>
-      <recordname>reference.background.${this.sanitizeString((characterData.background?.definition?.name || 'unknown').toLowerCase().replace(/\s+/g, ''))}@*</recordname>
+      <recordname>reference.background.${StringSanitizer.sanitizeForXML((characterData.background?.definition?.name || 'unknown').toLowerCase().replace(/\s+/g, ''))}@*</recordname>
     </backgroundlink>
     <level type="number">${totalLevel}</level>
     <profbonus type="number">${proficiencyBonus}</profbonus>
@@ -217,10 +218,6 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
       ${this.generateTraitsXML(characterData)}
     </traitlist>
     
-    <weaponlist>
-      ${this.generateWeaponsXML(characterData)}
-    </weaponlist>
-    
     <powers>
       ${this.generateSpellsXML(characterData)}
     </powers>
@@ -288,10 +285,10 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
         <hddie type="dice">${cls.definition?.hitDie ? `d${cls.definition.hitDie}` : gameConfigService.getDefaultHitDie()}</hddie>
         <hdused type="number">0</hdused>
         <level type="number">${cls.level || 1}</level>
-        <name type="string">${this.sanitizeString(cls.definition?.name || 'Unknown')}</name>
+        <name type="string">${StringSanitizer.sanitizeForXML(cls.definition?.name || 'Unknown')}</name>
         <shortcut type="windowreference">
           <class>reference_class</class>
-          <recordname>reference.class.${this.sanitizeString((cls.definition?.name || 'unknown').toLowerCase())}@*</recordname>
+          <recordname>reference.class.${StringSanitizer.sanitizeForXML((cls.definition?.name || 'unknown').toLowerCase())}@*</recordname>
         </shortcut>
       </id-${String(index + 1).padStart(5, '0')}>`
     ).join('\n      ') || '';
@@ -418,26 +415,6 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
     }
   }
 
-  /**
-   * Sanitize string content for XML text content (not HTML)
-   * Fantasy Grounds expects normal text with minimal XML escaping
-   */
-  private sanitizeString(input: unknown): string {
-    if (input === null || input === undefined || input === "") {
-      return "";
-    }
-    
-    const inputString = String(input);
-    
-    // Only escape characters that are invalid in XML text content
-    return inputString
-      .replace(/&/g, "&amp;")      // Must be first to avoid double-encoding
-      .replace(/</g, "&lt;")       // Prevent XML structure issues  
-      .replace(/>/g, "&gt;")       // Prevent XML structure issues
-      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "") // Remove control characters
-      .substring(0, 1000)          // Reasonable length limit
-      .trim();
-  }
 
   // Placeholder methods that need to be implemented with the full logic from the facade
   private generateNotesText(characterData: CharacterData, characterId: string | number): string {
@@ -980,7 +957,7 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
 \t\t\t</damagelist>
 \t\t\t<isidentified type="number">1</isidentified>
 \t\t\t<locked type="number">1</locked>
-\t\t\t<name type="string">${this.sanitizeString(weaponDef.name)}</name>
+\t\t\t<name type="string">${StringSanitizer.sanitizeForXML(weaponDef.name)}</name>
 \t\t\t<properties type="string">${properties}</properties>
 \t\t\t<subtype type="string">${subtype}</subtype>
 \t\t\t<type type="string">Weapon</type>

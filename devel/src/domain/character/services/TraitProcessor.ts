@@ -1,5 +1,6 @@
 import type { CharacterData } from '../models/CharacterData';
 import type { RacialTrait } from '../models/Features';
+import { StringSanitizer } from '@/shared/utils/StringSanitizer';
 
 interface ProcessedTrait {
   id: string;
@@ -121,14 +122,14 @@ export class TraitProcessor {
       xml += `
 			<id-${id}>
 				<locked type="number">1</locked>
-				<name type="string">${this.escapeXml(trait.name)}</name>
+				<name type="string">${StringSanitizer.sanitizeForXML(trait.name)}</name>
 				<text type="formattedtext">`;
       
       // Convert the cleaned description to proper paragraph format
       const paragraphs = trait.description.split('\n\n').filter(p => p.trim());
       paragraphs.forEach(paragraph => {
         xml += `
-					<p>${this.escapeXml(paragraph.trim())}</p>`;
+					<p>${StringSanitizer.sanitizeForXML(paragraph.trim(), { maxLength: 10000 })}</p>`;
       });
       
       xml += `
@@ -139,12 +140,5 @@ export class TraitProcessor {
     return xml;
   }
 
-  private escapeXml(text: string): string {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&apos;');
-  }
+
 }

@@ -615,10 +615,15 @@ export class FeatureProcessor {
       const featureType = this.determineFeatureType(featureInfo.name, className);
       const usageInfo = this.determineFeatureUsage(featureInfo.name, className);
 
+      let featureDescription = '';
+      if (options.includeDescriptions) {
+        featureDescription = featureInfo.description || '';
+      }
+
       const feature: ClassFeature = {
         id: featureInfo.id,
         name: featureInfo.name,
-        description: options.includeDescriptions ? featureInfo.description : '',
+        description: featureDescription,
         requiredLevel: featureInfo.requiredLevel,
         className: className,
         subclassName: subclassName,
@@ -870,9 +875,11 @@ export class FeatureProcessor {
     features.forEach((feature, index) => {
       const featureId = String(index + 1).padStart(5, '0');
       const sanitizedName = options.sanitizeText ? StringSanitizer.sanitizeForXML(feature.name) : feature.name;
+      
       const sanitizedDescription = options.sanitizeText && feature.description
-        ? StringSanitizer.sanitizeForXML(feature.description, { maxLength: 10000 }) // Allow longer descriptions
+        ? StringSanitizer.sanitizeForXML(feature.description, { maxLength: 10000 })
         : feature.description || '';
+
 
       xml += `      <id-${featureId}>`;
 
@@ -894,7 +901,7 @@ export class FeatureProcessor {
 
       xml += `
         <text type="formattedtext">
-          <p>${sanitizedDescription}</p>
+          ${sanitizedDescription}
         </text>`;
 
       // Add group information for better organization
@@ -939,7 +946,7 @@ export class FeatureProcessor {
 
       xml += `
         <text type="formattedtext">
-          <p>${sanitizedDescription}</p>
+          ${sanitizedDescription}
         </text>
       </id-${traitId}>
 `;
@@ -965,7 +972,7 @@ export class FeatureProcessor {
         <locked type="number">1</locked>
         <name type="string">${sanitizedName}</name>
         <text type="formattedtext">
-          <p>${sanitizedDescription}</p>
+          ${sanitizedDescription}
         </text>
         <source type="string">${trait.raceName}${trait.suraceName ? ` (${trait.suraceName})` : ''}</source>
       </id-${traitId}>
@@ -992,7 +999,7 @@ export class FeatureProcessor {
         <locked type="number">1</locked>
         <name type="string">${sanitizedName}</name>
         <text type="formattedtext">
-          <p>${sanitizedDescription}</p>
+          ${sanitizedDescription}
         </text>
         <source type="string">${feat.category}${feat.prerequisite ? ` (Prereq: ${feat.prerequisite})` : ''}</source>
       </id-${featId}>
@@ -1335,4 +1342,5 @@ export class FeatureProcessor {
       errors
     };
   }
+
 }

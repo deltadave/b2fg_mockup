@@ -164,7 +164,7 @@ export class FantasyGroundsXMLStrategy implements XMLGenerationStrategy {
     
     if (item.description) {
       xml += `${indentContent}<description type="formattedtext">\n`;
-      xml += `${indentContent}\t<p>${item.description}</p>\n`;
+      xml += `${indentContent}\t${StringSanitizer.sanitizeForXML(item.description, { maxLength: 10000 })}\n`;
       xml += `${indentContent}</description>\n`;
     }
     

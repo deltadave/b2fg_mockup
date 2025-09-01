@@ -160,10 +160,13 @@ export class FileProcessor {
    * Content sanitization based on file type
    */
   private async sanitizeContent(content: string, fileType: string): Promise<string> {
-    // Remove null bytes and control characters
-    let sanitized = content
-      .replace(/\0/g, '') // Remove null bytes
-      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ''); // Remove control characters
+    let sanitized = StringSanitizer.sanitizeText(content, {
+      allowNewlines: true,
+      allowTabs: true,
+      preserveSpaces: true,
+      removeEventHandlers: true,
+      removeDangerousProtocols: true
+    });
 
     if (fileType === 'application/json') {
       sanitized = this.sanitizeJsonContent(sanitized);
@@ -178,27 +181,34 @@ export class FileProcessor {
    * JSON-specific sanitization
    */
   private sanitizeJsonContent(content: string): string {
-    return content
-      .replace(/<script[^>]*>.*?<\/script>/gi, '')
-      .replace(/javascript:/gi, '')
-      .replace(/data:text\/html/gi, '')
-      .replace(/vbscript:/gi, '');
+    return StringSanitizer.sanitizeText(content, {
+      allowNewlines: true,
+      allowTabs: true,
+      preserveSpaces: true,
+      removeEventHandlers: true,
+      removeDangerousProtocols: true
+    });
   }
 
   /**
    * XML-specific sanitization
    */
   private sanitizeXmlContent(content: string): string {
-    return content
+    let sanitized = StringSanitizer.sanitizeText(content, {
+      allowNewlines: true,
+      allowTabs: true,
+      preserveSpaces: true,
+      removeEventHandlers: true,
+      removeDangerousProtocols: true
+    });
+
+    return sanitized
       .replace(/<!DOCTYPE[^>]*>/gi, '') // Remove DOCTYPE declarations
       .replace(/<\?.*?\?>/g, (match) => {
         // Keep standard XML declaration, remove others
         return match.includes('xml version') ? match : '';
       })
-      .replace(/<!ENTITY[^>]*>/gi, '') // Remove entity declarations
-      .replace(/<script[^>]*>.*?<\/script>/gi, '')
-      .replace(/javascript:/gi, '')
-      .replace(/vbscript:/gi, '');
+      .replace(/<!ENTITY[^>]*>/gi, ''); // Remove entity declarations
   }
 
   /**
@@ -330,17 +340,11 @@ export class FileProcessor {
    * Sanitize individual string values
    */
   private sanitizeStringValue(value: string): string {
-    // Limit string length
-    if (value.length > this.maxStringLength) {
-      value = value.substring(0, this.maxStringLength);
-    }
-
-    // Remove potentially dangerous content
-    return value
-      .replace(/<script[^>]*>.*?<\/script>/gi, '')
-      .replace(/javascript:/gi, '')
-      .replace(/data:text\/html/gi, '')
-      .replace(/vbscript:/gi, '');
+    return StringSanitizer.sanitizeText(value, {
+      maxLength: this.maxStringLength,
+      allowNewlines: false,
+      allowTabs: false
+    });
   }
 
   /**
@@ -515,15 +519,19 @@ export class FileProcessor {
   }
 
   private sanitizeFilename(filename: string): string {
-    return filename
-      .replace(/[^a-zA-Z0-9._-]/g, '_')
-      .substring(0, 100);
+    return StringSanitizer.sanitizeText(filename, {
+      maxLength: 100,
+      allowNewlines: false,
+      allowTabs: false
+    }).replace(/[^a-zA-Z0-9._-]/g, '_');
   }
 
   private sanitizeErrorMessage(message: string): string {
-    return message
-      .replace(/[<>]/g, '')
-      .substring(0, 200);
+    return StringSanitizer.sanitizeText(message, {
+      maxLength: 200,
+      allowNewlines: false,
+      allowTabs: false
+    });
   }
 
   private getFileExtension(filename: string): string {

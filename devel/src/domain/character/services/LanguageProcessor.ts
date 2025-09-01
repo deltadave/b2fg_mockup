@@ -1,5 +1,6 @@
 import type { CharacterData } from '../models/CharacterData';
 import type { LanguageConstants } from '../constants/LanguageConstants';
+import { StringSanitizer } from '../../../shared/utils/StringSanitizer';
 
 export interface ProcessedLanguage {
   id: string;
@@ -327,7 +328,7 @@ export class LanguageProcessor {
       const id = String(index + 1).padStart(5, '0');
       xml += `
 			<id-${id}>
-				<name type="string">${this.escapeXml(language.name)}</name>
+				<name type="string">${StringSanitizer.sanitizeForXML(language.name)}</name>
 			</id-${id}>`;
     });
 
@@ -439,15 +440,4 @@ export class LanguageProcessor {
     };
   }
 
-  /**
-   * XML escape utility
-   */
-  private escapeXml(text: string): string {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&apos;');
-  }
 }

@@ -175,7 +175,7 @@ export class CharacterConverterFacade {
           ];
           
           testStrings.forEach((testString, index) => {
-            const sanitized = this.sanitizeString(testString);
+            const sanitized = StringSanitizer.sanitizeForXML(testString);
             const report = StringSanitizer.sanitizeWithReport(testString);
             console.log(`Test ${index + 1}:`, {
               original: testString,
@@ -764,7 +764,7 @@ export class CharacterConverterFacade {
       if (slotCount > 0) {
         xml += `      <id-${String(groupId).padStart(5, '0')}>
         <castertype type="string">memorized</castertype>
-        <name type="string">${this.sanitizeString(level.name + ' Spells')}</name>
+        <name type="string">${StringSanitizer.sanitizeForXML(level.name + ' Spells')}</name>
         <stat type="string">charisma</stat>
         <powers>
           <!-- Spell slots: ${slotCount} -->
@@ -909,22 +909,6 @@ export class CharacterConverterFacade {
   }
 
 
-  /**
-   * Sanitize string content using either new StringSanitizer or legacy method
-   * Based on feature flags for gradual migration
-   * 
-   * @param input - String to sanitize
-   * @returns Sanitized string safe for XML
-   */
-  private sanitizeString(input: unknown): string {
-    if (featureFlags.isEnabled('string_sanitizer_service')) {
-      return StringSanitizer.sanitizeForXML(input);
-    } else {
-      // Legacy fallback - would call legacy fixQuote function
-      // For now, we'll use the compatibility function
-      return StringSanitizer.sanitizeForXML(input);
-    }
-  }
 
   /**
    * Safely access nested object properties using either new SafeAccess or legacy method
@@ -1459,8 +1443,8 @@ export class CharacterConverterFacade {
         </damagelist>
         <handling type="number">0</handling>
         <isidentified type="number">1</isidentified>
-        <name type="string">${this.sanitizeString(weapon.name)}</name>
-        <properties type="string">${this.sanitizeString(weapon.properties)}</properties>
+        <name type="string">${StringSanitizer.sanitizeForXML(weapon.name)}</name>
+        <properties type="string">${StringSanitizer.sanitizeForXML(weapon.properties)}</properties>
         <shortcut type="windowreference">
           <class>item</class>
           <recordname>${weapon.shortcut}</recordname>
@@ -1624,32 +1608,32 @@ ${actions}        </actions>`;
           xml += `
         <cast type="number">0</cast>
         <description type="formattedtext">
-          <p>${this.sanitizeString(spell.description)}</p>
+          <p>${StringSanitizer.sanitizeHTML(spell.description)}</p>
         </description>
-        <group type="string">${this.sanitizeString(spell.group)}</group>
+        <group type="string">${StringSanitizer.sanitizeForXML(spell.group)}</group>
         <level type="number">${spell.level}</level>
         <locked type="number">1</locked>
-        <name type="string">${this.sanitizeString(spell.name)}</name>
+        <name type="string">${StringSanitizer.sanitizeForXML(spell.name)}</name>
         <prepared type="number">${spell.prepared}</prepared>
         <ritual type="number">${spell.ritual ? 1 : 0}</ritual>
-        <source type="string">${this.sanitizeString(spell.source)}</source>`;
+        <source type="string">${StringSanitizer.sanitizeForXML(spell.source)}</source>`;
         } else {
           // Spell metadata
           xml += `
-        <castingtime type="string">${this.sanitizeString(spell.castingTime)}</castingtime>
-        <components type="string">${this.sanitizeString(spell.components)}</components>
+        <castingtime type="string">${StringSanitizer.sanitizeForXML(spell.castingTime)}</castingtime>
+        <components type="string">${StringSanitizer.sanitizeForXML(spell.components)}</components>
         <description type="formattedtext">
-          <p>${this.sanitizeString(spell.description)}</p>
+          <p>${StringSanitizer.sanitizeHTML(spell.description)}</p>
         </description>
-        <duration type="string">${this.sanitizeString(spell.duration)}</duration>
+        <duration type="string">${StringSanitizer.sanitizeForXML(spell.duration)}</duration>
         <group type="string">Spells</group>
         <level type="number">${spell.level}</level>
-        <name type="string">${this.sanitizeString(spell.name)}</name>
+        <name type="string">${StringSanitizer.sanitizeForXML(spell.name)}</name>
         <prepared type="number">${spell.prepared ? 1 : 0}</prepared>
-        <range type="string">${this.sanitizeString(spell.range)}</range>
+        <range type="string">${StringSanitizer.sanitizeForXML(spell.range)}</range>
         <ritual type="number">${spell.ritual ? 1 : 0}</ritual>
-        <school type="string">${this.sanitizeString(spell.school)}</school>
-        <source type="string">${this.sanitizeString(spell.source)}</source>`;
+        <school type="string">${StringSanitizer.sanitizeForXML(spell.school)}</school>
+        <source type="string">${StringSanitizer.sanitizeForXML(spell.source)}</source>`;
         }
         
         xml += `
@@ -1741,7 +1725,7 @@ ${actions}        </actions>`;
               const capitalizedKey = key.charAt(0).toUpperCase() + key.substring(1);
               
               // Clean and format the value
-              const cleanValue = this.sanitizeString(value).trim();
+              const cleanValue = StringSanitizer.sanitizeHTML(value).trim();
               
               allNotes += `${capitalizedKey}: ${cleanValue}\\n`;
               
@@ -1759,11 +1743,11 @@ ${actions}        </actions>`;
       const finalNotes = allNotes.replace(/\\n$/, '');
       console.log(`📝 Generated notes text (${finalNotes.length} chars total)`);
       
-      return this.sanitizeString(finalNotes);
+      return StringSanitizer.sanitizeHTML(finalNotes);
       
     } catch (error) {
       console.error('Failed to generate notes text:', error);
-      return this.sanitizeString(`Character converted from D&D Beyond (ID: ${characterId}) using Modern Converter v2.0`);
+      return StringSanitizer.sanitizeHTML(`Character converted from D&D Beyond (ID: ${characterId}) using Modern Converter v2.0`);
     }
   }
 
@@ -2088,7 +2072,7 @@ ${actions}        </actions>`;
     sortedLanguages.forEach((language, index) => {
       const langId = String(index + 1).padStart(5, '0');
       xml += `      <id-${langId}>\n`;
-      xml += `        <name type="string">${this.sanitizeString(language)}</name>\n`;
+      xml += `        <name type="string">${StringSanitizer.sanitizeForXML(language)}</name>\n`;
       xml += `      </id-${langId}>\n`;
     });
 

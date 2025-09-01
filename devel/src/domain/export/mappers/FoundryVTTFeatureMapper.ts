@@ -185,7 +185,7 @@ export class FoundryVTTFeatureMapper {
   private mapClassFeatureToFoundryItem(feature: ClassFeature, options: FoundryFeatureOptions): FoundryItem {
     const sanitizedName = options.sanitizeText ? StringSanitizer.sanitizeForXML(feature.name) : feature.name;
     const sanitizedDescription = options.sanitizeText && feature.description
-      ? StringSanitizer.sanitizeForXML(feature.description)
+      ? StringSanitizer.sanitizeHTML(feature.description)
       : feature.description || '';
 
     const systemData: FoundryFeatureSystemData = {
@@ -241,7 +241,7 @@ export class FoundryVTTFeatureMapper {
   private mapRacialTraitToFoundryItem(trait: RacialTrait, options: FoundryFeatureOptions): FoundryItem {
     const sanitizedName = options.sanitizeText ? StringSanitizer.sanitizeForXML(trait.name) : trait.name;
     const sanitizedDescription = options.sanitizeText && trait.description
-      ? StringSanitizer.sanitizeForXML(trait.description)
+      ? StringSanitizer.sanitizeHTML(trait.description)
       : trait.description || '';
 
     const systemData: FoundryFeatureSystemData = {
@@ -292,7 +292,7 @@ export class FoundryVTTFeatureMapper {
   private mapFeatToFoundryItem(feat: Feat, options: FoundryFeatureOptions): FoundryItem {
     const sanitizedName = options.sanitizeText ? StringSanitizer.sanitizeForXML(feat.name) : feat.name;
     const sanitizedDescription = options.sanitizeText && feat.description
-      ? StringSanitizer.sanitizeForXML(feat.description)
+      ? StringSanitizer.sanitizeHTML(feat.description)
       : feat.description || '';
 
     const systemData: FoundryFeatureSystemData = {
@@ -565,18 +565,11 @@ export class FoundryVTTFeatureMapper {
   private formatDescriptionForFoundry(description: string): string {
     if (!description) return '';
     
-    // Convert basic HTML formatting for Foundry VTT
-    let formatted = description
-      .replace(/&lt;p&gt;/g, '<p>')
-      .replace(/&lt;\/p&gt;/g, '</p>')
-      .replace(/&lt;strong&gt;/g, '<strong>')
-      .replace(/&lt;\/strong&gt;/g, '</strong>')
-      .replace(/&lt;em&gt;/g, '<em>')
-      .replace(/&lt;\/em&gt;/g, '</em>')
-      .replace(/&lt;br\s*\/?&gt;/g, '<br>')
-      .replace(/&amp;/g, '&');
-
-    return formatted;
+    // Use StringSanitizer.sanitizeHTML to properly decode HTML entities and preserve formatting for Foundry VTT
+    return StringSanitizer.sanitizeHTML(description, {
+      allowNewlines: true,
+      maxLength: 10000
+    });
   }
 
   /**

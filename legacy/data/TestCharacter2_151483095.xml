@@ -6,7 +6,7 @@
     <deity type="string">Corellian</deity>
     <age type="string">102</age>
     <appearance type="string">Hair: sandy, Eyes: green, Skin: pasty</appearance>
-    <height type="string">5'7"</height>
+    <height type="string">5&#39;7&quot;</height>
     <weight type="string">140</weight>
     <size type="string">Medium</size>
     <alignment type="string">Chaotic Good</alignment>
@@ -200,7 +200,7 @@
         <locked type="number">1</locked>
         <name type="string">Alert</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;&lt;em&gt;Origin Feat&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;  &lt;p&gt;You gain the following benefits.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;em&gt;&lt;strong&gt;Initiative Proficiency.&lt;&#x2F;strong&gt;&lt;&#x2F;em&gt; When you roll Initiative, you can add your Proficiency Bonus to the roll.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;em&gt;&lt;strong&gt;Initiative Swap.&lt;&#x2F;strong&gt;&lt;&#x2F;em&gt; Immediately after you roll Initiative, you can swap your Initiative with the Initiative of one willing ally in the same combat. You can’t make this swap if you or the ally has the Incapacitated condition.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;&lt;em&gt;Origin Feat&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;  &lt;p&gt;You gain the following benefits.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;em&gt;&lt;strong&gt;Initiative Proficiency.&lt;&#x2F;strong&gt;&lt;&#x2F;em&gt; When you roll Initiative, you can add your Proficiency Bonus to the roll.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;em&gt;&lt;strong&gt;Initiative Swap.&lt;&#x2F;strong&gt;&lt;&#x2F;em&gt; Immediately after you roll Initiative, you can swap your Initiative with the Initiative of one willing ally in the same combat. You can’t make this swap if you or the ally has the Incapacitated condition.&lt;&#x2F;p&gt;
         </text>
         <source type="string">Origin</source>
       </id-02000>
@@ -208,7 +208,7 @@
         <locked type="number">1</locked>
         <name type="string">Weapon Mastery</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;Your training with weapons allows you to use the mastery properties of two kinds of Simple or Martial Melee weapons of your choice, such as Greataxes and Handaxes. Whenever you finish a Long Rest, you can practice weapon drills and change one of those weapon choices.&lt;&#x2F;p&gt;  &lt;p&gt;When you reach certain Barbarian levels, you gain the ability to use the mastery properties of more kinds of weapons, as shown in the Weapon Mastery column of the Barbarian Features table.&lt;&#x2F;p&gt;  (This feat has been taken multiple times)</p>
+          &lt;p&gt;Your training with weapons allows you to use the mastery properties of two kinds of Simple or Martial Melee weapons of your choice, such as Greataxes and Handaxes. Whenever you finish a Long Rest, you can practice weapon drills and change one of those weapon choices.&lt;&#x2F;p&gt;  &lt;p&gt;When you reach certain Barbarian levels, you gain the ability to use the mastery properties of more kinds of weapons, as shown in the Weapon Mastery column of the Barbarian Features table.&lt;&#x2F;p&gt;  (This feat has been taken multiple times)
         </text>
         <source type="string">__DISGUISE_FEAT</source>
       </id-02001>
@@ -216,7 +216,7 @@
         <locked type="number">1</locked>
         <name type="string">Boon of the Night Spirit</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;&lt;em&gt;Epic Boon Feat (Prerequisite: Level 19+)&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;  &lt;p&gt;You gain the following benefits.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;em&gt;&lt;strong&gt;Ability Score Increase.&lt;&#x2F;strong&gt;&lt;&#x2F;em&gt; Increase one ability score of your choice by 1, to a maximum of 30.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;em&gt;&lt;strong&gt; Merge with Shadows.&lt;&#x2F;strong&gt;&lt;&#x2F;em&gt; While within Dim Light or Darkness, you can give yourself the Invisible condition as a Bonus Action. The condition ends on you immediately after you take an action, a Bonus Action, or a Reaction.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;em&gt;&lt;strong&gt; Shadowy Form.&lt;&#x2F;strong&gt;&lt;&#x2F;em&gt; While within Dim Light or Darkness, you have Resistance to all damage except Psychic and Radiant.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;&lt;em&gt;Epic Boon Feat (Prerequisite: Level 19+)&lt;&#x2F;em&gt;&lt;&#x2F;p&gt;  &lt;p&gt;You gain the following benefits.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;em&gt;&lt;strong&gt;Ability Score Increase.&lt;&#x2F;strong&gt;&lt;&#x2F;em&gt; Increase one ability score of your choice by 1, to a maximum of 30.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;em&gt;&lt;strong&gt; Merge with Shadows.&lt;&#x2F;strong&gt;&lt;&#x2F;em&gt; While within Dim Light or Darkness, you can give yourself the Invisible condition as a Bonus Action. The condition ends on you immediately after you take an action, a Bonus Action, or a Reaction.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;em&gt;&lt;strong&gt; Shadowy Form.&lt;&#x2F;strong&gt;&lt;&#x2F;em&gt; While within Dim Light or Darkness, you have Resistance to all damage except Psychic and Radiant.&lt;&#x2F;p&gt;
         </text>
         <source type="string">Epic Boon</source>
       </id-02002>
@@ -224,7 +224,7 @@
         <locked type="number">1</locked>
         <name type="string">Hero&#39;s Journey Boon</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;At your GM&#39;s discretion you can be granted a Hero&#39;s Journey Boon.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;At your GM&#39;s discretion you can be granted a Hero&#39;s Journey Boon.&lt;&#x2F;p&gt;
         </text>
         <source type="string">__DISGUISE_FEAT</source>
       </id-02003>
@@ -232,7 +232,7 @@
         <locked type="number">1</locked>
         <name type="string">Dark Bargain</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;At your GM&#39;s discretion, you can take a Dark Bargain.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;At your GM&#39;s discretion, you can take a Dark Bargain.&lt;&#x2F;p&gt;
         </text>
         <source type="string">__DISGUISE_FEAT</source>
       </id-02004>
@@ -245,7 +245,7 @@
         <locked type="number">1</locked>
         <name type="string">Rage</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;You can imbue yourself with a primal power called Rage, a force that grants you extraordinary might and resilience. You can enter it as a Bonus Action if you aren’t wearing Heavy armor.&lt;&#x2F;p&gt;  &lt;p&gt;You can enter your Rage the number of times shown for your Barbarian level in the Rages column of the Barbarian Features table. You regain one expended use when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest.&lt;&#x2F;p&gt;  &lt;p&gt;While active, your Rage follows the rules below.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Damage Resistance.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; You have Resistance to Bludgeoning, Piercing, and Slashing damage.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Rage Damage.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; When you make an attack using Strength&amp;with either a weapon or an Unarmed Strike&amp;and deal damage to the target, you gain a bonus to the damage that increases as you gain levels as a Barbarian, as shown in the Rage Damage column of the Barbarian Features table.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Strength Advantage.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; You have Advantage on Strength checks and Strength saving throws.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;No Concentration or Spells.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; You can’t maintain Concentration, and you can’t cast spells.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Duration.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; The Rage lasts until the end of your next turn, and it ends early if you don Heavy armor or have the Incapacitated condition. If your Rage is still active on your next turn, you can extend the Rage for another round by doing one of the following:&lt;&#x2F;p&gt;  &lt;ul&gt;  &lt;li&gt;Make an attack roll against an enemy.&lt;&#x2F;li&gt;  &lt;li&gt;Force an enemy to make a saving throw.&lt;&#x2F;li&gt;  &lt;li&gt;Take a Bonus Action to extend your Rage.&lt;&#x2F;li&gt;  &lt;&#x2F;ul&gt;  &lt;p&gt;Each time the Rage is extended, it lasts until the end of your next turn. You can maintain a Rage for up to 10 minutes.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;You can imbue yourself with a primal power called Rage, a force that grants you extraordinary might and resilience. You can enter it as a Bonus Action if you aren’t wearing Heavy armor.&lt;&#x2F;p&gt;  &lt;p&gt;You can enter your Rage the number of times shown for your Barbarian level in the Rages column of the Barbarian Features table. You regain one expended use when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest.&lt;&#x2F;p&gt;  &lt;p&gt;While active, your Rage follows the rules below.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Damage Resistance.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; You have Resistance to Bludgeoning, Piercing, and Slashing damage.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Rage Damage.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; When you make an attack using Strength-with either a weapon or an Unarmed Strike-and deal damage to the target, you gain a bonus to the damage that increases as you gain levels as a Barbarian, as shown in the Rage Damage column of the Barbarian Features table.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Strength Advantage.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; You have Advantage on Strength checks and Strength saving throws.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;No Concentration or Spells.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; You can’t maintain Concentration, and you can’t cast spells.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Duration.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; The Rage lasts until the end of your next turn, and it ends early if you don Heavy armor or have the Incapacitated condition. If your Rage is still active on your next turn, you can extend the Rage for another round by doing one of the following:&lt;&#x2F;p&gt;  &lt;ul&gt;  &lt;li&gt;Make an attack roll against an enemy.&lt;&#x2F;li&gt;  &lt;li&gt;Force an enemy to make a saving throw.&lt;&#x2F;li&gt;  &lt;li&gt;Take a Bonus Action to extend your Rage.&lt;&#x2F;li&gt;  &lt;&#x2F;ul&gt;  &lt;p&gt;Each time the Rage is extended, it lasts until the end of your next turn. You can maintain a Rage for up to 10 minutes.&lt;&#x2F;p&gt;
         </text>
         <group type="string">Class (Barbarian)</group>
       </id-00001>
@@ -254,7 +254,7 @@
         <locked type="number">1</locked>
         <name type="string">Unarmored Defense</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;While you aren’t wearing any armor, your base Armor Class equals 10 plus your Dexterity and Constitution modifiers. You can use a Shield and still gain this benefit.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;While you aren’t wearing any armor, your base Armor Class equals 10 plus your Dexterity and Constitution modifiers. You can use a Shield and still gain this benefit.&lt;&#x2F;p&gt;
         </text>
         <group type="string">Class (Barbarian)</group>
       </id-00002>
@@ -263,7 +263,7 @@
         <locked type="number">1</locked>
         <name type="string">Weapon Mastery</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;Your training with weapons allows you to use the mastery properties of two kinds of Simple or Martial Melee weapons of your choice. Whenever you finish a Long Rest, you can practice weapon drills and change one of those weapon choices.&lt;&#x2F;p&gt;  &lt;p&gt;When you reach certain Barbarian levels, you gain the ability to use the mastery properties of more kinds of weapons, as shown in the Weapon Mastery column of the Barbarian Features table.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;Your training with weapons allows you to use the mastery properties of two kinds of Simple or Martial Melee weapons of your choice. Whenever you finish a Long Rest, you can practice weapon drills and change one of those weapon choices.&lt;&#x2F;p&gt;  &lt;p&gt;When you reach certain Barbarian levels, you gain the ability to use the mastery properties of more kinds of weapons, as shown in the Weapon Mastery column of the Barbarian Features table.&lt;&#x2F;p&gt;
         </text>
         <group type="string">Class (Barbarian)</group>
       </id-00003>
@@ -272,7 +272,7 @@
         <locked type="number">1</locked>
         <name type="string">Danger Sense</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;You gain an uncanny sense of when things aren’t as they should be, giving you an edge when you dodge perils. You have Advantage on Dexterity saving throws unless you have the Incapacitated condition.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;You gain an uncanny sense of when things aren’t as they should be, giving you an edge when you dodge perils. You have Advantage on Dexterity saving throws unless you have the Incapacitated condition.&lt;&#x2F;p&gt;
         </text>
         <group type="string">Class (Barbarian)</group>
       </id-00004>
@@ -281,7 +281,7 @@
         <locked type="number">1</locked>
         <name type="string">Reckless Attack</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;You can throw aside all concern for defense to attack with increased ferocity. When you make your first attack roll on your turn, you can decide to attack recklessly. Doing so gives you Advantage on attack rolls using Strength until the start of your next turn, but attack rolls against you have Advantage during that time.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;You can throw aside all concern for defense to attack with increased ferocity. When you make your first attack roll on your turn, you can decide to attack recklessly. Doing so gives you Advantage on attack rolls using Strength until the start of your next turn, but attack rolls against you have Advantage during that time.&lt;&#x2F;p&gt;
         </text>
         <group type="string">Class (Barbarian)</group>
       </id-00005>
@@ -290,7 +290,7 @@
         <locked type="number">1</locked>
         <name type="string">Primal Knowledge</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;You gain proficiency in another skill of your choice from the skill list available to Barbarians at level 1.&lt;&#x2F;p&gt;  &lt;p&gt;In addition, while your Rage is active, you can channel primal power when you attempt certain tasks; whenever you make an ability check using one of the following skills, you can make it as a Strength check even if it normally uses a different ability: Acrobatics, Intimidation, Perception, Stealth, or Survival. When you use this ability, your Strength represents primal power coursing through you, honing your agility, bearing, and senses.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;You gain proficiency in another skill of your choice from the skill list available to Barbarians at level 1.&lt;&#x2F;p&gt;  &lt;p&gt;In addition, while your Rage is active, you can channel primal power when you attempt certain tasks; whenever you make an ability check using one of the following skills, you can make it as a Strength check even if it normally uses a different ability: Acrobatics, Intimidation, Perception, Stealth, or Survival. When you use this ability, your Strength represents primal power coursing through you, honing your agility, bearing, and senses.&lt;&#x2F;p&gt;
         </text>
         <group type="string">Class (Barbarian)</group>
       </id-00006>
@@ -299,7 +299,7 @@
         <locked type="number">1</locked>
         <name type="string">Spellcasting</name>
         <text type="formattedtext">
-          <p>&lt;p class&#x3D;&quot;Core-Styles_Core-Body&quot;&gt;As a conduit for divine power, you can cast cleric spells. See &lt;span style&#x3D;&quot;color: #99cc00;&quot;&gt;&lt;a style&#x3D;&quot;color: #47d18c;&quot; title&#x3D;&quot;Spells Rules&quot; href&#x3D;&quot;https:&#x2F;&#x2F;www.dndbeyond.com&#x2F;compendium&#x2F;rules&#x2F;basic-rules&#x2F;spellcasting&quot;&gt;Spells Rules&lt;&#x2F;a&gt;&lt;&#x2F;span&gt; for the general rules of spellcasting and the &lt;span style&#x3D;&quot;color: #993366;&quot;&gt;&lt;a style&#x3D;&quot;color: #704cd9;&quot; title&#x3D;&quot;Spells Listing (Cleric)&quot; href&#x3D;&quot;https:&#x2F;&#x2F;www.dndbeyond.com&#x2F;spells?filter-class&#x3D;2&amp;amp;filter-search&#x3D;&amp;amp;filter-sub-class&#x3D;&amp;amp;filter-c&amp;amp;filter-ritual&#x3D;&amp;amp;filter-unlocked-c&quot;&gt;Spells Listing&lt;&#x2F;a&gt;&lt;&#x2F;span&gt;&amp;nbsp;for the cleric spell list.&lt;&#x2F;p&gt;  &lt;h5 class&#x3D;&quot;compendium-hr&quot;&gt;Cantrips&lt;&#x2F;h5&gt;  &lt;p class&#x3D;&quot;Core-Styles_Core-Body&quot;&gt;At 1st level, you know three cantrips of your choice from the cleric spell list. You learn additional cleric cantrips of your choice at higher levels, as shown in the Cantrips Known column of the Cleric table.&lt;&#x2F;p&gt;  &lt;h5 id&#x3D;&quot;PreparingandCastingSpells&quot; class&#x3D;&quot;compendium-hr&quot;&gt;Preparing and Casting Spells&lt;&#x2F;h5&gt;  &lt;p class&#x3D;&quot;Core-Styles_Core-Body&quot;&gt;The Cleric table shows how many spell slots you have to cast your cleric spells of 1st level and higher. To cast one of these spells, you must expend a slot of the spell’s level or higher. You regain all expended spell slots when you finish a long rest.&lt;&#x2F;p&gt;  &lt;p class&#x3D;&quot;Core-Styles_Core-Body&quot;&gt;You prepare the list of cleric spells that are available for you to cast, choosing from the cleric spell list. When you do so, choose a number of cleric spells equal to your Wisdom modifier + your cleric level (minimum of one spell). The spells must be of a level for which you have spell slots.&lt;&#x2F;p&gt;  &lt;p class&#x3D;&quot;Core-Styles_Core-Body&quot;&gt;For example, if you are a 3rd-level cleric, you have four 1st-level and two 2nd-level spell slots. With a Wisdom of 16, your list of prepared spells can include six spells of 1st or 2nd level, in any combination. If you prepare the 1st-level spell &lt;span class&#x3D;&quot;Serif-Character-Style_Italic-Serif&quot;&gt;cure wounds&lt;&#x2F;span&gt;, you can cast it using a 1st-level or 2nd-level slot. Casting the spell doesn’t remove it from your list of prepared spells.&lt;&#x2F;p&gt;  &lt;p class&#x3D;&quot;Core-Styles_Core-Body&quot;&gt;You can change your list of prepared spells when you finish a long rest. Preparing a new list of cleric spells requires time spent in prayer and meditation: at least 1 minute per spell level for each spell on your list.&lt;&#x2F;p&gt;  &lt;h5 class&#x3D;&quot;compendium-hr&quot;&gt;Spellcasting Ability&lt;&#x2F;h5&gt;  &lt;p class&#x3D;&quot;Core-Styles_Core-Body-Last--to-apply-extra-space-&quot;&gt;Wisdom is your spellcasting ability for your cleric spells. The power of your spells comes from your devotion to your deity. You use your Wisdom whenever a cleric spell refers to your spellcasting ability. In addition, you use your Wisdom modifier when setting the saving throw DC for a cleric spell you cast and when making an attack roll with one.&lt;&#x2F;p&gt;  &lt;p class&#x3D;&quot;List-Styles_List-Item-Centered&quot;&gt;&lt;strong&gt;&lt;span class&#x3D;&quot;Sans-Serif-Character-Styles_Bold-Sans-Serif&quot;&gt;Spell save DC &lt;&#x2F;span&gt;&lt;&#x2F;strong&gt;&#x3D; 8 + your proficiency bonus + your Wisdom modifier&lt;&#x2F;p&gt;  &lt;p class&#x3D;&quot;List-Styles_List-Item-Centered ParaOverride-2&quot;&gt;&lt;strong&gt;&lt;span class&#x3D;&quot;Sans-Serif-Character-Styles_Bold-Sans-Serif&quot;&gt;Spell attack modifier &lt;&#x2F;span&gt;&lt;&#x2F;strong&gt;&#x3D; your proficiency bonus + your Wisdom modifier&lt;&#x2F;p&gt;  &lt;h5 class&#x3D;&quot;compendium-hr&quot;&gt;Ritual Casting&lt;&#x2F;h5&gt;  &lt;p class&#x3D;&quot;Core-Styles_Core-Body&quot;&gt;You can cast a cleric spell as a ritual if that spell has the ritual tag and you have the spell prepared.&lt;&#x2F;p&gt;  &lt;h5 class&#x3D;&quot;compendium-hr&quot;&gt;Spellcasting Focus&lt;&#x2F;h5&gt;  &lt;p class&#x3D;&quot;Core-Styles_Core-Body&quot;&gt;You can use a holy symbol (see the &lt;span style&#x3D;&quot;color: #47d18c;&quot;&gt;&lt;a style&#x3D;&quot;color: #47d18c;&quot; title&#x3D;&quot;Adventuring Gear&quot; href&#x3D;&quot;https:&#x2F;&#x2F;www.dndbeyond.com&#x2F;compendium&#x2F;rules&#x2F;basic-rules&#x2F;equipment#HolySymbol&quot;&gt;Adventuring Gear&lt;&#x2F;a&gt;&lt;&#x2F;span&gt; section) as a spellcasting focus for your cleric spells.&lt;&#x2F;p&gt;</p>
+          &lt;p class=&quot;Core-Styles_Core-Body&quot;&gt;As a conduit for divine power, you can cast cleric spells. See &lt;span style=&quot;color: #99cc00;&quot;&gt;&lt;a style=&quot;color: #47d18c;&quot; title=&quot;Spells Rules&quot; href=&quot;https:&#x2F;&#x2F;www.dndbeyond.com&#x2F;compendium&#x2F;rules&#x2F;basic-rules&#x2F;spellcasting&quot;&gt;Spells Rules&lt;&#x2F;a&gt;&lt;&#x2F;span&gt; for the general rules of spellcasting and the &lt;span style=&quot;color: #993366;&quot;&gt;&lt;a style=&quot;color: #704cd9;&quot; title=&quot;Spells Listing (Cleric)&quot; href=&quot;https:&#x2F;&#x2F;www.dndbeyond.com&#x2F;spells?filter-class=2&amp;amp;filter-search=&amp;amp;filter-sub-class=&amp;amp;filter-c&amp;amp;filter-ritual=&amp;amp;filter-unlocked-c&quot;&gt;Spells Listing&lt;&#x2F;a&gt;&lt;&#x2F;span&gt; for the cleric spell list.&lt;&#x2F;p&gt;  &lt;h5 class=&quot;compendium-hr&quot;&gt;Cantrips&lt;&#x2F;h5&gt;  &lt;p class=&quot;Core-Styles_Core-Body&quot;&gt;At 1st level, you know three cantrips of your choice from the cleric spell list. You learn additional cleric cantrips of your choice at higher levels, as shown in the Cantrips Known column of the Cleric table.&lt;&#x2F;p&gt;  &lt;h5 id=&quot;PreparingandCastingSpells&quot; class=&quot;compendium-hr&quot;&gt;Preparing and Casting Spells&lt;&#x2F;h5&gt;  &lt;p class=&quot;Core-Styles_Core-Body&quot;&gt;The Cleric table shows how many spell slots you have to cast your cleric spells of 1st level and higher. To cast one of these spells, you must expend a slot of the spell’s level or higher. You regain all expended spell slots when you finish a long rest.&lt;&#x2F;p&gt;  &lt;p class=&quot;Core-Styles_Core-Body&quot;&gt;You prepare the list of cleric spells that are available for you to cast, choosing from the cleric spell list. When you do so, choose a number of cleric spells equal to your Wisdom modifier + your cleric level (minimum of one spell). The spells must be of a level for which you have spell slots.&lt;&#x2F;p&gt;  &lt;p class=&quot;Core-Styles_Core-Body&quot;&gt;For example, if you are a 3rd-level cleric, you have four 1st-level and two 2nd-level spell slots. With a Wisdom of 16, your list of prepared spells can include six spells of 1st or 2nd level, in any combination. If you prepare the 1st-level spell &lt;span class=&quot;Serif-Character-Style_Italic-Serif&quot;&gt;cure wounds&lt;&#x2F;span&gt;, you can cast it using a 1st-level or 2nd-level slot. Casting the spell doesn’t remove it from your list of prepared spells.&lt;&#x2F;p&gt;  &lt;p class=&quot;Core-Styles_Core-Body&quot;&gt;You can change your list of prepared spells when you finish a long rest. Preparing a new list of cleric spells requires time spent in prayer and meditation: at least 1 minute per spell level for each spell on your list.&lt;&#x2F;p&gt;  &lt;h5 class=&quot;compendium-hr&quot;&gt;Spellcasting Ability&lt;&#x2F;h5&gt;  &lt;p class=&quot;Core-Styles_Core-Body-Last--to-apply-extra-space-&quot;&gt;Wisdom is your spellcasting ability for your cleric spells. The power of your spells comes from your devotion to your deity. You use your Wisdom whenever a cleric spell refers to your spellcasting ability. In addition, you use your Wisdom modifier when setting the saving throw DC for a cleric spell you cast and when making an attack roll with one.&lt;&#x2F;p&gt;  &lt;p class=&quot;List-Styles_List-Item-Centered&quot;&gt;&lt;strong&gt;&lt;span class=&quot;Sans-Serif-Character-Styles_Bold-Sans-Serif&quot;&gt;Spell save DC &lt;&#x2F;span&gt;&lt;&#x2F;strong&gt;= 8 + your proficiency bonus + your Wisdom modifier&lt;&#x2F;p&gt;  &lt;p class=&quot;List-Styles_List-Item-Centered ParaOverride-2&quot;&gt;&lt;strong&gt;&lt;span class=&quot;Sans-Serif-Character-Styles_Bold-Sans-Serif&quot;&gt;Spell attack modifier &lt;&#x2F;span&gt;&lt;&#x2F;strong&gt;= your proficiency bonus + your Wisdom modifier&lt;&#x2F;p&gt;  &lt;h5 class=&quot;compendium-hr&quot;&gt;Ritual Casting&lt;&#x2F;h5&gt;  &lt;p class=&quot;Core-Styles_Core-Body&quot;&gt;You can cast a cleric spell as a ritual if that spell has the ritual tag and you have the spell prepared.&lt;&#x2F;p&gt;  &lt;h5 class=&quot;compendium-hr&quot;&gt;Spellcasting Focus&lt;&#x2F;h5&gt;  &lt;p class=&quot;Core-Styles_Core-Body&quot;&gt;You can use a holy symbol (see the &lt;span style=&quot;color: #47d18c;&quot;&gt;&lt;a style=&quot;color: #47d18c;&quot; title=&quot;Adventuring Gear&quot; href=&quot;https:&#x2F;&#x2F;www.dndbeyond.com&#x2F;compendium&#x2F;rules&#x2F;basic-rules&#x2F;equipment#HolySymbol&quot;&gt;Adventuring Gear&lt;&#x2F;a&gt;&lt;&#x2F;span&gt; section) as a spellcasting focus for your cleric spells.&lt;&#x2F;p&gt;
         </text>
         <group type="string">Class (Cleric)</group>
       </id-00007>
@@ -308,7 +308,7 @@
         <locked type="number">1</locked>
         <name type="string">Divine Domain</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;Choose one domain related to your deity. Your choice grants you domain spells and other features when you choose it at 1st level. It also grants you additional ways to use Channel Divinity when you gain that feature at 2nd level, and additional benefits at 6th, 8th, and 17th levels.&lt;&#x2F;p&gt;  &lt;h5&gt;Domain Spells&lt;&#x2F;h5&gt;  &lt;p&gt;Each domain has a list of spells &amp; its domain spells &amp; that you gain at the cleric levels noted in the domain description. Once you gain a domain spell, you always have it prepared, and it doesn’t count against the number of spells you can prepare each day.&lt;&#x2F;p&gt;  &lt;p&gt;If you have a domain spell that doesn’t appear on the cleric spell list, the spell is nonetheless a cleric spell for you.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;Choose one domain related to your deity. Your choice grants you domain spells and other features when you choose it at 1st level. It also grants you additional ways to use Channel Divinity when you gain that feature at 2nd level, and additional benefits at 6th, 8th, and 17th levels.&lt;&#x2F;p&gt;  &lt;h5&gt;Domain Spells&lt;&#x2F;h5&gt;  &lt;p&gt;Each domain has a list of spells - its domain spells - that you gain at the cleric levels noted in the domain description. Once you gain a domain spell, you always have it prepared, and it doesn’t count against the number of spells you can prepare each day.&lt;&#x2F;p&gt;  &lt;p&gt;If you have a domain spell that doesn’t appear on the cleric spell list, the spell is nonetheless a cleric spell for you.&lt;&#x2F;p&gt;
         </text>
         <group type="string">Class (Cleric)</group>
       </id-00008>
@@ -317,7 +317,7 @@
         <locked type="number">1</locked>
         <name type="string">Channel Divinity</name>
         <text type="formattedtext">
-          <p>&lt;p class&#x3D;&quot;compendium-hr&quot;&gt;At 2nd level, you gain the ability to channel divine energy directly from your deity, using that energy to fuel magical effects. You start with two such effects: Turn Undead and an effect determined by your domain. Some domains grant you additional effects as you advance in levels, as noted in the domain description.&lt;&#x2F;p&gt;  &lt;p class&#x3D;&quot;Core-Styles_Core-Body&quot;&gt;When you use your Channel Divinity, you choose which effect to create. You must then finish a short or long rest to use your Channel Divinity again.&lt;&#x2F;p&gt;  &lt;p class&#x3D;&quot;Core-Styles_Core-Body&quot;&gt;Some Channel Divinity effects require saving throws. When you use such an effect from this class, the DC equals your cleric spell save DC.&lt;&#x2F;p&gt;  &lt;p class&#x3D;&quot;Core-Styles_Core-Body&quot;&gt;Beginning at 6th level, you can use your Channel Divinity twice between rests, and beginning at 18th level, you can use it three times between rests. When you finish a short or long rest, you regain your expended uses.&lt;&#x2F;p&gt;  &lt;h5 class&#x3D;&quot;compendium-hr&quot;&gt;Channel Divinity: Turn Undead&lt;&#x2F;h5&gt;  &lt;p class&#x3D;&quot;Core-Styles_Core-Body&quot;&gt;As an action, you present your holy symbol and speak a prayer censuring the undead. Each undead that can see or hear you within 30 feet of you must make a Wisdom saving throw. If the creature fails its saving throw, it is turned for 1 minute or until it takes any damage.&lt;&#x2F;p&gt;  &lt;p class&#x3D;&quot;Core-Styles_Core-Body&quot;&gt;A turned creature must spend its turns trying to move as far away from you as it can, and it can’t willingly move to a space within 30 feet of you. It also can’t take reactions. For its action, it can use only the Dash action or try to escape from an effect that prevents it from moving. If there’s nowhere to move, the creature can use the Dodge action.&lt;&#x2F;p&gt;</p>
+          &lt;p class=&quot;compendium-hr&quot;&gt;At 2nd level, you gain the ability to channel divine energy directly from your deity, using that energy to fuel magical effects. You start with two such effects: Turn Undead and an effect determined by your domain. Some domains grant you additional effects as you advance in levels, as noted in the domain description.&lt;&#x2F;p&gt;  &lt;p class=&quot;Core-Styles_Core-Body&quot;&gt;When you use your Channel Divinity, you choose which effect to create. You must then finish a short or long rest to use your Channel Divinity again.&lt;&#x2F;p&gt;  &lt;p class=&quot;Core-Styles_Core-Body&quot;&gt;Some Channel Divinity effects require saving throws. When you use such an effect from this class, the DC equals your cleric spell save DC.&lt;&#x2F;p&gt;  &lt;p class=&quot;Core-Styles_Core-Body&quot;&gt;Beginning at 6th level, you can use your Channel Divinity twice between rests, and beginning at 18th level, you can use it three times between rests. When you finish a short or long rest, you regain your expended uses.&lt;&#x2F;p&gt;  &lt;h5 class=&quot;compendium-hr&quot;&gt;Channel Divinity: Turn Undead&lt;&#x2F;h5&gt;  &lt;p class=&quot;Core-Styles_Core-Body&quot;&gt;As an action, you present your holy symbol and speak a prayer censuring the undead. Each undead that can see or hear you within 30 feet of you must make a Wisdom saving throw. If the creature fails its saving throw, it is turned for 1 minute or until it takes any damage.&lt;&#x2F;p&gt;  &lt;p class=&quot;Core-Styles_Core-Body&quot;&gt;A turned creature must spend its turns trying to move as far away from you as it can, and it can’t willingly move to a space within 30 feet of you. It also can’t take reactions. For its action, it can use only the Dash action or try to escape from an effect that prevents it from moving. If there’s nowhere to move, the creature can use the Dodge action.&lt;&#x2F;p&gt;
         </text>
         <group type="string">Class (Cleric)</group>
       </id-00009>
@@ -327,7 +327,7 @@
         <name type="string">Disciple of Life</name>
         <specialization type="string">Life Domain</specialization>
         <text type="formattedtext">
-          <p>&lt;p&gt;Also starting at 1st level, your healing spells are more effective. Whenever you use a spell of 1st level or higher to restore hit points to a creature, the creature regains additional hit points equal to 2 + the spell’s level.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;Also starting at 1st level, your healing spells are more effective. Whenever you use a spell of 1st level or higher to restore hit points to a creature, the creature regains additional hit points equal to 2 + the spell’s level.&lt;&#x2F;p&gt;
         </text>
         <group type="string">Class (Cleric - Life Domain)</group>
       </id-00010>
@@ -337,7 +337,7 @@
         <name type="string">Channel Divinity: Preserve Life</name>
         <specialization type="string">Life Domain</specialization>
         <text type="formattedtext">
-          <p>&lt;p&gt;Starting at 2nd level, you can use your Channel Divinity to heal the badly injured.&lt;&#x2F;p&gt;  &lt;p&gt;As an action, you present your holy symbol and evoke healing energy that can restore a number of hit points equal to five times your cleric level. Choose any creatures within 30 feet of you, and divide those hit points among them. This feature can restore a creature to no more than half of its hit point maximum. You can’t use this feature on an undead or a construct.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;Starting at 2nd level, you can use your Channel Divinity to heal the badly injured.&lt;&#x2F;p&gt;  &lt;p&gt;As an action, you present your holy symbol and evoke healing energy that can restore a number of hit points equal to five times your cleric level. Choose any creatures within 30 feet of you, and divide those hit points among them. This feature can restore a creature to no more than half of its hit point maximum. You can’t use this feature on an undead or a construct.&lt;&#x2F;p&gt;
         </text>
         <group type="string">Class (Cleric - Life Domain)</group>
       </id-00011>
@@ -346,7 +346,7 @@
         <locked type="number">1</locked>
         <name type="string">Expertise</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;You gain Expertise in two of your skill proficiencies of your choice.&lt;&#x2F;p&gt;  &lt;p&gt;At Rogue level 6, you gain Expertise in two more of your skill proficiencies of your choice.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;You gain Expertise in two of your skill proficiencies of your choice.&lt;&#x2F;p&gt;  &lt;p&gt;At Rogue level 6, you gain Expertise in two more of your skill proficiencies of your choice.&lt;&#x2F;p&gt;
         </text>
         <group type="string">Class (Rogue)</group>
       </id-00012>
@@ -355,7 +355,7 @@
         <locked type="number">1</locked>
         <name type="string">Sneak Attack</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;You know how to strike subtly and exploit a foe’s distraction. Once per turn, you can deal an extra 1d6 damage to one creature you hit with an attack roll if you have Advantage on the roll and the attack uses a Finesse or a Ranged weapon. The extra damage’s type is the same as the weapon’s type.&lt;&#x2F;p&gt;  &lt;p&gt;You don’t need Advantage on the attack roll if at least one of your allies is within 5 feet of the target, the ally doesn’t have the Incapacitated condition, and you don’t have Disadvantage on the attack roll.&lt;&#x2F;p&gt;  &lt;p&gt;The extra damage increases as you gain Rogue levels, as shown in the Sneak Attack column of the Rogue Features table.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;You know how to strike subtly and exploit a foe’s distraction. Once per turn, you can deal an extra 1d6 damage to one creature you hit with an attack roll if you have Advantage on the roll and the attack uses a Finesse or a Ranged weapon. The extra damage’s type is the same as the weapon’s type.&lt;&#x2F;p&gt;  &lt;p&gt;You don’t need Advantage on the attack roll if at least one of your allies is within 5 feet of the target, the ally doesn’t have the Incapacitated condition, and you don’t have Disadvantage on the attack roll.&lt;&#x2F;p&gt;  &lt;p&gt;The extra damage increases as you gain Rogue levels, as shown in the Sneak Attack column of the Rogue Features table.&lt;&#x2F;p&gt;
         </text>
         <group type="string">Class (Rogue)</group>
       </id-00013>
@@ -364,7 +364,7 @@
         <locked type="number">1</locked>
         <name type="string">Thieves’ Cant</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;You picked up various languages in the communities where you plied your roguish talents. You know Thieves’ Cant and one other language of your choice.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;You picked up various languages in the communities where you plied your roguish talents. You know Thieves’ Cant and one other language of your choice.&lt;&#x2F;p&gt;
         </text>
         <group type="string">Class (Rogue)</group>
       </id-00014>
@@ -373,7 +373,7 @@
         <locked type="number">1</locked>
         <name type="string">Cunning Action</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;Your quick thinking and agility allow you to move and act quickly. On your turn, you can take one of the following actions as a Bonus Action: Dash, Disengage, or Hide.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;Your quick thinking and agility allow you to move and act quickly. On your turn, you can take one of the following actions as a Bonus Action: Dash, Disengage, or Hide.&lt;&#x2F;p&gt;
         </text>
         <group type="string">Class (Rogue)</group>
       </id-00015>
@@ -382,7 +382,7 @@
         <locked type="number">1</locked>
         <name type="string">Steady Aim</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;As a Bonus Action, you give yourself Advantage on your next attack roll on the current turn. You can use this feature only if you haven’t moved during this turn, and after you use it, your Speed is 0 until the end of the current turn.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;As a Bonus Action, you give yourself Advantage on your next attack roll on the current turn. You can use this feature only if you haven’t moved during this turn, and after you use it, your Speed is 0 until the end of the current turn.&lt;&#x2F;p&gt;
         </text>
         <group type="string">Class (Rogue)</group>
       </id-00016>
@@ -391,7 +391,7 @@
         <locked type="number">1</locked>
         <name type="string">Ritual Adept</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;You can cast any spell as a Ritual if that spell has the Ritual tag and the spell is in your spellbook. You needn’t have the spell prepared, but you must read from the book to cast a spell in this way.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;You can cast any spell as a Ritual if that spell has the Ritual tag and the spell is in your spellbook. You needn’t have the spell prepared, but you must read from the book to cast a spell in this way.&lt;&#x2F;p&gt;
         </text>
         <group type="string">Class (Wizard)</group>
       </id-00017>
@@ -400,7 +400,7 @@
         <locked type="number">1</locked>
         <name type="string">Arcane Recovery</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;You can regain some of your magical energy by studying your spellbook. When you finish a Short Rest, you can choose expended spell slots to recover. The spell slots can have a combined level equal to no more than half your Wizard level (round up), and none of the slots can be level 6 or higher. For example, if you’re a level 4 Wizard, you can recover up to two levels’ worth of spell slots, regaining either one level 2 spell slot or two level 1 spell slots.&lt;&#x2F;p&gt;  &lt;p&gt;Once you use this feature, you can’t do so again until you finish a Long Rest.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;You can regain some of your magical energy by studying your spellbook. When you finish a Short Rest, you can choose expended spell slots to recover. The spell slots can have a combined level equal to no more than half your Wizard level (round up), and none of the slots can be level 6 or higher. For example, if you’re a level 4 Wizard, you can recover up to two levels’ worth of spell slots, regaining either one level 2 spell slot or two level 1 spell slots.&lt;&#x2F;p&gt;  &lt;p&gt;Once you use this feature, you can’t do so again until you finish a Long Rest.&lt;&#x2F;p&gt;
         </text>
         <group type="string">Class (Wizard)</group>
       </id-00018>
@@ -409,7 +409,7 @@
         <locked type="number">1</locked>
         <name type="string">Scholar</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;While studying magic, you also specialized in another field of study. Choose one of the following skills in which you have proficiency: Arcana, History, Investigation, Medicine, Nature, or Religion. You have Expertise in the chosen skill.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;While studying magic, you also specialized in another field of study. Choose one of the following skills in which you have proficiency: Arcana, History, Investigation, Medicine, Nature, or Religion. You have Expertise in the chosen skill.&lt;&#x2F;p&gt;
         </text>
         <group type="string">Class (Wizard)</group>
       </id-00019>
@@ -418,7 +418,7 @@
         <locked type="number">1</locked>
         <name type="string">Martial Arts</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;Your practice of martial arts gives you mastery of combat styles that use your Unarmed Strike and Monk weapons, which are the following:&lt;&#x2F;p&gt;  &lt;ul&gt;  &lt;li&gt;Simple Melee weapons&lt;&#x2F;li&gt;  &lt;li&gt;Martial Melee weapons that have the Light property&lt;&#x2F;li&gt;  &lt;&#x2F;ul&gt;  &lt;p&gt;You gain the following benefits while you are unarmed or wielding only Monk weapons and you aren’t wearing armor or wielding a Shield.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Bonus Unarmed Strike.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; You can make an Unarmed Strike as a Bonus Action.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Martial Arts Die.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; You can roll 1d6 in place of the normal damage of your Unarmed Strike or Monk weapons. This die changes as you gain Monk levels, as shown in the Martial Arts column of the Monk Features table.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Dexterous Attacks.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; You can use your Dexterity modifier instead of your Strength modifier for the attack and damage rolls of your Unarmed Strikes and Monk weapons. In addition, when you use the Grapple or Shove option of your Unarmed Strike, you can use your Dexterity modifier instead of your Strength modifier to determine the save DC.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;Your practice of martial arts gives you mastery of combat styles that use your Unarmed Strike and Monk weapons, which are the following:&lt;&#x2F;p&gt;  &lt;ul&gt;  &lt;li&gt;Simple Melee weapons&lt;&#x2F;li&gt;  &lt;li&gt;Martial Melee weapons that have the Light property&lt;&#x2F;li&gt;  &lt;&#x2F;ul&gt;  &lt;p&gt;You gain the following benefits while you are unarmed or wielding only Monk weapons and you aren’t wearing armor or wielding a Shield.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Bonus Unarmed Strike.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; You can make an Unarmed Strike as a Bonus Action.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Martial Arts Die.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; You can roll 1d6 in place of the normal damage of your Unarmed Strike or Monk weapons. This die changes as you gain Monk levels, as shown in the Martial Arts column of the Monk Features table.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Dexterous Attacks.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; You can use your Dexterity modifier instead of your Strength modifier for the attack and damage rolls of your Unarmed Strikes and Monk weapons. In addition, when you use the Grapple or Shove option of your Unarmed Strike, you can use your Dexterity modifier instead of your Strength modifier to determine the save DC.&lt;&#x2F;p&gt;
         </text>
         <group type="string">Class (Monk)</group>
       </id-00020>
@@ -427,7 +427,7 @@
         <locked type="number">1</locked>
         <name type="string">Monk’s Focus</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;Your focus and martial training allow you to harness a well of extraordinary energy within yourself. This energy is represented by Focus Points. Your Monk level determines the number of points you have, as shown in the Focus Points column of the Monk Features table.&lt;&#x2F;p&gt;  &lt;p&gt;You can expend these points to enhance or fuel certain Monk features. You start knowing three such features: Flurry of Blows, Patient Defense, and Step of the Wind, each of which is detailed below.&lt;&#x2F;p&gt;  &lt;p&gt;When you expend a Focus Point, it is unavailable until you finish a Short or Long Rest, at the end of which you regain all your expended points.&lt;&#x2F;p&gt;  &lt;p&gt;Some features that use Focus Points require your target to make a saving throw. The save DC equals 8 plus your Wisdom modifier and Proficiency Bonus.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Flurry of Blows.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; You can expend 1 Focus Point to make two Unarmed Strikes as a Bonus Action.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Patient Defense.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; You can take the Disengage action as a Bonus Action. Alternatively, you can expend 1 Focus Point to take both the Disengage and the Dodge actions as a Bonus Action.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Step of the Wind.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; You can take the Dash action as a Bonus Action. Alternatively, you can expend 1 Focus Point to take both the Disengage and Dash actions as a Bonus Action, and your jump distance is doubled for the turn.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;Your focus and martial training allow you to harness a well of extraordinary energy within yourself. This energy is represented by Focus Points. Your Monk level determines the number of points you have, as shown in the Focus Points column of the Monk Features table.&lt;&#x2F;p&gt;  &lt;p&gt;You can expend these points to enhance or fuel certain Monk features. You start knowing three such features: Flurry of Blows, Patient Defense, and Step of the Wind, each of which is detailed below.&lt;&#x2F;p&gt;  &lt;p&gt;When you expend a Focus Point, it is unavailable until you finish a Short or Long Rest, at the end of which you regain all your expended points.&lt;&#x2F;p&gt;  &lt;p&gt;Some features that use Focus Points require your target to make a saving throw. The save DC equals 8 plus your Wisdom modifier and Proficiency Bonus.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Flurry of Blows.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; You can expend 1 Focus Point to make two Unarmed Strikes as a Bonus Action.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Patient Defense.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; You can take the Disengage action as a Bonus Action. Alternatively, you can expend 1 Focus Point to take both the Disengage and the Dodge actions as a Bonus Action.&lt;&#x2F;p&gt;  &lt;p&gt;&lt;strong&gt;&lt;em&gt;Step of the Wind.&lt;&#x2F;em&gt;&lt;&#x2F;strong&gt; You can take the Dash action as a Bonus Action. Alternatively, you can expend 1 Focus Point to take both the Disengage and Dash actions as a Bonus Action, and your jump distance is doubled for the turn.&lt;&#x2F;p&gt;
         </text>
         <group type="string">Class (Monk)</group>
       </id-00021>
@@ -436,7 +436,7 @@
         <locked type="number">1</locked>
         <name type="string">Unarmored Movement</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;Your speed increases by 10 feet while you aren’t wearing armor or wielding a Shield. This bonus increases when you reach certain Monk levels, as shown on the Monk Features table.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;Your speed increases by 10 feet while you aren’t wearing armor or wielding a Shield. This bonus increases when you reach certain Monk levels, as shown on the Monk Features table.&lt;&#x2F;p&gt;
         </text>
         <group type="string">Class (Monk)</group>
       </id-00022>
@@ -445,7 +445,7 @@
         <locked type="number">1</locked>
         <name type="string">Uncanny Metabolism</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;When you roll Initiative, you can regain all expended Focus Points. When you do so, roll your Martial Arts die, and regain a number of Hit Points equal to your Monk level plus the number rolled.&lt;&#x2F;p&gt;  &lt;p&gt;Once you use this feature, you can’t use it again until you finish a Long Rest.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;When you roll Initiative, you can regain all expended Focus Points. When you do so, roll your Martial Arts die, and regain a number of Hit Points equal to your Monk level plus the number rolled.&lt;&#x2F;p&gt;  &lt;p&gt;Once you use this feature, you can’t use it again until you finish a Long Rest.&lt;&#x2F;p&gt;
         </text>
         <group type="string">Class (Monk)</group>
       </id-00023>
@@ -454,7 +454,7 @@
         <locked type="number">1</locked>
         <name type="string">Deflect Attacks</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;When an attack roll hits you and its damage includes Bludgeoning, Piercing, or Slashing damage, you can take a Reaction to reduce the attack’s total damage against you. The reduction equals 1d10 plus your Dexterity modifier and Monk level.&lt;&#x2F;p&gt;  &lt;p&gt;If you reduce the damage to 0, you can expend 1 Focus Point to redirect some of the attack’s force. If you do so, choose a creature you can see within 5 feet of yourself if the attack was a melee attack or a creature you can see within 60 feet of yourself that isn’t behind Total Cover if the attack was a ranged attack. That creature must succeed on a Dexterity saving throw or take damage equal to two rolls of your Martial Arts die plus your Dexterity modifier. The damage is the same type dealt by the attack.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;When an attack roll hits you and its damage includes Bludgeoning, Piercing, or Slashing damage, you can take a Reaction to reduce the attack’s total damage against you. The reduction equals 1d10 plus your Dexterity modifier and Monk level.&lt;&#x2F;p&gt;  &lt;p&gt;If you reduce the damage to 0, you can expend 1 Focus Point to redirect some of the attack’s force. If you do so, choose a creature you can see within 5 feet of yourself if the attack was a melee attack or a creature you can see within 60 feet of yourself that isn’t behind Total Cover if the attack was a ranged attack. That creature must succeed on a Dexterity saving throw or take damage equal to two rolls of your Martial Arts die plus your Dexterity modifier. The damage is the same type dealt by the attack.&lt;&#x2F;p&gt;
         </text>
         <group type="string">Class (Monk)</group>
       </id-00024>
@@ -463,14 +463,14 @@
         <locked type="number">1</locked>
         <name type="string">Slow Fall</name>
         <text type="formattedtext">
-          <p>&lt;p&gt;You can take a Reaction when you fall to reduce any damage you take from the fall by an amount equal to five times your Monk level.&lt;&#x2F;p&gt;</p>
+          &lt;p&gt;You can take a Reaction when you fall to reduce any damage you take from the fall by an amount equal to five times your Monk level.&lt;&#x2F;p&gt;
         </text>
         <group type="string">Class (Monk)</group>
       </id-00025>
 
     </featurelist>
     
-    <inventorylist>
+    	<inventorylist>
 			<id-00001>
 				<count type="number">1</count>
 				<name type="string">Traveler&#39;s Clothes</name>
@@ -505,9 +505,9 @@
 				<isidentified type="number">1</isidentified>
 				<type type="string">weapon</type>
 				<description type="formattedtext">
-					<p><p>When you nock an arrow on this bow, it whispers in Elvish, Swift defeat to my enemies. When you use this weapon to make a ranged attack, you can utter or sign the following command words: Swift death to you who have wronged me. The target of your attack becomes your sworn enemy until it dies or until dawn 7 days later. You can have only one such sworn enemy at a time. When your sworn enemy dies, you can choose a new one after the next dawn.</p>
-          <p>When you make a ranged attack roll with this weapon against your sworn enemy, you have Advantage on the roll. In addition, your target gains no benefit from Half Cover or Three-Quarters Cover, and you suffer no Disadvantage due to long range. If the attack hits, your sworn enemy takes an extra 3d6 Piercing damage.</p>
-          <p>While your sworn enemy lives, you have Disadvantage on attack rolls with all other weapons.</p></p>
+					<p><p>When you nock an arrow on this bow, it whispers in Elvish, &ldquo;Swift defeat to my enemies.&rdquo; When you use this weapon to make a ranged attack, you can utter or sign the following command words: &ldquo;Swift death to you who have wronged me.&rdquo; The target of your attack becomes your sworn enemy until it dies or until dawn 7 days later. You can have only one such sworn enemy at a time. When your sworn enemy dies, you can choose a new one after the next dawn.</p>
+<p>When you make a ranged attack roll with this weapon against your sworn enemy, you have Advantage on the roll. In addition, your target gains no benefit from Half Cover or Three-Quarters Cover, and you suffer no Disadvantage due to long range. If the attack hits, your sworn enemy takes an extra 3d6 Piercing damage.</p>
+<p>While your sworn enemy lives, you have Disadvantage on attack rolls with all other weapons.</p></p>
 				</description>
 				<properties type="string">Damage, Combat, Bane, Magic, Requires Attunement</properties>
 				<location type="string">Quiver of Ehlonna</location>
@@ -522,10 +522,10 @@
 				<cost type="string">undefined undefined</cost>
 				<description type="formattedtext">
 					<p><p>Proficiency with a Dagger allows you to add your proficiency bonus to the attack roll for any attack you make with it.</p>
-          <div class="mastery-container"><hr />
-          <p>This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.</p>
-          <p><strong><em>Nick.</em></strong> When you make the extra attack of the Light property, you can make it as part of the Attack action instead of as a Bonus Action. You can make this extra attack only once per turn.</p>
-          </div></p>
+<div class="mastery-container"><hr />
+<p>This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.</p>
+<p><strong><em>Nick.</em></strong> When you make the extra attack of the Light property, you can make it as part of the Attack action instead of as a Bonus Action. You can make this extra attack only once per turn.</p>
+</div></p>
 				</description>
 				<properties type="string">Damage, Combat</properties>
 				<location type="string">Quiver of Ehlonna</location>
@@ -540,10 +540,10 @@
 				<cost type="string">undefined undefined</cost>
 				<description type="formattedtext">
 					<p><p>Proficiency with a Dagger allows you to add your proficiency bonus to the attack roll for any attack you make with it.</p>
-          <div class="mastery-container"><hr />
-          <p>This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.</p>
-          <p><strong><em>Nick.</em></strong> When you make the extra attack of the Light property, you can make it as part of the Attack action instead of as a Bonus Action. You can make this extra attack only once per turn.</p>
-          </div></p>
+<div class="mastery-container"><hr />
+<p>This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.</p>
+<p><strong><em>Nick.</em></strong> When you make the extra attack of the Light property, you can make it as part of the Attack action instead of as a Bonus Action. You can make this extra attack only once per turn.</p>
+</div></p>
 				</description>
 				<properties type="string">Damage, Combat</properties>
 				<location type="string">Quiver of Ehlonna</location>
@@ -558,10 +558,10 @@
 				<cost type="string">undefined undefined</cost>
 				<description type="formattedtext">
 					<p><p>Proficiency with a Handaxe allows you to add your proficiency bonus to the attack roll for any attack you make with it.</p>
-          <div class="mastery-container"><hr />
-          <p>This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.</p>
-          <p><strong><em>Vex.</em></strong> If you hit a creature with this weapon and deal damage to the creature, you have Advantage on your next attack roll against that creature before the end of your next turn.</p>
-          </div></p>
+<div class="mastery-container"><hr />
+<p>This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.</p>
+<p><strong><em>Vex.</em></strong> If you hit a creature with this weapon and deal damage to the creature, you have Advantage on your next attack roll against that creature before the end of your next turn.</p>
+</div></p>
 				</description>
 				<properties type="string">Damage, Combat</properties>
 				<location type="string">Quiver of Ehlonna</location>
@@ -576,10 +576,10 @@
 				<cost type="string">undefined undefined</cost>
 				<description type="formattedtext">
 					<p><p>Proficiency with a Handaxe allows you to add your proficiency bonus to the attack roll for any attack you make with it.</p>
-            <div class="mastery-container"><hr />
-            <p>This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.</p>
-            <p><strong><em>Vex.</em></strong> If you hit a creature with this weapon and deal damage to the creature, you have Advantage on your next attack roll against that creature before the end of your next turn.</p>
-          </div></p>
+<div class="mastery-container"><hr />
+<p>This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.</p>
+<p><strong><em>Vex.</em></strong> If you hit a creature with this weapon and deal damage to the creature, you have Advantage on your next attack roll against that creature before the end of your next turn.</p>
+</div></p>
 				</description>
 				<properties type="string">Damage, Combat</properties>
 				<location type="string">Quiver of Ehlonna</location>
@@ -594,10 +594,10 @@
 				<cost type="string">undefined undefined</cost>
 				<description type="formattedtext">
 					<p><p>Proficiency with a Handaxe allows you to add your proficiency bonus to the attack roll for any attack you make with it.</p>
-          <div class="mastery-container"><hr />
-          <p>This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.</p>
-          <p><strong><em>Vex.</em></strong> If you hit a creature with this weapon and deal damage to the creature, you have Advantage on your next attack roll against that creature before the end of your next turn.</p>
-          </div></p>
+<div class="mastery-container"><hr />
+<p>This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.</p>
+<p><strong><em>Vex.</em></strong> If you hit a creature with this weapon and deal damage to the creature, you have Advantage on your next attack roll against that creature before the end of your next turn.</p>
+</div></p>
 				</description>
 				<properties type="string">Damage, Combat</properties>
 				<location type="string">Quiver of Ehlonna</location>
@@ -612,10 +612,10 @@
 				<cost type="string">undefined undefined</cost>
 				<description type="formattedtext">
 					<p><p>Proficiency with a Handaxe allows you to add your proficiency bonus to the attack roll for any attack you make with it.</p>
-          <div class="mastery-container"><hr />
-          <p>This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.</p>
-          <p><strong><em>Vex.</em></strong> If you hit a creature with this weapon and deal damage to the creature, you have Advantage on your next attack roll against that creature before the end of your next turn.</p>
-          </div></p>
+<div class="mastery-container"><hr />
+<p>This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.</p>
+<p><strong><em>Vex.</em></strong> If you hit a creature with this weapon and deal damage to the creature, you have Advantage on your next attack roll against that creature before the end of your next turn.</p>
+</div></p>
 				</description>
 				<properties type="string">Damage, Combat</properties>
 				<location type="string">Quiver of Ehlonna</location>
@@ -630,10 +630,10 @@
 				<cost type="string">undefined undefined</cost>
 				<description type="formattedtext">
 					<p><p>Proficiency with a Javelin allows you to add your proficiency bonus to the attack roll for any attack you make with it.</p>
-          <div class="mastery-container"><hr />
-          <p>This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.</p>
-          <p><em><strong>Slow.</strong></em> If you hit a creature with this weapon and deal damage to it, you can reduce its Speed by 10 feet until the start of your next turn. If the creature is hit more than once by weapons that have this property, the Speed reduction doesn’t exceed 10 feet.</p>
-          </div></p>
+<div class="mastery-container"><hr />
+<p>This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.</p>
+<p><em><strong>Slow.</strong></em> If you hit a creature with this weapon and deal damage to it, you can reduce its Speed by 10 feet until the start of your next turn. If the creature is hit more than once by weapons that have this property, the Speed reduction doesn’t exceed 10 feet.</p>
+</div></p>
 				</description>
 				<properties type="string">Damage, Combat</properties>
 				<location type="string">Quiver of Ehlonna</location>
@@ -662,10 +662,10 @@
 				<cost type="string">undefined undefined</cost>
 				<description type="formattedtext">
 					<p><p>Proficiency with a Greataxe allows you to add your proficiency bonus to the attack roll for any attack you make with it.</p>
-          <div class="mastery-container"><hr />
-          <p>This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.</p>
-          <p><em><strong>Cleave.</strong></em> If you hit a creature with a melee attack roll using this weapon, you can make a melee attack roll with the weapon against a second creature within 5 feet of the first that is also within your reach. On a hit, the second creature takes the weapon’s damage, but don’t add your ability modifier to that damage unless that modifier is negative. You can make this extra attack only once per turn.</p>
-          </div></p>
+<div class="mastery-container"><hr />
+<p>This weapon has the following mastery property. To use this property, you must have a feature that lets you use it.</p>
+<p><em><strong>Cleave.</strong></em> If you hit a creature with a melee attack roll using this weapon, you can make a melee attack roll with the weapon against a second creature within 5 feet of the first that is also within your reach. On a hit, the second creature takes the weapon’s damage, but don’t add your ability modifier to that damage unless that modifier is negative. You can make this extra attack only once per turn.</p>
+</div></p>
 				</description>
 				<properties type="string">Damage, Combat</properties>
 				<location type="string">Heward's Handy Haversack</location>
@@ -694,9 +694,9 @@
 				<cost type="string">undefined undefined</cost>
 				<description type="formattedtext">
 					<p><p>You can douse a creature, object, or space with Oil or use it as fuel, as detailed below.</p>
-          <p><strong><em>Dousing a Creature or an Object.</em></strong> When you take the Attack action, you can replace one of your attacks with throwing an Oil flask. Target one creature or object within 20 feet of yourself. The target must succeed on a Dexterity saving throw (DC 8 plus your Dexterity modifier and Proficiency Bonus) or be covered in oil. If the target takes Fire damage before the oil dries (after 1 minute), the target takes an extra 5 Fire damage from burning oil.</p>
-          <p><strong><em>Dousing a Space.</em></strong> You can take the Utilize action to pour an Oil flask on level ground to cover a 5-foot-square area within 5 feet of yourself. If lit, the oil burns until the end of the turn 2 rounds from when the oil was lit (or 12 seconds) and deals 5 Fire damage to any creature that enters the area or ends its turn there. A creature can take this damage only once per turn.</p>
-          <p><strong><em>Fuel.</em></strong> Oil serves as fuel for Lamps and Lanterns. Once lit, a flask of Oil burns for 6 hours in a Lamp or Lantern. That duration doesn’t need to be consecutive; you can extinguish the burning Oil (as a Utilize action) and rekindle it again until it has burned for a total of 6 hours.</p></p>
+<p><strong><em>Dousing a Creature or an Object.</em></strong> When you take the Attack action, you can replace one of your attacks with throwing an Oil flask. Target one creature or object within 20 feet of yourself. The target must succeed on a Dexterity saving throw (DC 8 plus your Dexterity modifier and Proficiency Bonus) or be covered in oil. If the target takes Fire damage before the oil dries (after 1 minute), the target takes an extra 5 Fire damage from burning oil.</p>
+<p><strong><em>Dousing a Space.</em></strong> You can take the Utilize action to pour an Oil flask on level ground to cover a 5-foot-square area within 5 feet of yourself. If lit, the oil burns until the end of the turn 2 rounds from when the oil was lit (or 12 seconds) and deals 5 Fire damage to any creature that enters the area or ends its turn there. A creature can take this damage only once per turn.</p>
+<p><strong><em>Fuel.</em></strong> Oil serves as fuel for Lamps and Lanterns. Once lit, a flask of Oil burns for 6 hours in a Lamp or Lantern. That duration doesn’t need to be consecutive; you can extinguish the burning Oil (as a Utilize action) and rekindle it again until it has burned for a total of 6 hours.</p></p>
 				</description>
 				<properties type="string">Damage, Utility, Combat</properties>
 				<location type="string">Backpack</location>
@@ -710,7 +710,7 @@
 				<type type="string">adventuring-gear</type>
 				<cost type="string">undefined undefined</cost>
 				<description type="formattedtext">
-					<p><p>Rations consist of travel-ready food, including jerky, dried fruit, hardtack, and nuts. See Malnutrition for the risks of not eating.</p></p>
+					<p><p>Rations consist of travel-ready food, including jerky, dried fruit, hardtack, and nuts. See &ldquo;Malnutrition&rdquo; for the risks of not eating.</p></p>
 				</description>
 				<properties type="string">Social, Utility, Consumable</properties>
 				<location type="string">Backpack</location>
@@ -725,7 +725,7 @@
 				<cost type="string">undefined undefined</cost>
 				<description type="formattedtext">
 					<p><p>As a Utilize action, you can tie a knot with Rope if you succeed on a DC 10 Dexterity (Sleight of Hand) check. The Rope can be burst with a successful DC 20 Strength (Athletics) check.</p>
-          <p>You can bind an unwilling creature with the Rope only if the creature has the Grappled, Incapacitated, or Restrained condition. If the creature’s legs are bound, the creature has the Restrained condition until it escapes. Escaping the Rope requires the creature to make a successful DC 15 Dexterity (Acrobatics) check as an action.</p></p>
+<p>You can bind an unwilling creature with the Rope only if the creature has the Grappled, Incapacitated, or Restrained condition. If the creature’s legs are bound, the creature has the Restrained condition until it escapes. Escaping the Rope requires the creature to make a successful DC 15 Dexterity (Acrobatics) check as an action.</p></p>
 				</description>
 				<location type="string">Backpack</location>
 			</id-00016>
@@ -752,7 +752,7 @@
 				<type type="string">adventuring-gear</type>
 				<cost type="string">undefined undefined</cost>
 				<description type="formattedtext">
-					<p><p>A Tinderbox is a small container holding flint, fire steel, and tinder (usually dry cloth soaked in light oil) used to kindle a fire. Using it to light a Candle, Lamp, Lantern, or Torch or anything else with exposed fuel takes a Bonus Action. Lighting any other fire takes 1 minute.</p></p>
+					<p><p>A Tinderbox is a small container holding flint, fire steel, and tinder (usually dry cloth soaked in light oil) used to kindle a fire. Using it to light a Candle, Lamp, Lantern, or Torch&mdash;or anything else with exposed fuel&mdash;takes a Bonus Action. Lighting any other fire takes 1 minute.</p></p>
 				</description>
 				<properties type="string">Utility, Exploration</properties>
 				<location type="string">Backpack</location>
@@ -795,8 +795,8 @@
 				<cost type="string">undefined undefined</cost>
 				<description type="formattedtext">
 					<p><p><strong>Ability:</strong> Dexterity <br /><strong>Utilize:</strong> Pick a lock (DC 15), or disarm a trap (DC 15)</p>
-          <hr />
-          <p>If you have proficiency with a tool, add your Proficiency Bonus to any ability check you make that uses the tool. If you have proficiency in a skill that’s used with that check, you have Advantage on the check too.</p></p>
+<hr />
+<p>If you have proficiency with a tool, add your Proficiency Bonus to any ability check you make that uses the tool. If you have proficiency in a skill that’s used with that check, you have Advantage on the check too.</p></p>
 				</description>
 				<properties type="string">Utility, Exploration</properties>
 				<location type="string">Pouch</location>
@@ -843,13 +843,146 @@
 			</id-00026>
 	</inventorylist>
     
+    	<weaponlist>
+		<id-00001>
+			<attackbonus type="number">8</attackbonus>
+			<carried type="number">1</carried>
+			<damagelist>
+				<id-00001>
+					<bonus type="number">2</bonus>
+					<dice type="dice">d6</dice>
+					<stat type="string">base</stat>
+					<type type="string">bludgeoning</type>
+				</id-00001>
+			</damagelist>
+			<handling type="number">1</handling>
+			<isidentified type="number">1</isidentified>
+			<name type="string">Maul, +2</name>
+			<properties type="string">heavy, two-handed, topple</properties>
+			<shortcut type="windowreference">
+				<class>item</class>
+				<recordname>....inventorylist.id-00001</recordname>
+			</shortcut>
+			<type type="number">0</type>
+		</id-00001>
+		<id-00002>
+			<ammo type="number">0</ammo>
+			<attackbonus type="number">8</attackbonus>
+			<carried type="number">2</carried>
+			<damagelist>
+				<id-00001>
+					<bonus type="number">2</bonus>
+					<dice type="dice">d8</dice>
+					<stat type="string">base</stat>
+					<type type="string">piercing</type>
+				</id-00001>
+			</damagelist>
+			<handling type="number">1</handling>
+			<isidentified type="number">1</isidentified>
+			<maxammo type="number">20</maxammo>
+			<name type="string">Oathbow Longbow</name>
+			<properties type="string">ammunition, heavy, range, two-handed, slow</properties>
+			<shortcut type="windowreference">
+				<class>item</class>
+				<recordname>....inventorylist.id-00002</recordname>
+			</shortcut>
+			<type type="number">1</type>
+		</id-00002>
+		<id-00003>
+			<attackbonus type="number">8</attackbonus>
+			<carried type="number">1</carried>
+			<damagelist>
+				<id-00001>
+					<bonus type="number">2</bonus>
+					<dice type="dice">d4</dice>
+					<stat type="string">base</stat>
+					<type type="string">piercing</type>
+				</id-00001>
+			</damagelist>
+			<handling type="number">0</handling>
+			<isidentified type="number">1</isidentified>
+			<maxammo type="number">2</maxammo>
+			<name type="string">Dagger</name>
+			<properties type="string">finesse, light, thrown, nick</properties>
+			<shortcut type="windowreference">
+				<class>item</class>
+				<recordname>....inventorylist.id-00003</recordname>
+			</shortcut>
+			<type type="number">0</type>
+		</id-00003>
+		<id-00004>
+			<attackbonus type="number">8</attackbonus>
+			<carried type="number">1</carried>
+			<damagelist>
+				<id-00001>
+					<bonus type="number">2</bonus>
+					<dice type="dice">d6</dice>
+					<stat type="string">base</stat>
+					<type type="string">slashing</type>
+				</id-00001>
+			</damagelist>
+			<handling type="number">0</handling>
+			<isidentified type="number">1</isidentified>
+			<maxammo type="number">4</maxammo>
+			<name type="string">Handaxe</name>
+			<properties type="string">light, thrown, vex</properties>
+			<shortcut type="windowreference">
+				<class>item</class>
+				<recordname>....inventorylist.id-00005</recordname>
+			</shortcut>
+			<type type="number">0</type>
+		</id-00004>
+		<id-00005>
+			<attackbonus type="number">8</attackbonus>
+			<carried type="number">1</carried>
+			<damagelist>
+				<id-00001>
+					<bonus type="number">2</bonus>
+					<dice type="dice">d6</dice>
+					<stat type="string">base</stat>
+					<type type="string">piercing</type>
+				</id-00001>
+			</damagelist>
+			<handling type="number">0</handling>
+			<isidentified type="number">1</isidentified>
+			<name type="string">Javelin</name>
+			<properties type="string">thrown, slow</properties>
+			<shortcut type="windowreference">
+				<class>item</class>
+				<recordname>....inventorylist.id-00009</recordname>
+			</shortcut>
+			<type type="number">0</type>
+		</id-00005>
+		<id-00006>
+			<attackbonus type="number">8</attackbonus>
+			<carried type="number">1</carried>
+			<damagelist>
+				<id-00001>
+					<bonus type="number">2</bonus>
+					<dice type="dice">d12</dice>
+					<stat type="string">base</stat>
+					<type type="string">slashing</type>
+				</id-00001>
+			</damagelist>
+			<handling type="number">1</handling>
+			<isidentified type="number">1</isidentified>
+			<name type="string">Greataxe</name>
+			<properties type="string">heavy, two-handed, cleave</properties>
+			<shortcut type="windowreference">
+				<class>item</class>
+				<recordname>....inventorylist.id-00010</recordname>
+			</shortcut>
+			<type type="number">0</type>
+		</id-00006>
+	</weaponlist>
+    
     <languagelist>
       
 			<id-00001>
 				<name type="string">Common</name>
 			</id-00001>
 			<id-00002>
-				<name type="string">Thieves&apos; Cant</name>
+				<name type="string">Thieves&#39; Cant</name>
 			</id-00002>
     </languagelist>
     
@@ -941,7 +1074,7 @@
 				<locked type="number">1</locked>
 				<name type="string">Giant Ancestry</name>
 				<text type="formattedtext">
-					<p>You are descended from Giants. Choose one of the following benefits&amp;a supernatural boon from your ancestry; you can use the chosen benefit a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest:</p>
+					<p>You are descended from Giants. Choose one of the following benefits-a supernatural boon from your ancestry; you can use the chosen benefit a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest:</p>
 					<p>**Cloud’s Jaunt (Cloud Giant).** As a Bonus Action, you magically teleport up to 30 feet to an unoccupied space you can see.</p>
 					<p>**Fire’s Burn (Fire Giant).** When you hit a target with an attack roll and deal damage to it, you can also deal 1d10 Fire damage to that target.</p>
 					<p>**Frost’s Chill (Frost Giant).** When you hit a target with an attack roll and deal damage to it, you can also deal 1d6 Cold damage to that target and reduce its Speed by 10 feet until the start of your next turn.</p>
@@ -965,10 +1098,6 @@
 				</text>
 			</id-00003>
     </traitlist>
-    
-    <weaponlist>
-      
-    </weaponlist>
     
     <powers>
       

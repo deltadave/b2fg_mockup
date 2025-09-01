@@ -52,6 +52,18 @@ export class StringSanitizer {
     
     // Additional sanitization based on options (before encoding to preserve patterns)
     let tempString = inputString;
+
+    // FIRST: Convert HTML entities to characters to avoid XML parsing errors
+    // This handles entities like &mdash;, &ldquo;, &rdquo; that aren't valid in XML
+    tempString = tempString
+      .replace(/&rsquo;/g, "'")
+      .replace(/&lsquo;/g, "'")
+      .replace(/&rdquo;/g, '"')
+      .replace(/&ldquo;/g, '"')
+      .replace(/&ndash;/g, "-")
+      .replace(/&mdash;/g, "-")  // Convert em dash to hyphen
+      .replace(/&#34;/g, '"')
+      .replace(/&nbsp;/g, " ");
     
     if (removeDangerousProtocols) {
       tempString = tempString
@@ -87,12 +99,11 @@ export class StringSanitizer {
     
     // Comprehensive HTML entity encoding for security
     tempString = tempString
-      .replace(/&/g, "&amp;")      // Must be first to avoid double-encoding
+      .replace(/&/g, "&amp;")        // Encode remaining ampersands
       .replace(/</g, "&lt;")       // Prevent HTML injection
       .replace(/>/g, "&gt;")       // Prevent HTML injection
       .replace(/"/g, "&quot;")     // Prevent attribute injection
       .replace(/'/g, "&#39;")      // Prevent attribute injection
-      .replace(/=/g, "&#x3D;")     // Equal sign for attribute safety
       .replace(/\//g, "&#x2F;");   // Forward slash for extra safety
     
     // Apply length limit and normalize spaces

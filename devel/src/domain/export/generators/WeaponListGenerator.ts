@@ -5,6 +5,8 @@
  * without modifying existing inventory processing systems.
  */
 
+import { StringSanitizer } from '../../../shared/utils/StringSanitizer';
+
 export interface WeaponListEntry {
   readonly id: string;
   readonly name: string;
@@ -31,16 +33,19 @@ export class WeaponListGenerator {
     }
 
     // Extract weapons from inventory
-    const weapons = characterData.inventory
+    const rawWeapons = characterData.inventory
       .filter((item: any) => item.definition.filterType === 'Weapon')
       .map((weapon: any, index: number) => this.convertToWeaponListEntry(weapon, characterData, index));
 
-    if (weapons.length === 0) {
+    if (rawWeapons.length === 0) {
       return '\t<weaponlist>\n\t</weaponlist>';
     }
 
+    // Consolidate duplicate weapons
+    const consolidatedWeapons = this.consolidateDuplicateWeapons(rawWeapons);
+
     let xml = '\t<weaponlist>\n';
-    weapons.forEach((weapon, index) => {
+    consolidatedWeapons.forEach((weapon, index) => {
       xml += this.generateWeaponEntryXML(weapon, index + 1);
     });
     xml += '\t</weaponlist>';
@@ -49,15 +54,59 @@ export class WeaponListGenerator {
   }
 
   /**
+   * Consolidate duplicate weapons using maxammo field for quantity
+   */
+  private consolidateDuplicateWeapons(weapons: WeaponListEntry[]): WeaponListEntry[] {
+    const weaponMap = new Map<string, WeaponListEntry>();
+
+    weapons.forEach(weapon => {
+      // Create a key based on weapon properties that should match for consolidation
+      const key = this.createWeaponKey(weapon);
+      
+      if (weaponMap.has(key)) {
+        // Found duplicate - add quantities together
+        const existing = weaponMap.get(key)!;
+        const existingQuantity = existing.maxAmmo || 1;
+        const newQuantity = weapon.maxAmmo || 1;
+        const totalQuantity = existingQuantity + newQuantity;
+        
+        weaponMap.set(key, {
+          ...existing,
+          maxAmmo: totalQuantity,
+          ammo: existing.ammo // Keep ammo tracking for ranged weapons
+        });
+      } else {
+        // First occurrence - set maxammo based on weapon quantity or ranged weapon default
+        const isRanged = weapon.weaponType === 1;
+        weaponMap.set(key, {
+          ...weapon,
+          maxAmmo: isRanged ? weapon.maxAmmo : weapon.maxAmmo // Use the quantity as maxammo for all weapons
+        });
+      }
+    });
+
+    return Array.from(weaponMap.values());
+  }
+
+  /**
+   * Create a unique key for weapon consolidation
+   */
+  private createWeaponKey(weapon: WeaponListEntry): string {
+    // Consolidate based on name, dice, damage type, and properties
+    // This ensures magical variants don't get consolidated with non-magical
+    return `${weapon.name}|${weapon.dice}|${weapon.damageType}|${weapon.properties}|${weapon.attackBonus}|${weapon.damageBonus}`;
+  }
+
+  /**
    * Convert D&D Beyond weapon to weapon list entry
    */
   private convertToWeaponListEntry(weapon: any, characterData: any, inventoryIndex: number): WeaponListEntry {
     const weaponDef = weapon.definition;
     
-    // Basic weapon stats from JSON
-    const name = weaponDef.name || 'Unknown Weapon';
+    // Basic weapon stats from JSON - sanitize all D&D Beyond data
+    const name = StringSanitizer.sanitizeHTML(weaponDef.name) || 'Unknown Weapon';
     const dice = this.extractDiceFromDamage(weaponDef.damage);
-    const damageType = this.formatDamageType(weaponDef.damageType);
+    const damageType = this.formatDamageType(StringSanitizer.sanitizeHTML(weaponDef.damageType));
     const properties = this.formatWeaponProperties(weaponDef.properties);
     
     // Calculate bonuses based on character stats and weapon magic
@@ -85,7 +134,7 @@ export class WeaponListGenerator {
       carried,
       handling,
       ammo: this.getAmmoCount(weapon),
-      maxAmmo: this.getMaxAmmo(weaponDef),
+      maxAmmo: this.getMaxAmmo(weapon, weaponDef),
       inventoryShortcut
     };
   }
@@ -158,9 +207,19 @@ export class WeaponListGenerator {
     
     return properties
       .map(prop => {
-        if (typeof prop === 'string') return prop;
-        if (prop.name) return prop.name;
-        return prop;
+        let propName = '';
+        if (typeof prop === 'string') {
+          propName = prop;
+        } else if (prop.name) {
+          propName = prop.name;
+        } else if (prop.description) {
+          propName = prop.description;
+        } else {
+          propName = String(prop);
+        }
+        
+        // Sanitize each property name
+        return StringSanitizer.sanitizeHTML(propName);
       })
       .filter(name => name)
       .join(', ')
@@ -194,17 +253,25 @@ export class WeaponListGenerator {
   }
 
   /**
-   * Get max ammo capacity (for ranged weapons)
+   * Get max ammo capacity (uses D&D Beyond quantity for all weapons, or default capacity for ranged)
    */
-  private getMaxAmmo(weaponDef: any): number | undefined {
+  private getMaxAmmo(weapon: any, weaponDef: any): number {
+    // For all weapons, use the quantity from D&D Beyond
+    const quantity = weapon.quantity || 1;
+    
     if (weaponDef.attackType === 2) { // Ranged weapon
-      // Default ammo capacity based on weapon type
+      // For ranged weapons, use quantity but with reasonable defaults if needed
+      if (quantity > 1) return quantity;
+      
+      // Default ammo capacity based on weapon type for single ranged weapons
       const name = weaponDef.name?.toLowerCase() || '';
       if (name.includes('bow')) return 20;
       if (name.includes('javelin')) return 4;
       return 10;
     }
-    return undefined;
+    
+    // For melee weapons, use quantity (this handles cases like "5 daggers")
+    return quantity;
   }
 
   /**
@@ -269,13 +336,13 @@ export class WeaponListGenerator {
     xml += `\t\t\t<handling type="number">${weapon.handling}</handling>\n`;
     xml += `\t\t\t<isidentified type="number">1</isidentified>\n`;
     
-    // Optional max ammo fields
-    if (weapon.maxAmmo !== undefined) {
+    // Add maxammo field for weapons with quantity > 1
+    if (weapon.maxAmmo && weapon.maxAmmo > 1) {
       xml += `\t\t\t<maxammo type="number">${weapon.maxAmmo}</maxammo>\n`;
     }
     
-    xml += `\t\t\t<name type="string">${this.sanitizeString(weapon.name)}</name>\n`;
-    xml += `\t\t\t<properties type="string">${weapon.properties}</properties>\n`;
+    xml += `\t\t\t<name type="string">${StringSanitizer.sanitizeHTML(weapon.name)}</name>\n`;
+    xml += `\t\t\t<properties type="string">${StringSanitizer.sanitizeHTML(weapon.properties)}</properties>\n`;
     xml += `\t\t\t<shortcut type="windowreference">\n`;
     xml += `\t\t\t\t<class>item</class>\n`;
     xml += `\t\t\t\t<recordname>${weapon.inventoryShortcut}</recordname>\n`;
@@ -286,17 +353,4 @@ export class WeaponListGenerator {
     return xml;
   }
 
-
-  /**
-   * Sanitize string for XML output
-   */
-  private sanitizeString(input: string): string {
-    if (!input) return '';
-    return input
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&apos;');
-  }
 }
