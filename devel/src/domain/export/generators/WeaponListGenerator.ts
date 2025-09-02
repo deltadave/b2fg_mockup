@@ -32,16 +32,20 @@ export class WeaponListGenerator {
       return '\t<weaponlist>\n\t</weaponlist>';
     }
 
-    // Extract weapons from inventory
-    const rawWeapons = characterData.inventory
+    // Extract weapons from inventory, handling thrown weapons as dual entries
+    const rawWeapons: WeaponListEntry[] = [];
+    characterData.inventory
       .filter((item: any) => item.definition.filterType === 'Weapon')
-      .map((weapon: any, index: number) => this.convertToWeaponListEntry(weapon, characterData, index));
+      .forEach((weapon: any, index: number) => {
+        const entries = this.convertToWeaponListEntries(weapon, characterData, index);
+        rawWeapons.push(...entries);
+      });
 
     if (rawWeapons.length === 0) {
       return '\t<weaponlist>\n\t</weaponlist>';
     }
 
-    // Consolidate duplicate weapons
+    // Consolidate duplicate weapons (but not thrown weapon dual entries)
     const consolidatedWeapons = this.consolidateDuplicateWeapons(rawWeapons);
 
     let xml = '\t<weaponlist>\n';
@@ -55,12 +59,14 @@ export class WeaponListGenerator {
 
   /**
    * Consolidate duplicate weapons using maxammo field for quantity
+   * NOTE: Thrown weapon dual entries are NOT consolidated together
    */
   private consolidateDuplicateWeapons(weapons: WeaponListEntry[]): WeaponListEntry[] {
     const weaponMap = new Map<string, WeaponListEntry>();
 
     weapons.forEach(weapon => {
       // Create a key based on weapon properties that should match for consolidation
+      // Include weapon type to prevent consolidating thrown weapon dual entries
       const key = this.createWeaponKey(weapon);
       
       if (weaponMap.has(key)) {
@@ -76,12 +82,8 @@ export class WeaponListGenerator {
           ammo: existing.ammo // Keep ammo tracking for ranged weapons
         });
       } else {
-        // First occurrence - set maxammo based on weapon quantity or ranged weapon default
-        const isRanged = weapon.weaponType === 1;
-        weaponMap.set(key, {
-          ...weapon,
-          maxAmmo: isRanged ? weapon.maxAmmo : weapon.maxAmmo // Use the quantity as maxammo for all weapons
-        });
+        // First occurrence - keep as-is
+        weaponMap.set(key, weapon);
       }
     });
 
@@ -92,15 +94,37 @@ export class WeaponListGenerator {
    * Create a unique key for weapon consolidation
    */
   private createWeaponKey(weapon: WeaponListEntry): string {
-    // Consolidate based on name, dice, damage type, and properties
+    // Consolidate based on name, dice, damage type, properties, and weapon type
+    // Including weapon type prevents consolidating thrown weapon dual entries
     // This ensures magical variants don't get consolidated with non-magical
-    return `${weapon.name}|${weapon.dice}|${weapon.damageType}|${weapon.properties}|${weapon.attackBonus}|${weapon.damageBonus}`;
+    return `${weapon.name}|${weapon.dice}|${weapon.damageType}|${weapon.properties}|${weapon.attackBonus}|${weapon.damageBonus}|${weapon.weaponType}`;
+  }
+
+  /**
+   * Convert D&D Beyond weapon to weapon list entries (may return multiple for thrown weapons)
+   */
+  private convertToWeaponListEntries(weapon: any, characterData: any, inventoryIndex: number): WeaponListEntry[] {
+    const weaponDef = weapon.definition;
+    
+    // Check if this is a thrown weapon (attackType 1 with thrown property)
+    const isThrown = weaponDef.attackType === 1 && this.hasProperty(weaponDef.properties, 'Thrown');
+    
+    if (isThrown) {
+      // Create dual entries for thrown weapons: melee and ranged
+      return [
+        this.convertToSingleWeaponListEntry(weapon, characterData, inventoryIndex, 'melee'),
+        this.convertToSingleWeaponListEntry(weapon, characterData, inventoryIndex, 'ranged')
+      ];
+    } else {
+      // Single entry for non-thrown weapons
+      return [this.convertToSingleWeaponListEntry(weapon, characterData, inventoryIndex, 'normal')];
+    }
   }
 
   /**
    * Convert D&D Beyond weapon to weapon list entry
    */
-  private convertToWeaponListEntry(weapon: any, characterData: any, inventoryIndex: number): WeaponListEntry {
+  private convertToSingleWeaponListEntry(weapon: any, characterData: any, inventoryIndex: number, entryType: 'melee' | 'ranged' | 'normal'): WeaponListEntry {
     const weaponDef = weapon.definition;
     
     // Basic weapon stats from JSON - sanitize all D&D Beyond data
@@ -109,21 +133,25 @@ export class WeaponListGenerator {
     const damageType = this.formatDamageType(StringSanitizer.sanitizeHTML(weaponDef.damageType));
     const properties = this.formatWeaponProperties(weaponDef.properties);
     
-    // Calculate bonuses based on character stats and weapon magic
-    const magicBonus = this.extractMagicBonus(weapon.grantedModifiers || []);
-    const attackBonus = this.calculateAttackBonus(characterData, weaponDef, magicBonus);
-    const damageBonus = this.calculateDamageBonus(characterData, weaponDef, magicBonus);
+    // Set all attack bonuses to 0 - Fantasy Grounds will calculate everything
+    const magicBonus = this.extractMagicBonus(weapon.definition?.grantedModifiers || weapon.grantedModifiers || []);
+    const attackBonus = 0; // Always 0 - let FG handle all calculations
+    const damageBonus = magicBonus; // Keep magic bonus for damage only
     
     // Determine weapon type and handling from D&D Beyond data
-    const weaponType = this.getWeaponType(weaponDef);
+    const weaponType = this.getWeaponType(weaponDef, entryType);
     const carried = weapon.equipped ? 2 : 1;
     const handling = this.getHandling(weaponDef.properties);
     
     // Build inventory reference
     const inventoryShortcut = `....inventorylist.id-${(inventoryIndex + 1).toString().padStart(5, '0')}`;
     
+    // Generate unique ID for thrown weapon dual entries
+    const baseId = weapon.id.toString();
+    const entryId = entryType === 'ranged' ? `${baseId}_ranged` : baseId;
+    
     return {
-      id: weapon.id.toString(),
+      id: entryId,
       name,
       dice,
       damageType,
@@ -133,20 +161,32 @@ export class WeaponListGenerator {
       weaponType,
       carried,
       handling,
-      ammo: this.getAmmoCount(weapon),
-      maxAmmo: this.getMaxAmmo(weapon, weaponDef),
+      ammo: this.getAmmoCount(weapon, entryType),
+      maxAmmo: this.getMaxAmmo(weapon, weaponDef, entryType),
       inventoryShortcut
     };
   }
 
   /**
-   * Extract dice notation from damage data (returns "d8", "d6", etc.)
+   * Extract dice notation from damage data (returns "2d6", "1d8", etc.)
    */
   private extractDiceFromDamage(damage: any): string {
-    if (!damage || !damage.diceValue) {
+    if (!damage) {
       return 'd4';
     }
-    return `d${damage.diceValue}`;
+    
+    // Prefer diceString if available (contains full notation like "2d6")
+    if (damage.diceString) {
+      return damage.diceString;
+    }
+    
+    // Fallback to constructing from diceCount and diceValue
+    if (damage.diceValue) {
+      const diceCount = damage.diceCount || 1;
+      return `${diceCount}d${damage.diceValue}`;
+    }
+    
+    return 'd4';
   }
 
   /**
@@ -172,15 +212,29 @@ export class WeaponListGenerator {
   /**
    * Calculate attack bonus based on character abilities and proficiency
    */
-  private calculateAttackBonus(characterData: any, weaponDef: any, magicBonus: number): number {
-    // Get ability modifier (simplified - use STR or DEX based on finesse)
-    const isFinesse = this.hasProperty(weaponDef.properties, 'Finesse');
-    const abilityScore = isFinesse ? this.getAbilityScore(characterData, 'dexterity') : this.getAbilityScore(characterData, 'strength');
+  private calculateAttackBonus(characterData: any, weaponDef: any, magicBonus: number, entryType: 'melee' | 'ranged' | 'normal' = 'normal'): number {
+    // Determine which ability to use based on entry type and weapon properties
+    let useAbility: string;
+    
+    if (entryType === 'ranged' || weaponDef.attackType === 2) {
+      // Ranged entries (thrown weapons) and ranged-only weapons always use Dexterity
+      useAbility = 'dexterity';
+    } else {
+      // Melee entries use STR unless weapon has finesse property
+      const isFinesse = this.hasProperty(weaponDef.properties, 'Finesse');
+      useAbility = isFinesse ? 'dexterity' : 'strength';
+    }
+    
+    const abilityScore = this.getAbilityScore(characterData, useAbility);
     const abilityModifier = Math.floor((abilityScore - 10) / 2);
     
     // Get proficiency bonus (simplified - assume proficient)
     const characterLevel = this.getCharacterLevel(characterData);
-    const proficiencyBonus = Math.ceil(characterLevel / 4) + 1; // 2 at level 1-4, 3 at 5-8, etc.
+    // D&D 5e proficiency bonus: +2 (levels 1-4), +3 (5-8), +4 (9-12), +5 (13-16), +6 (17-20)
+    const proficiencyBonus = characterLevel <= 4 ? 2 : 
+                             characterLevel <= 8 ? 3 : 
+                             characterLevel <= 12 ? 4 : 
+                             characterLevel <= 16 ? 5 : 6;
     
     return abilityModifier + proficiencyBonus + magicBonus;
   }
@@ -188,10 +242,20 @@ export class WeaponListGenerator {
   /**
    * Calculate damage bonus based on character abilities
    */
-  private calculateDamageBonus(characterData: any, weaponDef: any, magicBonus: number): number {
-    // Get ability modifier (simplified - use STR or DEX based on finesse)
-    const isFinesse = this.hasProperty(weaponDef.properties, 'Finesse');
-    const abilityScore = isFinesse ? this.getAbilityScore(characterData, 'dexterity') : this.getAbilityScore(characterData, 'strength');
+  private calculateDamageBonus(characterData: any, weaponDef: any, magicBonus: number, entryType: 'melee' | 'ranged' | 'normal' = 'normal'): number {
+    // Determine which ability to use based on entry type and weapon properties
+    let useAbility: string;
+    
+    if (entryType === 'ranged' || weaponDef.attackType === 2) {
+      // Ranged entries (thrown weapons) and ranged-only weapons always use Dexterity
+      useAbility = 'dexterity';
+    } else {
+      // Melee entries use STR unless weapon has finesse property
+      const isFinesse = this.hasProperty(weaponDef.properties, 'Finesse');
+      useAbility = isFinesse ? 'dexterity' : 'strength';
+    }
+    
+    const abilityScore = this.getAbilityScore(characterData, useAbility);
     const abilityModifier = Math.floor((abilityScore - 10) / 2);
     
     return abilityModifier + magicBonus;
@@ -229,12 +293,22 @@ export class WeaponListGenerator {
   /**
    * Get weapon type number (0=melee, 1=ranged, 2=equipped ranged)
    */
-  private getWeaponType(weaponDef: any): number {
+  private getWeaponType(weaponDef: any, entryType: 'melee' | 'ranged' | 'normal' = 'normal'): number {
     const attackType = weaponDef.attackType;
-    if (attackType === 2) { // Ranged weapon
-      return 1; // Could be 2 if equipped and has ammo
+    
+    // Handle thrown weapons based on entry type
+    if (entryType === 'melee') {
+      return 0; // Thrown weapon melee entry
     }
-    return 0; // Melee
+    if (entryType === 'ranged') {
+      return 2; // Thrown weapon ranged entry (equipped ranged for ammunition tracking)
+    }
+    
+    // Handle normal weapons
+    if (attackType === 2) { // Ranged weapon from D&D Beyond
+      return 1; // Standard ranged weapon (could be 2 if equipped and has ammo)
+    }
+    return 0; // Melee weapon from D&D Beyond (attackType 1)
   }
 
   /**
@@ -247,20 +321,29 @@ export class WeaponListGenerator {
   /**
    * Get current ammo count (for ranged weapons)
    */
-  private getAmmoCount(weapon: any): number | undefined {
-    // Return 0 for ranged weapons - ammo tracking
-    return weapon.definition.attackType === 2 ? 0 : undefined;
+  private getAmmoCount(weapon: any, entryType: 'melee' | 'ranged' | 'normal' = 'normal'): number | undefined {
+    // Only ranged entries get ammo tracking
+    if (entryType === 'ranged' || weapon.definition.attackType === 2) {
+      return 0; // Start with 0 ammo, player needs to add
+    }
+    return undefined;
   }
 
   /**
    * Get max ammo capacity (uses D&D Beyond quantity for all weapons, or default capacity for ranged)
    */
-  private getMaxAmmo(weapon: any, weaponDef: any): number {
+  private getMaxAmmo(weapon: any, weaponDef: any, entryType: 'melee' | 'ranged' | 'normal' = 'normal'): number {
     // For all weapons, use the quantity from D&D Beyond
     const quantity = weapon.quantity || 1;
     
-    if (weaponDef.attackType === 2) { // Ranged weapon
-      // For ranged weapons, use quantity but with reasonable defaults if needed
+    // Only ranged entries or ranged weapons get maxAmmo property
+    if (entryType === 'ranged' || weaponDef.attackType === 2) {
+      // For thrown weapons (entryType === 'ranged'), always use D&D Beyond quantity
+      if (entryType === 'ranged') {
+        return quantity; // Use exact quantity for thrown weapons
+      }
+      
+      // For true ranged weapons (attackType 2), use quantity or defaults
       if (quantity > 1) return quantity;
       
       // Default ammo capacity based on weapon type for single ranged weapons
@@ -336,8 +419,8 @@ export class WeaponListGenerator {
     xml += `\t\t\t<handling type="number">${weapon.handling}</handling>\n`;
     xml += `\t\t\t<isidentified type="number">1</isidentified>\n`;
     
-    // Add maxammo field for weapons with quantity > 1
-    if (weapon.maxAmmo && weapon.maxAmmo > 1) {
+    // Add maxammo field for ranged weapons (type 1 or 2) only
+    if ((weapon.weaponType === 1 || weapon.weaponType === 2) && weapon.maxAmmo) {
       xml += `\t\t\t<maxammo type="number">${weapon.maxAmmo}</maxammo>\n`;
     }
     
