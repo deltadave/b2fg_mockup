@@ -302,67 +302,78 @@ class SpellSlotProcessingStep extends CharacterProcessor {
     context.progress = 40;
     
     if (featureFlags.isEnabled('conversion_orchestrator_debug')) {
-      console.log('✨ SpellSlotProcessingStep: Starting spell slot calculation');
+      console.log('✨ SpellSlotProcessingStep: Starting enhanced spell slot calculation');
     }
     
-    // Convert character classes to the format expected by SpellSlotCalculator
-    const classes = this.extractCharacterClasses(context.originalCharacter);
-    
-    if (classes.length === 0) {
-      // Non-spellcaster - return empty spell slots
-      const emptyResult: SpellSlotCalculationResult = {
-        spellSlots: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 },
-        pactMagicSlots: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 },
-        multiclassCasterLevel: 0,
-        totalCasterClasses: 0,
-        debugInfo: {
-          classBreakdown: [],
-          calculationMethod: 'single_class',
-          casterLevelCalculation: []
-        }
-      };
+    try {
+      // Use enhanced D&D Beyond parsing directly
+      const rawClasses = SafeAccess.get(context.originalCharacter, 'classes', []) as any[];
       
-      return ProcessingResult.success({ spellSlots: emptyResult });
-    }
-    
-    const validation = SpellSlotCalculator.validateClassData(classes);
-    if (!validation.isValid) {
+      if (rawClasses.length === 0) {
+        if (featureFlags.isEnabled('conversion_orchestrator_debug')) {
+          console.log('✨ SpellSlotProcessingStep: No classes found, returning empty spell slots');
+        }
+        
+        // Non-spellcaster - return empty spell slots
+        const emptyResult: SpellSlotCalculationResult = {
+          spellSlots: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 },
+          pactMagicSlots: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 },
+          multiclassCasterLevel: 0,
+          totalCasterClasses: 0,
+          debugInfo: {
+            classBreakdown: [],
+            calculationMethod: 'single_class',
+            casterLevelCalculation: []
+          }
+        };
+        
+        return ProcessingResult.success({ spellSlots: emptyResult });
+      }
+
+      // Use the enhanced D&D Beyond parsing method
+      const result = this.calculator.calculateFromDnDBeyond(rawClasses, {
+        includeDebugInfo: context.processingOptions.includeDebugInfo,
+        strictMulticlassRules: context.processingOptions.strictValidation,
+        handleSpelllessRanger: true,
+        includePactMagicInMainSlots: false
+      });
+
+      if (featureFlags.isEnabled('conversion_orchestrator_debug')) {
+        console.log('✨ SpellSlotProcessingStep: Spell slot calculation complete', {
+          characterId: context.originalCharacter.id,
+          multiclassCasterLevel: result.multiclassCasterLevel,
+          totalCasterClasses: result.totalCasterClasses,
+          calculationMethod: result.debugInfo.calculationMethod,
+          hasRegularSpells: Object.values(result.spellSlots).some(count => count > 0),
+          hasPactMagic: Object.values(result.pactMagicSlots).some(count => count > 0)
+        });
+      }
+
+      // Collect any warnings from the calculation
+      const warnings: ConversionWarning[] = [];
+      if (result.debugInfo.classBreakdown.some(cb => cb.casterType === 'none' && cb.className !== 'unknown')) {
+        warnings.push({
+          step: 'spell_slots',
+          type: 'feature_unsupported',
+          message: `Some classes may not have spell slot calculations: ${result.debugInfo.classBreakdown.filter(cb => cb.casterType === 'none').map(cb => cb.className).join(', ')}`,
+          impact: 'low'
+        });
+      }
+
+      return ProcessingResult.success({ spellSlots: result }, warnings);
+
+    } catch (error) {
+      console.error('❌ SpellSlotProcessingStep: Spell slot calculation failed:', error);
+      
       return ProcessingResult.error(
         'spell_slots',
-        `Spell slot validation failed: ${validation.errors.join(', ')}`,
-        true
+        `Spell slot calculation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        this.isRecoverable(error)
       );
     }
-    
-    const result = this.calculator.calculateSpellSlots(classes, {
-      includeDebugInfo: context.processingOptions.includeDebugInfo,
-      strictMulticlassRules: context.processingOptions.strictValidation,
-      handleSpelllessRanger: true,
-      includePactMagicInMainSlots: false
-    });
-    
-    return ProcessingResult.success({ spellSlots: result });
   }
   
-  private extractCharacterClasses(character: CharacterData): any[] {
-    if (!character.classes || !Array.isArray(character.classes)) {
-      return [];
-    }
-    
-    return character.classes.map((cls: any) => ({
-      id: cls.id || 1,
-      level: cls.level || 1,
-      classDefinition: {
-        id: cls.definition?.id || cls.id || 1,
-        name: cls.definition?.name || 'Unknown',
-        canCastSpells: cls.definition?.canCastSpells || false
-      },
-      subclassDefinition: cls.subclassDefinition ? {
-        id: cls.subclassDefinition.id,
-        name: cls.subclassDefinition.name
-      } : undefined
-    }));
-  }
+  // Note: extractCharacterClasses removed - now using direct D&D Beyond parsing via calculateFromDnDBeyond
   
   protected getStepName(): string {
     return 'spell_slots';

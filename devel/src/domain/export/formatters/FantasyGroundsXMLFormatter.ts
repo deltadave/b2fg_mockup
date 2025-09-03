@@ -823,8 +823,51 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
       return '<!-- Weapon processing failed -->';
     }
   }
-  private generateSpellsXML(characterData: CharacterData): string { return ''; }
-  private generatePowerMetaXML(characterData: CharacterData): string { return ''; }
+  private generateSpellsXML(characterData: CharacterData): string { 
+    // TODO: Implement spell data XML generation
+    return ''; 
+  }
+
+  /**
+   * Generate power meta XML containing spell slots and pact magic
+   */
+  private generatePowerMetaXML(characterData: CharacterData): string {
+    if (!featureFlags.isEnabled('spell_slot_calculator')) {
+      return '<!-- Spell slots disabled by feature flag -->';
+    }
+
+    try {
+      // Use enhanced D&D Beyond parsing
+      const spellSlotResult = this.spellSlotCalculator.calculateFromDnDBeyond(
+        characterData.classes || [],
+        {
+          includeDebugInfo: true,
+          strictMulticlassRules: true,
+          handleSpelllessRanger: true,
+          includePactMagicInMainSlots: false
+        }
+      );
+
+      // Generate XML using the SpellSlotCalculator's XML generation
+      const xmlResult = this.spellSlotCalculator.generateSpellSlotsXML(spellSlotResult);
+
+      if (featureFlags.isEnabled('spell_slot_calculator_debug')) {
+        console.log('🔮 FantasyGroundsXMLFormatter: Generated spell slot XML', {
+          characterId: characterData.id,
+          multiclassCasterLevel: spellSlotResult.multiclassCasterLevel,
+          totalCasterClasses: spellSlotResult.totalCasterClasses,
+          hasRegularSpells: Object.values(spellSlotResult.spellSlots).some(count => count > 0),
+          hasPactMagic: Object.values(spellSlotResult.pactMagicSlots).some(count => count > 0)
+        });
+      }
+
+      return xmlResult.combinedXML;
+
+    } catch (error) {
+      console.error('❌ FantasyGroundsXMLFormatter: Failed to generate spell slot XML:', error);
+      return '<!-- Spell slot generation failed -->';
+    }
+  }
 
   /**
    * Generate resistances XML for special defenses

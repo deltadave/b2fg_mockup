@@ -697,55 +697,216 @@ export class FoundrySkillMapper {
 }
 
 /**
- * Specialized mapper for spells
+ * Specialized mapper for spells with enhanced pact magic support
  */
 export class FoundrySpellMapper {
+  /**
+   * Map spell slot calculation results to Foundry VTT spell format
+   * 
+   * @param spellSlots - Calculated spell slots from SpellSlotCalculator
+   * @returns Foundry VTT spell slot structure
+   */
   mapSpells(spellSlots: SpellSlotCalculationResult): FoundrySpells {
+    if (featureFlags.isEnabled('foundry_mapper_debug')) {
+      console.log('🔮 FoundrySpellMapper: Mapping spell slots', {
+        regularSlots: this.summarizeSpellSlots(spellSlots.spellSlots),
+        pactSlots: this.summarizeSpellSlots(spellSlots.pactMagicSlots),
+        multiclassCasterLevel: spellSlots.multiclassCasterLevel,
+        calculationMethod: spellSlots.debugInfo.calculationMethod
+      });
+    }
+
+    // Map regular spell slots
     const foundrySpells: FoundrySpells = {
-      spell1: { value: spellSlots.spellSlots[1] || 0, max: spellSlots.spellSlots[1] || 0 },
-      spell2: { value: spellSlots.spellSlots[2] || 0, max: spellSlots.spellSlots[2] || 0 },
-      spell3: { value: spellSlots.spellSlots[3] || 0, max: spellSlots.spellSlots[3] || 0 },
-      spell4: { value: spellSlots.spellSlots[4] || 0, max: spellSlots.spellSlots[4] || 0 },
-      spell5: { value: spellSlots.spellSlots[5] || 0, max: spellSlots.spellSlots[5] || 0 },
-      spell6: { value: spellSlots.spellSlots[6] || 0, max: spellSlots.spellSlots[6] || 0 },
-      spell7: { value: spellSlots.spellSlots[7] || 0, max: spellSlots.spellSlots[7] || 0 },
-      spell8: { value: spellSlots.spellSlots[8] || 0, max: spellSlots.spellSlots[8] || 0 },
-      spell9: { value: spellSlots.spellSlots[9] || 0, max: spellSlots.spellSlots[9] || 0 }
+      spell1: this.createSpellSlot(spellSlots.spellSlots[1]),
+      spell2: this.createSpellSlot(spellSlots.spellSlots[2]),
+      spell3: this.createSpellSlot(spellSlots.spellSlots[3]),
+      spell4: this.createSpellSlot(spellSlots.spellSlots[4]),
+      spell5: this.createSpellSlot(spellSlots.spellSlots[5]),
+      spell6: this.createSpellSlot(spellSlots.spellSlots[6]),
+      spell7: this.createSpellSlot(spellSlots.spellSlots[7]),
+      spell8: this.createSpellSlot(spellSlots.spellSlots[8]),
+      spell9: this.createSpellSlot(spellSlots.spellSlots[9])
     };
 
-    // Add pact magic if present
-    if (this.hasPactMagic(spellSlots)) {
-      const pactLevel = this.getPactMagicLevel(spellSlots);
-      const pactSlots = this.getPactMagicSlots(spellSlots);
+    // Add pact magic if present with enhanced validation
+    const pactMagicData = this.processPactMagic(spellSlots);
+    if (pactMagicData) {
+      foundrySpells.pact = pactMagicData;
       
-      foundrySpells.pact = {
-        value: pactSlots,
-        max: pactSlots,
-        level: pactLevel
-      };
+      if (featureFlags.isEnabled('foundry_mapper_debug')) {
+        console.log('🔮 FoundrySpellMapper: Added pact magic', {
+          level: pactMagicData.level,
+          slots: pactMagicData.max,
+          calculationMethod: spellSlots.debugInfo.calculationMethod
+        });
+      }
     }
 
     return foundrySpells;
   }
 
+  /**
+   * Create a standardized spell slot object
+   */
+  private createSpellSlot(slotCount: number): { value: number; max: number } {
+    const count = Math.max(0, slotCount || 0); // Ensure non-negative
+    return {
+      value: count,
+      max: count
+    };
+  }
+
+  /**
+   * Process pact magic slots with enhanced logic and validation
+   */
+  private processPactMagic(spellSlots: SpellSlotCalculationResult): FoundrySpells['pact'] | undefined {
+    if (!this.hasPactMagic(spellSlots)) {
+      return undefined;
+    }
+
+    const pactLevel = this.getPactMagicLevel(spellSlots);
+    const pactSlots = this.getPactMagicSlots(spellSlots);
+
+    // Validate pact magic data
+    if (pactLevel < 1 || pactLevel > 5) {
+      console.warn('⚠️ FoundrySpellMapper: Invalid pact magic level:', pactLevel);
+      return undefined;
+    }
+
+    if (pactSlots <= 0) {
+      console.warn('⚠️ FoundrySpellMapper: Invalid pact magic slot count:', pactSlots);
+      return undefined;
+    }
+
+    // Ensure pact magic follows D&D 5e rules
+    const maxPactSlots = this.getMaxPactSlotsForLevel(pactLevel);
+    const validatedSlots = Math.min(pactSlots, maxPactSlots);
+
+    if (validatedSlots !== pactSlots) {
+      console.warn('⚠️ FoundrySpellMapper: Capped pact magic slots', {
+        calculated: pactSlots,
+        capped: validatedSlots,
+        level: pactLevel
+      });
+    }
+
+    return {
+      value: validatedSlots,
+      max: validatedSlots,
+      level: pactLevel
+    };
+  }
+
+  /**
+   * Check if character has any pact magic slots
+   */
   private hasPactMagic(spellSlots: SpellSlotCalculationResult): boolean {
     return Object.values(spellSlots.pactMagicSlots).some(count => count > 0);
   }
 
+  /**
+   * Get the level of pact magic slots (1-5 for warlocks)
+   */
   private getPactMagicLevel(spellSlots: SpellSlotCalculationResult): number {
     // Find the highest level with pact magic slots
-    for (let level = 9; level >= 1; level--) {
-      if (spellSlots.pactMagicSlots[level as keyof typeof spellSlots.pactMagicSlots] > 0) {
+    for (let level = 5; level >= 1; level--) {
+      const slotCount = spellSlots.pactMagicSlots[level as keyof typeof spellSlots.pactMagicSlots];
+      if (slotCount > 0) {
         return level;
       }
     }
-    return 1;
+    return 1; // Default fallback
   }
 
+  /**
+   * Get the number of pact magic slots at the appropriate level
+   */
   private getPactMagicSlots(spellSlots: SpellSlotCalculationResult): number {
-    // Get the number of pact magic slots at the highest level
     const level = this.getPactMagicLevel(spellSlots);
     return spellSlots.pactMagicSlots[level as keyof typeof spellSlots.pactMagicSlots] || 0;
+  }
+
+  /**
+   * Get maximum allowed pact magic slots for a given spell level
+   * Based on D&D 5e Warlock progression
+   */
+  private getMaxPactSlotsForLevel(spellLevel: number): number {
+    // Warlock pact magic progression:
+    // - Levels 1-2: 1 slot
+    // - Levels 3-10: 2 slots  
+    // - Levels 11-16: 3 slots
+    // - Levels 17-20: 4 slots
+    // But spell slot level caps at 5th level
+    
+    switch (spellLevel) {
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+      case 5:
+        return 4; // Maximum at warlock level 17+
+      default:
+        return 0; // Warlocks don't get 6th+ level slots
+    }
+  }
+
+  /**
+   * Create a summary string of non-zero spell slots for logging
+   */
+  private summarizeSpellSlots(slots: { [level: number]: number }): string {
+    const nonZeroSlots = Object.entries(slots)
+      .filter(([_, count]) => count > 0)
+      .map(([level, count]) => `${level}:${count}`)
+      .join(', ');
+    return nonZeroSlots || 'none';
+  }
+
+  /**
+   * Validate that spell slots follow D&D 5e progression rules
+   * Used for testing and debugging
+   */
+  validateSpellSlots(spellSlots: SpellSlotCalculationResult): { isValid: boolean; warnings: string[] } {
+    const warnings: string[] = [];
+    let isValid = true;
+
+    // Check for impossible spell slot combinations
+    const totalRegularSlots = Object.values(spellSlots.spellSlots).reduce((sum, count) => sum + count, 0);
+    const totalPactSlots = Object.values(spellSlots.pactMagicSlots).reduce((sum, count) => sum + count, 0);
+
+    // Characters with only pact magic should not have regular spell slots
+    if (spellSlots.debugInfo.calculationMethod === 'pact_magic_only' && totalRegularSlots > 0) {
+      warnings.push('Pure warlock should not have regular spell slots');
+      isValid = false;
+    }
+
+    // Regular casters should not have pact magic
+    if (spellSlots.debugInfo.calculationMethod === 'single_class' && totalPactSlots > 0) {
+      const hasWarlock = spellSlots.debugInfo.classBreakdown.some(c => c.className === 'warlock');
+      if (!hasWarlock) {
+        warnings.push('Non-warlock should not have pact magic slots');
+        isValid = false;
+      }
+    }
+
+    // Check spell slot progression limits
+    if (spellSlots.spellSlots[9] > 1) {
+      warnings.push('Character has more than 1 ninth-level spell slot');
+    }
+
+    if (spellSlots.spellSlots[8] > 1) {
+      warnings.push('Character has more than 1 eighth-level spell slot');
+    }
+
+    if (spellSlots.spellSlots[7] > 1) {
+      warnings.push('Character has more than 1 seventh-level spell slot');
+    }
+
+    if (spellSlots.spellSlots[6] > 1) {
+      warnings.push('Character has more than 1 sixth-level spell slot');
+    }
+
+    return { isValid, warnings };
   }
 }
 

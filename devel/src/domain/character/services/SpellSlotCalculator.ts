@@ -23,6 +23,8 @@ import {
   SpellSlotCount
 } from '@/domain/character/models/SpellSlots';
 import { featureFlags } from '@/core/FeatureFlags';
+import { StringSanitizer } from '@/shared/utils/StringSanitizer';
+import { SafeAccess } from '@/shared/utils/SafeAccess';
 
 export interface SpellSlotCalculationOptions {
   includeDebugInfo: boolean;
@@ -35,6 +37,24 @@ export interface SpellSlotXMLResult {
   spellSlotsXML: string;
   pactMagicXML: string;
   combinedXML: string;
+}
+
+export interface DnDBeyondClassData {
+  readonly level: number;
+  readonly definition: {
+    readonly name: string;
+    readonly spellCastingAbilityId?: number | null;
+  };
+  readonly subclassDefinition?: {
+    readonly name: string;
+  } | null;
+}
+
+export interface SpellSlotValidationResult {
+  readonly isValid: boolean;
+  readonly errors: readonly string[];
+  readonly warnings: readonly string[];
+  readonly suggestedFixes?: readonly string[];
 }
 
 export class SpellSlotCalculator {
@@ -130,6 +150,144 @@ export class SpellSlotCalculator {
     }
 
     return result;
+  }
+
+  /**
+   * Calculate spell slots from D&D Beyond JSON format with validation
+   * 
+   * @param classes - Array of D&D Beyond class data
+   * @param options - Calculation options
+   * @returns Complete spell slot calculation result
+   */
+  calculateFromDnDBeyond(
+    classes: DnDBeyondClassData[],
+    options: SpellSlotCalculationOptions = this.getDefaultOptions()
+  ): SpellSlotCalculationResult {
+    
+    if (SpellSlotCalculator.debugEnabled || featureFlags.isEnabled('spell_slot_calculator_debug')) {
+      console.log('🔮 SpellSlotCalculator: Parsing D&D Beyond classes', {
+        classCount: classes.length,
+        classes: classes.map(c => `${c.definition.name}${c.level}`),
+        options
+      });
+    }
+
+    // Validate input data with fail-fast approach
+    const validation = this.validateDnDBeyondInput(classes);
+    if (!validation.isValid) {
+      throw new Error(`Invalid D&D Beyond class data: ${validation.errors.join(', ')}`);
+    }
+
+    // Parse D&D Beyond format to internal format
+    const characterClasses = this.parseDnDBeyondClasses(classes);
+    
+    // Use existing calculation logic
+    return this.calculateSpellSlots(characterClasses, options);
+  }
+
+  /**
+   * Validate D&D Beyond class input data
+   */
+  private validateDnDBeyondInput(classes: DnDBeyondClassData[]): SpellSlotValidationResult {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    const suggestedFixes: string[] = [];
+
+    if (!Array.isArray(classes)) {
+      errors.push('Classes must be an array');
+      return { isValid: false, errors, warnings, suggestedFixes };
+    }
+
+    if (classes.length === 0) {
+      errors.push('Character must have at least one class');
+      return { isValid: false, errors, warnings, suggestedFixes };
+    }
+
+    classes.forEach((cls, index) => {
+      // Validate class structure
+      if (!cls || typeof cls !== 'object') {
+        errors.push(`Class at index ${index} is not a valid object`);
+        return;
+      }
+
+      // Validate level
+      const level = SafeAccess.get(cls, 'level', 0) as number;
+      if (typeof level !== 'number' || level < 1 || level > 20) {
+        errors.push(`Class at index ${index} has invalid level: ${level}`);
+      }
+
+      // Validate definition
+      const definition = SafeAccess.get(cls, 'definition', null) as any;
+      if (!definition || typeof definition !== 'object') {
+        errors.push(`Class at index ${index} missing definition`);
+        return;
+      }
+
+      // Validate class name
+      const className = SafeAccess.get(definition, 'name', '') as string;
+      if (!className || typeof className !== 'string') {
+        errors.push(`Class at index ${index} missing name`);
+      } else {
+        // Sanitize and validate class name
+        const sanitizedName = StringSanitizer.sanitizeText(className).toLowerCase();
+        const knownClasses = Object.keys(CLASS_CASTER_TYPES);
+        if (!knownClasses.includes(sanitizedName)) {
+          warnings.push(`Unknown class '${className}' - will treat as non-caster`);
+          suggestedFixes.push(`Verify class name '${className}' is spelled correctly`);
+        }
+      }
+
+      // Validate spellcasting ability (optional)
+      const spellCastingAbilityId = SafeAccess.get(definition, 'spellCastingAbilityId', null) as number | null;
+      if (spellCastingAbilityId !== undefined && spellCastingAbilityId !== null) {
+        if (typeof spellCastingAbilityId === 'number' && (spellCastingAbilityId < 1 || spellCastingAbilityId > 6)) {
+          warnings.push(`Class '${className}' has invalid spellCastingAbilityId: ${spellCastingAbilityId}`);
+        }
+      }
+    });
+
+    // Check for multiclass level limits
+    const totalLevel = classes.reduce((sum, cls) => sum + (SafeAccess.get(cls, 'level', 0) as number || 0), 0);
+    if (totalLevel > 20) {
+      errors.push(`Total character level (${totalLevel}) exceeds maximum of 20`);
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+      suggestedFixes
+    };
+  }
+
+  /**
+   * Parse D&D Beyond classes to internal CharacterClass format
+   */
+  private parseDnDBeyondClasses(dndbClasses: DnDBeyondClassData[]): CharacterClass[] {
+    return dndbClasses.map((dndbClass, index) => {
+      const className = StringSanitizer.sanitizeText(
+        SafeAccess.get(dndbClass.definition, 'name', 'Unknown') as string || 'Unknown'
+      );
+      
+      const level = SafeAccess.get(dndbClass, 'level', 1) as number || 1;
+      const spellCastingAbilityId = SafeAccess.get(dndbClass.definition, 'spellCastingAbilityId', null) as number | null;
+      const subclassName = SafeAccess.get(dndbClass.subclassDefinition, 'name', null) as string | null;
+
+      return {
+        id: index + 1, // Generate sequential IDs
+        level,
+        classDefinition: {
+          id: index + 1,
+          name: className,
+          canCastSpells: spellCastingAbilityId !== undefined && spellCastingAbilityId !== null,
+          spellCastingAbilityId: spellCastingAbilityId || undefined
+        },
+        subclassDefinition: subclassName ? {
+          id: index + 1,
+          name: StringSanitizer.sanitizeText(subclassName)
+        } : undefined
+      };
+    });
   }
 
   /**
