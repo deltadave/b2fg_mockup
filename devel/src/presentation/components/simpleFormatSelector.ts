@@ -339,12 +339,23 @@ Alpine.data('simpleFormatSelector', (): SimpleFormatSelectorData => ({
         }
       }
       
-      // Handle Fantasy Grounds XML separately (uses existing system)
+      // Handle Fantasy Grounds XML separately (legacy approach for now)
       if (includeFantasyGrounds) {
+        console.log('🏰 Handling Fantasy Grounds XML conversion...');
+        
+        // Use the existing Fantasy Grounds XML system temporarily
+        const conversionResults = Alpine.store('conversionResults');
+        const convertedData = conversionResults.result || '<character>No data available</character>';
+        const filename = conversionResults.filename || `${this.getCharacterFilename()}.xml`;
+        
         const format = this.availableFormats.find(f => f.id === 'fantasy-grounds-xml');
-        if (format) {
-          await this.simulateConversion('fantasy-grounds-xml', format);
-        }
+        this.conversionResults['fantasy-grounds-xml'] = {
+          data: convertedData,
+          filename: filename,
+          format: format
+        };
+        
+        console.log('✅ Fantasy Grounds conversion handled');
       }
 
       notifications.addSuccess(`Successfully converted to ${this.selectedFormats.length} format(s)!`);
@@ -370,30 +381,6 @@ Alpine.data('simpleFormatSelector', (): SimpleFormatSelectorData => ({
     }
   },
 
-  async simulateConversion(formatId: string, format: SimpleFormat) {
-    // This is only used for Fantasy Grounds XML now (legacy system)
-    if (formatId !== 'fantasy-grounds-xml') {
-      console.warn('simulateConversion should only be used for Fantasy Grounds XML');
-      return;
-    }
-    
-    // Simulate conversion delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Use the existing Fantasy Grounds XML system
-    const conversionResults = Alpine.store('conversionResults');
-    
-    const convertedData = conversionResults.result || '<character>No data</character>';
-    const filename = conversionResults.filename || `${this.getCharacterFilename()}.xml`;
-    
-    this.conversionResults[formatId] = {
-      data: convertedData,
-      filename: filename,
-      format: format
-    };
-    
-    console.log(`✅ ${format.name} conversion complete`);
-  },
 
   async downloadFormat(formatId: string) {
     const result = this.conversionResults[formatId];

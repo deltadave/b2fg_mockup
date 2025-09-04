@@ -208,6 +208,7 @@ export class StringSanitizer {
       .replace(/&ldquo;/g, '"')
       .replace(/&ndash;/g, "-")
       .replace(/&mdash;/g, "-")  // Convert em dash to hyphen
+      .replace(/&minus;/g, "-")  // Convert minus sign to hyphen
       .replace(/&#34;/g, '"')
       .replace(/&nbsp;/g, " ");
 

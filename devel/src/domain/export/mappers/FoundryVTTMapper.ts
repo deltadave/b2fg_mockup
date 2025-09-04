@@ -21,6 +21,9 @@ import { AbilityScoreUtils, ABILITY_NAMES } from '@/domain/character/constants/A
 import { FoundryVTTFeatureMapper } from './FoundryVTTFeatureMapper';
 import { FoundryVTTInventoryMapper } from './FoundryVTTInventoryMapper';
 import { LanguageProcessor } from '@/domain/character/services/LanguageProcessor';
+import { SpellDataExtractor } from '@/domain/character/services/SpellDataExtractor';
+import { SpellDeduplicator } from '@/domain/character/services/SpellDeduplicator';
+import type { NormalizedSpell } from '@/domain/character/models/Spells';
 import { featureFlags } from '@/core/FeatureFlags';
 
 // Foundry VTT D&D 5e System Interfaces
@@ -697,9 +700,11 @@ export class FoundrySkillMapper {
 }
 
 /**
- * Specialized mapper for spells with enhanced pact magic support
+ * Specialized mapper for spells with enhanced pact magic support and individual spell conversion
  */
 export class FoundrySpellMapper {
+  private spellExtractor = new SpellDataExtractor();
+  private spellDeduplicator = new SpellDeduplicator();
   /**
    * Map spell slot calculation results to Foundry VTT spell format
    * 
@@ -860,6 +865,489 @@ export class FoundrySpellMapper {
       .map(([level, count]) => `${level}:${count}`)
       .join(', ');
     return nonZeroSlots || 'none';
+  }
+
+  /**
+   * Convert character spells to Foundry VTT spell items
+   * 
+   * @param character - Character data with spells
+   * @returns Array of Foundry VTT spell items
+   */
+  async mapSpellsToItems(character: CharacterData): Promise<FoundryItem[]> {
+    try {
+      if (!featureFlags.isEnabled('spell_processing')) {
+        return [];
+      }
+
+      // Extract spells from character data
+      const extractionResult = await this.spellExtractor.extractSpells(character, {
+        sanitizeContent: true,
+        validateSpells: true,
+        includeDuplicates: false,
+        includeHomebrew: true
+      });
+
+      if (!extractionResult.success || extractionResult.spells.length === 0) {
+        if (featureFlags.isEnabled('foundry_mapper_debug')) {
+          console.log('🔮 FoundrySpellMapper: No spells found for character', {
+            characterId: character.id,
+            errors: extractionResult.errors.length
+          });
+        }
+        return [];
+      }
+
+      // Deduplicate spells
+      const deduplicationResult = this.spellDeduplicator.deduplicateSpells(
+        extractionResult.spells,
+        {
+          strategy: 'merge',
+          preserveMulticlassSpells: true,
+          mergePreparedStatus: true,
+          preferOfficialSources: true,
+          priorityOrder: ['class', 'race', 'feat', 'item', 'background', 'multiclass', 'other']
+        }
+      );
+
+      if (deduplicationResult.uniqueSpells.length === 0) {
+        return [];
+      }
+
+      // Convert each spell to a Foundry VTT item
+      const foundrySpellItems: FoundryItem[] = [];
+
+      for (const spell of deduplicationResult.uniqueSpells) {
+        const foundrySpell = this.convertSpellToFoundryItem(spell);
+        if (foundrySpell) {
+          foundrySpellItems.push(foundrySpell);
+        }
+      }
+
+      if (featureFlags.isEnabled('foundry_mapper_debug')) {
+        console.log('🔮 FoundrySpellMapper: Converted spells to items', {
+          characterId: character.id,
+          totalSpells: deduplicationResult.uniqueSpells.length,
+          convertedItems: foundrySpellItems.length,
+          duplicatesRemoved: deduplicationResult.duplicatesRemoved.length
+        });
+      }
+
+      return foundrySpellItems;
+
+    } catch (error) {
+      console.error('❌ FoundrySpellMapper: Failed to map spells to items:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Convert a normalized spell to a Foundry VTT spell item
+   */
+  private convertSpellToFoundryItem(spell: NormalizedSpell): FoundryItem | null {
+    try {
+      const foundrySpell: FoundryItem = {
+        _id: this.generateFoundryId(),
+        name: StringSanitizer.sanitizeText(spell.name),
+        type: 'spell',
+        img: this.getSpellIcon(spell),
+        system: {
+          description: {
+            value: StringSanitizer.sanitizeHTML(spell.description),
+            chat: StringSanitizer.sanitizeHTML(spell.description.substring(0, 200) + '...'),
+            unidentified: ''
+          },
+          source: spell.sourceReference?.book || 'D&D Beyond',
+          activation: this.mapActivation(spell),
+          duration: this.mapDuration(spell),
+          target: this.mapTarget(spell),
+          range: this.mapRange(spell),
+          uses: this.mapUses(spell),
+          consume: this.mapConsume(spell),
+          ability: this.getSpellcastingAbility(spell),
+          actionType: this.getActionType(spell),
+          attackBonus: '',
+          chatFlavor: '',
+          critical: { threshold: null, damage: '' },
+          damage: this.mapDamage(spell),
+          formula: '',
+          save: this.mapSave(spell),
+          level: spell.level,
+          school: this.mapSchool(spell.school),
+          components: this.mapComponents(spell),
+          materials: this.mapMaterials(spell),
+          preparation: this.mapPreparation(spell),
+          scaling: this.mapScaling(spell)
+        },
+        effects: [],
+        ownership: { default: 0 },
+        flags: {
+          'dnd5e': {
+            originalSpellId: spell.id,
+            spellSource: spell.source
+          }
+        },
+        sort: 0
+      };
+
+      return foundrySpell;
+
+    } catch (error) {
+      console.warn(`Failed to convert spell ${spell.name} to Foundry item:`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Map spell activation to Foundry format
+   */
+  private mapActivation(spell: NormalizedSpell): any {
+    const activationTypeMap: Record<string, string> = {
+      'action': 'action',
+      'bonus_action': 'bonus',
+      'reaction': 'reaction',
+      'minute': 'minute',
+      'hour': 'hour',
+      'special': 'special'
+    };
+
+    return {
+      type: activationTypeMap[spell.castingTime.type] || 'action',
+      cost: spell.castingTime.value || 1,
+      condition: spell.castingTime.condition || ''
+    };
+  }
+
+  /**
+   * Map spell duration to Foundry format
+   */
+  private mapDuration(spell: NormalizedSpell): any {
+    const durationUnitMap: Record<string, string> = {
+      'minute': 'minute',
+      'hour': 'hour',
+      'day': 'day'
+    };
+
+    let units = 'inst'; // instantaneous
+    let value = null;
+
+    if (spell.duration.type === 'timed') {
+      value = spell.duration.value || 1;
+      units = durationUnitMap[spell.duration.unit || 'minute'] || 'minute';
+    } else if (spell.duration.type === 'until_dispelled') {
+      units = 'perm';
+    }
+
+    return {
+      value,
+      units
+    };
+  }
+
+  /**
+   * Map spell target to Foundry format
+   */
+  private mapTarget(spell: NormalizedSpell): any {
+    if (spell.range.areaOfEffect) {
+      const aoe = spell.range.areaOfEffect;
+      return {
+        value: aoe.size,
+        width: aoe.type === 'line' ? aoe.size : null,
+        units: 'ft',
+        type: aoe.type
+      };
+    }
+
+    // Default to single creature
+    return {
+      value: 1,
+      width: null,
+      units: '',
+      type: 'creature'
+    };
+  }
+
+  /**
+   * Map spell range to Foundry format
+   */
+  private mapRange(spell: NormalizedSpell): any {
+    if (spell.range.type === 'self') {
+      return { value: null, long: null, units: 'self' };
+    } else if (spell.range.type === 'touch') {
+      return { value: null, long: null, units: 'touch' };
+    } else if (spell.range.type === 'ranged' && spell.range.value) {
+      return { value: spell.range.value, long: null, units: 'ft' };
+    } else if (spell.range.type === 'sight') {
+      return { value: null, long: null, units: 'spec' };
+    }
+
+    return { value: 30, long: null, units: 'ft' };
+  }
+
+  /**
+   * Map spell limited uses to Foundry format
+   */
+  private mapUses(spell: NormalizedSpell): any {
+    if (spell.limitedUse) {
+      const resetMap: Record<string, string> = {
+        'short_rest': 'sr',
+        'long_rest': 'lr',
+        'daily': 'day',
+        'weekly': 'week'
+      };
+
+      return {
+        value: spell.limitedUse.maxUses - spell.limitedUse.usedUses,
+        max: spell.limitedUse.maxUses.toString(),
+        per: resetMap[spell.limitedUse.resetType] || 'lr',
+        recovery: ''
+      };
+    }
+
+    return {
+      value: null,
+      max: '',
+      per: null,
+      recovery: ''
+    };
+  }
+
+  /**
+   * Map spell consume requirements to Foundry format
+   */
+  private mapConsume(spell: NormalizedSpell): any {
+    if (spell.usesSpellSlot) {
+      return {
+        type: 'spell',
+        target: '',
+        amount: 1
+      };
+    }
+
+    return {
+      type: '',
+      target: '',
+      amount: null
+    };
+  }
+
+  /**
+   * Get spellcasting ability from spell overrides or default
+   */
+  private getSpellcastingAbility(spell: NormalizedSpell): string {
+    const abilityMap: Record<string, string> = {
+      'intelligence': 'int',
+      'wisdom': 'wis',
+      'charisma': 'cha'
+    };
+
+    if (spell.overrides?.spellcastingAbility) {
+      return abilityMap[spell.overrides.spellcastingAbility] || 'int';
+    }
+
+    // Default based on spell source
+    switch (spell.source) {
+      case 'class':
+        return 'int'; // Default, should be determined by class
+      default:
+        return 'int';
+    }
+  }
+
+  /**
+   * Get action type for spell
+   */
+  private getActionType(spell: NormalizedSpell): string {
+    if (spell.attackRoll) {
+      return spell.attackRoll.type === 'ranged_spell' ? 'rsak' : 'msak';
+    } else if (spell.savingThrow) {
+      return 'save';
+    } else if (spell.healing) {
+      return 'heal';
+    } else if (spell.damage) {
+      return 'other';
+    }
+    return 'util';
+  }
+
+  /**
+   * Map spell damage to Foundry format
+   */
+  private mapDamage(spell: NormalizedSpell): any {
+    if (!spell.damage || spell.damage.rolls.length === 0) {
+      return {
+        parts: [],
+        versatile: ''
+      };
+    }
+
+    const parts: [string, string][] = [];
+
+    for (const roll of spell.damage.rolls) {
+      let formula = '';
+      if (roll.diceCount > 0) {
+        formula = `${roll.diceCount}d${roll.diceSize}`;
+        if (roll.bonus !== 0) {
+          formula += roll.bonus > 0 ? `+${roll.bonus}` : `${roll.bonus}`;
+        }
+      } else {
+        formula = roll.bonus.toString();
+      }
+      
+      parts.push([formula, roll.damageType]);
+    }
+
+    return {
+      parts,
+      versatile: ''
+    };
+  }
+
+  /**
+   * Map spell saving throw to Foundry format
+   */
+  private mapSave(spell: NormalizedSpell): any {
+    if (!spell.savingThrow) {
+      return {
+        ability: '',
+        dc: null,
+        scaling: 'spell'
+      };
+    }
+
+    const abilityMap: Record<string, string> = {
+      'strength': 'str',
+      'dexterity': 'dex',
+      'constitution': 'con',
+      'intelligence': 'int',
+      'wisdom': 'wis',
+      'charisma': 'cha'
+    };
+
+    return {
+      ability: abilityMap[spell.savingThrow.ability] || 'wis',
+      dc: spell.overrides?.saveDc || null,
+      scaling: 'spell'
+    };
+  }
+
+  /**
+   * Map spell school to Foundry format
+   */
+  private mapSchool(school: string): string {
+    return school.toLowerCase().substring(0, 3); // e.g., "Evocation" -> "evo"
+  }
+
+  /**
+   * Map spell components to Foundry format
+   */
+  private mapComponents(spell: NormalizedSpell): any {
+    return {
+      vocal: spell.components.verbal,
+      somatic: spell.components.somatic,
+      material: spell.components.material,
+      ritual: spell.ritual,
+      concentration: spell.concentration
+    };
+  }
+
+  /**
+   * Map spell material components to Foundry format
+   */
+  private mapMaterials(spell: NormalizedSpell): any {
+    if (!spell.components.material || !spell.components.materialDescription) {
+      return {
+        value: '',
+        consumed: false,
+        cost: 0,
+        supply: 0
+      };
+    }
+
+    return {
+      value: spell.components.materialDescription,
+      consumed: spell.components.materialConsumed,
+      cost: spell.components.materialCost || 0,
+      supply: 0
+    };
+  }
+
+  /**
+   * Map spell preparation to Foundry format
+   */
+  private mapPreparation(spell: NormalizedSpell): any {
+    let mode = 'prepared';
+    
+    if (spell.alwaysPrepared) {
+      mode = 'always';
+    } else if (spell.source === 'class') {
+      // Determine if it's a known spell or prepared spell based on class
+      mode = 'prepared'; // Default assumption
+    }
+
+    return {
+      mode,
+      prepared: spell.prepared || spell.alwaysPrepared
+    };
+  }
+
+  /**
+   * Map spell scaling to Foundry format
+   */
+  private mapScaling(spell: NormalizedSpell): any {
+    if (spell.damage?.scalingType) {
+      return {
+        mode: spell.damage.scalingType === 'spell_level' ? 'level' : 'none',
+        formula: this.buildScalingFormula(spell)
+      };
+    }
+
+    return {
+      mode: 'none',
+      formula: ''
+    };
+  }
+
+  /**
+   * Build scaling formula for damage
+   */
+  private buildScalingFormula(spell: NormalizedSpell): string {
+    if (!spell.damage?.scalingDice || spell.damage.scalingDice.length === 0) {
+      return '';
+    }
+
+    const scalingRoll = spell.damage.scalingDice[0];
+    if (scalingRoll.diceCount > 0) {
+      return `${scalingRoll.diceCount}d${scalingRoll.diceSize}`;
+    }
+
+    return scalingRoll.bonus?.toString() || '';
+  }
+
+  /**
+   * Get appropriate icon for spell based on school and level
+   */
+  private getSpellIcon(spell: NormalizedSpell): string {
+    const schoolIcons: Record<string, string> = {
+      'abjuration': 'systems/dnd5e/icons/spells/protect-blue-1.jpg',
+      'conjuration': 'systems/dnd5e/icons/spells/summon-air-1.jpg',
+      'divination': 'systems/dnd5e/icons/spells/light-blue-1.jpg',
+      'enchantment': 'systems/dnd5e/icons/spells/charm-person-purple-2.jpg',
+      'evocation': 'systems/dnd5e/icons/spells/lightning-red-1.jpg',
+      'illusion': 'systems/dnd5e/icons/spells/wind-wall-blue-1.jpg',
+      'necromancy': 'systems/dnd5e/icons/spells/evil-eye-eerie-1.jpg',
+      'transmutation': 'systems/dnd5e/icons/spells/shielding-eerie-1.jpg'
+    };
+
+    return schoolIcons[spell.school.toLowerCase()] || 'systems/dnd5e/icons/spells/magic-missile-2.jpg';
+  }
+
+  /**
+   * Generate a random Foundry VTT compatible ID
+   */
+  private generateFoundryId(): string {
+    return Array.from({ length: 16 }, () => 
+      Math.random().toString(36)[Math.floor(Math.random() * 36)]
+    ).join('');
   }
 
   /**

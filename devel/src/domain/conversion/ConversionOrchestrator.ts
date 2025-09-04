@@ -15,6 +15,9 @@ import { InventoryProcessor, type ProcessedInventory } from '@/domain/character/
 import { FeatureProcessor, type ProcessedFeatures } from '@/domain/character/services/FeatureProcessor';
 import { EncumbranceCalculator, type EncumbranceResult } from '@/domain/character/services/EncumbranceCalculator';
 import { LanguageProcessor, type ProcessedLanguages } from '@/domain/character/services/LanguageProcessor';
+import { SpellDataExtractor, type SpellProcessingResult } from '@/domain/character/services/SpellDataExtractor';
+import { SpellDeduplicator } from '@/domain/character/services/SpellDeduplicator';
+import { SpellValidator } from '@/domain/character/services/SpellValidator';
 import { featureFlags } from '@/core/FeatureFlags';
 import { errorService, createProcessingError } from '@/shared/errors/ErrorService';
 import { type ConversionError as CentralizedError } from '@/shared/errors/ConversionErrors';
@@ -65,6 +68,7 @@ export interface ProcessedCharacterData {
   // Processed components
   abilities: ProcessedAbilityScores;
   spellSlots: SpellSlotCalculationResult;
+  spells: SpellProcessingResult;
   inventory: ProcessedInventory;
   features: ProcessedFeatures;
   languages: ProcessedLanguages;
@@ -547,6 +551,115 @@ class FeatureProcessingStep extends CharacterProcessor {
 }
 
 /**
+ * Spell Processing Step
+ */
+class SpellProcessingStep extends CharacterProcessor {
+  private extractor: SpellDataExtractor;
+  private validator: SpellValidator;
+  private deduplicator: SpellDeduplicator;
+  
+  constructor() {
+    super();
+    this.extractor = new SpellDataExtractor();
+    this.validator = new SpellValidator();
+    this.deduplicator = new SpellDeduplicator();
+  }
+  
+  protected async doProcess(context: ConversionContext): Promise<ProcessingResult> {
+    context.currentStep = 'Processing character spells';
+    context.progress = 75;
+    
+    if (featureFlags.isEnabled('conversion_orchestrator_debug')) {
+      console.log('✨ SpellProcessingStep: Starting spell processing');
+    }
+    
+    try {
+      // Extract spells from D&D Beyond data
+      const extractionResult = await this.extractor.extractSpells(
+        context.originalCharacter,
+        {
+          strictValidation: context.processingOptions.strictValidation,
+          includeDebugInfo: context.processingOptions.includeDebugInfo,
+          validateSpells: true,
+          deduplicateSpells: true
+        }
+      );
+      
+      if (!extractionResult.success) {
+        if (featureFlags.isEnabled('conversion_orchestrator_debug')) {
+          console.log('✨ SpellProcessingStep: Spell extraction failed', extractionResult.errors);
+        }
+        
+        return ProcessingResult.error(
+          'spells',
+          `Spell extraction failed: ${extractionResult.errors.map(e => e.message).join(', ')}`,
+          true // Spell processing failures are recoverable
+        );
+      }
+      
+      // Process warnings from extraction
+      const warnings: ConversionWarning[] = [];
+      
+      if (extractionResult.warnings.length > 0) {
+        warnings.push({
+          step: 'spells',
+          type: 'data_missing',
+          message: `${extractionResult.warnings.length} spell extraction warnings`,
+          impact: 'low'
+        });
+      }
+      
+      if (extractionResult.spells.length === 0) {
+        warnings.push({
+          step: 'spells',
+          type: 'data_missing',
+          message: 'No spells found in character data',
+          impact: 'low'
+        });
+      }
+      
+      if (extractionResult.duplicatesRemoved > 0) {
+        warnings.push({
+          step: 'spells',
+          type: 'feature_unsupported',
+          message: `${extractionResult.duplicatesRemoved} duplicate spells were automatically merged`,
+          impact: 'low'
+        });
+      }
+      
+      if (featureFlags.isEnabled('conversion_orchestrator_debug')) {
+        console.log('✨ SpellProcessingStep: Spell processing complete', {
+          characterId: context.originalCharacter.id,
+          totalSpells: extractionResult.spells.length,
+          duplicatesRemoved: extractionResult.duplicatesRemoved,
+          validationErrors: extractionResult.validationResults.filter(r => !r.isValid).length,
+          warnings: warnings.length
+        });
+      }
+      
+      return ProcessingResult.success({ spells: extractionResult }, warnings);
+      
+    } catch (error) {
+      console.error('❌ SpellProcessingStep: Spell processing failed:', error);
+      
+      return ProcessingResult.error(
+        'spells',
+        `Spell processing failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        this.isRecoverable(error)
+      );
+    }
+  }
+  
+  protected getStepName(): string {
+    return 'spells';
+  }
+  
+  protected isRecoverable(error: any): boolean {
+    return true; // Can continue without spells
+  }
+}
+
+/**
  * Language Processing Step
  */
 class LanguageProcessingStep extends CharacterProcessor {
@@ -640,12 +753,14 @@ export class ConversionOrchestrator {
   private buildProcessingChain(): void {
     const abilityStep = new AbilityScoreProcessingStep();
     const spellSlotStep = new SpellSlotProcessingStep();
+    const spellStep = new SpellProcessingStep();
     const inventoryStep = new InventoryProcessingStep();
     const featureStep = new FeatureProcessingStep();
     const languageStep = new LanguageProcessingStep();
     
     abilityStep.setNext(spellSlotStep);
-    spellSlotStep.setNext(inventoryStep);
+    spellSlotStep.setNext(spellStep);
+    spellStep.setNext(inventoryStep);
     inventoryStep.setNext(languageStep); // Skip features for now
     // featureStep.setNext(languageStep);
     
@@ -730,6 +845,7 @@ export class ConversionOrchestrator {
         characterData: character, // Include original character data for formatters
         abilities: processingResult.data.abilities || {},
         spellSlots: processingResult.data.spellSlots || {},
+        spells: processingResult.data.spells || { success: true, spells: [], validationResults: [], warnings: [], errors: [], duplicatesRemoved: 0, performance: { extractionTime: 0, validationTime: 0, deduplicationTime: 0, totalTime: 0 } },
         inventory: processingResult.data.inventory || {},
         features: processingResult.data.features || {},
         languages: processingResult.data.languages || { languages: [], choices: [], skipped: [], totalLanguages: 0 },

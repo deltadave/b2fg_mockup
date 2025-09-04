@@ -322,6 +322,14 @@ export const defaultFeatureFlags: FeatureFlagConfig = {
         environment: 'development'
       }
     },
+    'fantasy_grounds_spell_debug': {
+      key: 'fantasy_grounds_spell_debug',
+      enabled: true,
+      description: 'Enable detailed debugging output for Fantasy Grounds spell processing',
+      conditions: {
+        environment: 'development'
+      }
+    },
     'error_service_debug': {
       key: 'error_service_debug',
       enabled: false,
@@ -367,6 +375,12 @@ export const defaultFeatureFlags: FeatureFlagConfig = {
       conditions: {
         environment: 'development'
       }
+    },
+    'spell_processing': {
+      key: 'spell_processing',
+      enabled: true,
+      description: 'Enable spell processing and spell output in Fantasy Grounds XML',
+      rolloutPercentage: 100
     }
   }
 };

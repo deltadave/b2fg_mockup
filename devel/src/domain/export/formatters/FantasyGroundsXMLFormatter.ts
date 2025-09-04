@@ -28,6 +28,12 @@ import { ProficiencyProcessor } from '../../character/services/ProficiencyProces
 import { LanguageProcessor } from '../../character/services/LanguageProcessor';
 import { InventoryProcessor } from '../../character/services/InventoryProcessor';
 import { CurrencyProcessor } from '../../character/services/CurrencyProcessor';
+import { SpellDataExtractor } from '../../character/services/SpellDataExtractor';
+import { SpellValidator } from '../../character/services/SpellValidator';
+import { SpellDeduplicator } from '../../character/services/SpellDeduplicator';
+import type { NormalizedSpell } from '../../character/models/Spells';
+import { SafeAccess } from '../../../shared/utils/SafeAccess';
+import { SpellCSVParser } from '../../../shared/utils/SpellCSVParser';
 import { featureFlags } from '../../../core/FeatureFlags';
 
 export class FantasyGroundsXMLFormatter implements OutputFormatter {
@@ -45,6 +51,10 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
   private proficiencyProcessor = new ProficiencyProcessor();
   private languageProcessor = new LanguageProcessor();
   private inventoryProcessor = new InventoryProcessor();
+  private spellExtractor = new SpellDataExtractor();
+  private spellValidator = new SpellValidator();
+  private spellDeduplicator = new SpellDeduplicator();
+  private debugRawSpellData: any = null;
 
   async generateOutput(
     processedData: ProcessedCharacterData, 
@@ -62,7 +72,7 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
       });
 
       // Generate the complete Fantasy Grounds XML
-      const xml = this.generateFantasyGroundsXML(character, processedData, options);
+      const xml = await this.generateFantasyGroundsXML(character, processedData, options);
       
       if (!xml || xml.length === 0) {
         return {
@@ -104,15 +114,18 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
    * Generate complete Fantasy Grounds XML
    * This is the main method that orchestrates all XML generation
    */
-  private generateFantasyGroundsXML(
+  private async generateFantasyGroundsXML(
     characterData: CharacterData, 
     processedData: ProcessedCharacterData,
     options?: FormatOptions
-  ): string {
+  ): Promise<string> {
     const characterName = StringSanitizer.sanitizeForXML(characterData.name || 'Unknown Character');
     const characterId = characterData.id || 0;
     const totalLevel = processedData.totalLevel || this.calculateTotalLevel(characterData);
     const proficiencyBonus = gameConfigService.calculateProficiencyBonus(totalLevel);
+    
+    // Generate async content first
+    const spellsXML = await this.generateSpellsXML(characterData);
     
     return `<?xml version="1.0" encoding="UTF-8"?>
 <root version="4.7" dataversion="20241002" release="8.1|CoreRPG:7">
@@ -219,7 +232,7 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
     </traitlist>
     
     <powers>
-      ${this.generateSpellsXML(characterData)}
+      ${spellsXML}
     </powers>
     
     ${this.generatePowerMetaXML(characterData)}
@@ -823,9 +836,519 @@ export class FantasyGroundsXMLFormatter implements OutputFormatter {
       return '<!-- Weapon processing failed -->';
     }
   }
-  private generateSpellsXML(characterData: CharacterData): string { 
-    // TODO: Implement spell data XML generation
-    return ''; 
+  /**
+   * Generate spells XML for Fantasy Grounds powers section
+   */
+  private async generateSpellsXML(characterData: CharacterData): Promise<string> {
+    try {
+      console.log('🔮 FantasyGroundsXMLFormatter: Starting spell processing for character:', characterData.id);
+      
+      if (!featureFlags.isEnabled('spell_processing')) {
+        console.log('🔮 FantasyGroundsXMLFormatter: Spell processing disabled by feature flag');
+        return '<!-- Spell processing disabled by feature flag -->';
+      }
+
+      console.log('🔮 FantasyGroundsXMLFormatter: Feature flag enabled, extracting spells...');
+      
+      // Extract spells from character data
+      const extractionResult = await this.spellExtractor.extractSpells(characterData, {
+        sanitizeContent: true,
+        validateSpells: true,
+        includeDuplicates: false,
+        includeHomebrew: true
+      });
+      
+      // Store raw spell data for source mapping (needed for group tags)
+      this.debugRawSpellData = this.extractRawSpellData(characterData);
+
+      if (!extractionResult.success || extractionResult.spells.length === 0) {
+        if (featureFlags.isEnabled('fantasy_grounds_spell_debug')) {
+          console.log('🔮 FantasyGroundsXMLFormatter: No spells found', {
+            characterId: characterData.id,
+            errors: extractionResult.errors.length,
+            warnings: extractionResult.warnings.length
+          });
+        }
+        return '<!-- No spells found -->';
+      }
+
+      // Deduplicate spells
+      const deduplicationResult = this.spellDeduplicator.deduplicateSpells(
+        extractionResult.spells,
+        {
+          strategy: 'merge',
+          preserveMulticlassSpells: true,
+          mergePreparedStatus: true,
+          preferOfficialSources: true,
+          priorityOrder: ['class', 'race', 'feat', 'item', 'background', 'multiclass', 'other']
+        }
+      );
+
+      const spells = deduplicationResult.uniqueSpells;
+
+      if (spells.length === 0) {
+        return '<!-- No spells after deduplication -->';
+      }
+
+      // Get spell groups from character data for proper categorization
+      const spellGroups = this.getSpellGroupings(characterData);
+
+      // Generate XML entries for each spell
+      const spellEntries: string[] = [];
+      let spellIndex = 1;
+
+      // Sort spells by level, then by name
+      const sortedSpells = [...spells].sort((a, b) => {
+        if (a.level !== b.level) return a.level - b.level;
+        return a.name.localeCompare(b.name);
+      });
+
+      for (const spell of sortedSpells) {
+        try {
+          const spellXML = this.generateIndividualSpellXML(spell, spellIndex, spellGroups);
+          if (spellXML) {
+            spellEntries.push(spellXML);
+            
+            // Debug: Show XML for first spell and spell sources
+            if (spellIndex === 1 && featureFlags.isEnabled('fantasy_grounds_spell_debug')) {
+              console.log('🔮 FantasyGroundsXMLFormatter: First spell XML generated:');
+              console.log('Spell name:', spell.name);
+              console.log('Spell level:', spell.level);
+              console.log('Generated XML:');
+              console.log(spellXML);
+              console.log('--- End first spell XML ---');
+            }
+            
+            // Debug: Show spell sources for all spells
+            if (featureFlags.isEnabled('fantasy_grounds_spell_debug')) {
+              this.debugSpellSources(sortedSpells[spellIndex - 1], spellIndex);
+            }
+            
+            spellIndex++;
+          }
+        } catch (error) {
+          console.warn(`Failed to generate XML for spell ${spell.name}:`, error);
+          extractionResult.errors.push({
+            type: 'conversion_error',
+            message: `Failed to convert spell: ${spell.name}`,
+            spellName: spell.name,
+            spellId: spell.id
+          });
+        }
+      }
+
+      if (featureFlags.isEnabled('fantasy_grounds_spell_debug')) {
+        console.log('🔮 FantasyGroundsXMLFormatter: Generated spell XML', {
+          characterId: characterData.id,
+          totalSpells: spells.length,
+          generatedEntries: spellEntries.length,
+          duplicatesRemoved: deduplicationResult.duplicatesRemoved.length,
+          warnings: extractionResult.warnings.length + deduplicationResult.warnings.length,
+          errors: extractionResult.errors.length + deduplicationResult.errors.length
+        });
+      }
+
+      return spellEntries.join('\n\t\t');
+
+    } catch (error) {
+      console.error('❌ FantasyGroundsXMLFormatter: Failed to generate spells XML:', error);
+      return '<!-- Spell processing failed -->';
+    }
+  }
+
+  /**
+   * Get spell groupings for Fantasy Grounds categorization
+   */
+  private getSpellGroupings(characterData: CharacterData): Record<string, string> {
+    const groups: Record<string, string> = {};
+    
+    // Map class names to Fantasy Grounds spell groups
+    if (characterData.classes) {
+      for (const cls of characterData.classes) {
+        const className = cls.definition?.name?.toLowerCase() || '';
+        switch (className) {
+          case 'wizard':
+            groups[className] = 'Spells (Wizard)';
+            break;
+          case 'sorcerer':
+            groups[className] = 'Spells (Sorcerer)';
+            break;
+          case 'cleric':
+            groups[className] = 'Spells (Cleric)';
+            break;
+          case 'druid':
+            groups[className] = 'Spells (Druid)';
+            break;
+          case 'bard':
+            groups[className] = 'Spells (Bard)';
+            break;
+          case 'paladin':
+            groups[className] = 'Spells (Paladin)';
+            break;
+          case 'ranger':
+            groups[className] = 'Spells (Ranger)';
+            break;
+          case 'warlock':
+            groups[className] = 'Spells (Warlock)';
+            break;
+          case 'artificer':
+            groups[className] = 'Spells (Artificer)';
+            break;
+          default:
+            groups[className] = `Spells (${cls.definition?.name || 'Unknown'})`;
+        }
+      }
+    }
+
+    // Add default groups for non-class spells
+    groups['race'] = 'Class (Racial)';
+    groups['feat'] = 'Class (Feat)';
+    groups['item'] = 'Class (Item)';
+    groups['background'] = 'Class (Background)';
+    groups['other'] = 'Class (Other)';
+
+    return groups;
+  }
+
+  /**
+   * Generate XML for individual spell entry
+   */
+  private generateIndividualSpellXML(
+    spell: NormalizedSpell, 
+    index: number, 
+    spellGroups: Record<string, string>
+  ): string {
+    const paddedId = String(index).padStart(5, '0');
+    
+    // Determine spell group from actual spell sources
+    const group = this.getSpellGroupFromSources(spell);
+    
+    // Generate spell actions if needed
+    const actions = this.generateSpellActions(spell);
+    
+    // Build spell XML
+    return `<id-${paddedId}>
+\t\t\t${actions}
+\t\t\t<castingtime type="string">${StringSanitizer.sanitizeForXML(spell.castingTime.description)}</castingtime>
+\t\t\t<components type="string">${StringSanitizer.sanitizeForXML(spell.components.description)}</components>
+\t\t\t<description type="formattedtext">
+\t\t\t\t${this.debugSanitizeSpellDescription(spell.description, spell.name)}
+\t\t\t</description>
+\t\t\t<duration type="string">${StringSanitizer.sanitizeForXML(spell.duration.description)}</duration>
+\t\t\t<group type="string">${group}</group>
+\t\t\t<level type="number">${spell.level}</level>
+\t\t\t<locked type="number">1</locked>
+\t\t\t<name type="string">${StringSanitizer.sanitizeForXML(spell.name)}</name>
+\t\t\t<prepared type="number">${spell.prepared || spell.alwaysPrepared ? 1 : 0}</prepared>
+\t\t\t<range type="string">${StringSanitizer.sanitizeForXML(spell.range.description)}</range>
+\t\t\t<school type="string">${StringSanitizer.sanitizeForXML(spell.school)}</school>
+\t\t\t<source type="string">${this.generateSpellSource(spell)}</source>
+\t\t</id-${paddedId}>`;
+  }
+
+
+  /**
+   * Debug spell description sanitization to find where </strong> comes from
+   */
+  private debugSanitizeSpellDescription(content: string, spellName: string): string {
+    if (featureFlags.isEnabled('fantasy_grounds_spell_debug')) {
+      console.log(`🔍 Debug ${spellName} - Original content:`, content);
+      
+      const sanitized = StringSanitizer.sanitizeHTML(content);
+      console.log(`🔍 Debug ${spellName} - After sanitizeHTML:`, sanitized);
+      
+      if (sanitized.includes('</strong>')) {
+        console.log(`⚠️ Found </strong> in ${spellName}!`);
+        console.log('Context:', sanitized.substring(Math.max(0, sanitized.indexOf('</strong>') - 50), sanitized.indexOf('</strong>') + 60));
+      }
+      
+      return sanitized;
+    }
+    
+    return StringSanitizer.sanitizeHTML(content);
+  }
+
+  /**
+   * Extract raw spell data for debugging sources
+   */
+  private extractRawSpellData(characterData: any): any[] {
+    const rawSpells: any[] = [];
+    
+    // Extract from classSpells array (Flint format)
+    const classSpells = SafeAccess.get<any[]>(characterData, 'classSpells') || SafeAccess.get<any[]>(characterData, 'data.classSpells');
+    if (classSpells && Array.isArray(classSpells)) {
+      for (const classSpellGroup of classSpells) {
+        const spells = SafeAccess.get<any[]>(classSpellGroup, 'spells', []);
+        rawSpells.push(...spells);
+      }
+    }
+    
+    // Extract from spells.class array (alternative format)
+    const spellsData = SafeAccess.get<any>(characterData, 'spells') || SafeAccess.get<any>(characterData, 'data.spells');
+    if (spellsData) {
+      const classSpellsAlt = SafeAccess.get<any[]>(spellsData, 'class', []);
+      rawSpells.push(...classSpellsAlt);
+      
+      const raceSpells = SafeAccess.get<any[]>(spellsData, 'race', []);
+      rawSpells.push(...raceSpells);
+      
+      const featSpells = SafeAccess.get<any[]>(spellsData, 'feat', []);
+      rawSpells.push(...featSpells);
+    }
+    
+    return rawSpells;
+  }
+
+  /**
+   * Debug spell sources to map sourceID numbers
+   */
+  private debugSpellSources(normalizedSpell: NormalizedSpell, spellIndex: number): void {
+    if (!this.debugRawSpellData) return;
+    
+    // Find the raw spell data that matches this normalized spell
+    const rawSpell = this.debugRawSpellData.find((raw: any) => {
+      const definition = SafeAccess.get<any>(raw, 'definition');
+      if (!definition) return false;
+      
+      const name = SafeAccess.get<string>(definition, 'name', '');
+      const level = SafeAccess.get<number>(definition, 'level', 0);
+      
+      return name === normalizedSpell.name && level === normalizedSpell.level;
+    });
+    
+    if (!rawSpell) {
+      console.log(`🔍 Spell ${spellIndex}: ${normalizedSpell.name} - No raw data found`);
+      return;
+    }
+    
+    const definition = SafeAccess.get<any>(rawSpell, 'definition');
+    const sources = SafeAccess.get<any[]>(definition, 'sources', []);
+    
+    if (sources.length === 0) {
+      console.log(`🔍 Spell ${spellIndex}: ${normalizedSpell.name} - No sources found`);
+      return;
+    }
+    
+    const sourceNames = sources.map((source: any) => {
+      const sourceId = SafeAccess.get<number>(source, 'sourceId', 0);
+      return `ID: ${sourceId}`;
+    });
+    
+    console.log(`🔍 Spell ${spellIndex}: ${normalizedSpell.name} - Sources: ${sourceNames.join(', ')}`);
+  }
+
+  /**
+   * Map spell to class name for spell grouping in Fantasy Grounds
+   * Uses ONLY the comprehensive spell database from CSV with D&D 5e official spell-to-class mappings
+   */
+  private mapSpellToClassName(spellName: string, sourceIds: number[]): string | null {
+    // Only use the CSV database - no fallbacks
+    if (SpellCSVParser.isDatabaseLoaded()) {
+      const primaryClass = SpellCSVParser.getSpellPrimaryClass(spellName);
+      
+      if (primaryClass && primaryClass !== 'Wizard') {
+        // Found in database, use the official mapping
+        console.log(`📚 CSV: ${spellName} → ${primaryClass}`);
+        return primaryClass;
+      } else {
+        // Spell not found in CSV database
+        console.log(`❓ Unknown spell not in CSV: ${spellName} (sourceIds: [${sourceIds.join(', ')}])`);
+        return null;
+      }
+    } else {
+      // CSV database not available
+      console.log(`🚫 CSV database not loaded, cannot map spell: ${spellName}`);
+      return null;
+    }
+  }
+
+  /**
+   * Get spell group for Fantasy Grounds based on actual spell sources
+   */
+  private getSpellGroupFromSources(spell: NormalizedSpell): string {
+    if (!this.debugRawSpellData) {
+      return '';
+    }
+    
+    // Find the raw spell data that matches this normalized spell
+    const rawSpell = this.debugRawSpellData.find((raw: any) => {
+      const definition = SafeAccess.get<any>(raw, 'definition');
+      if (!definition) return false;
+      
+      const name = SafeAccess.get<string>(definition, 'name', '');
+      const level = SafeAccess.get<number>(definition, 'level', 0);
+      
+      return name === spell.name && level === spell.level;
+    });
+    
+    if (!rawSpell) {
+      console.log(`🔍 No raw spell data found for: ${spell.name}`);
+      return '';
+    }
+    
+    const definition = SafeAccess.get<any>(rawSpell, 'definition');
+    const sources = SafeAccess.get<any[]>(definition, 'sources', []);
+    
+    if (sources.length === 0) {
+      console.log(`🔍 No sources found for spell: ${spell.name}`);
+      return '';
+    }
+    
+    // Extract source IDs and use spell-based mapping
+    const sourceIds = sources.map(source => SafeAccess.get<number>(source, 'sourceId', 0)).filter(id => id > 0);
+    const className = this.mapSpellToClassName(spell.name, sourceIds);
+    
+    // If no class mapping found, leave group empty
+    if (!className) {
+      return '';
+    }
+    
+    return `Class (${className})`;
+  }
+
+  /**
+   * Generate spell actions for Fantasy Grounds automation
+   */
+  private generateSpellActions(spell: NormalizedSpell): string {
+    const actions: string[] = [];
+    let actionIndex = 1;
+
+    // Cast action (for saving throws, attack rolls)
+    if (spell.savingThrow || spell.attackRoll) {
+      let castAction = '\t\t\t\t<id-00001>\n';
+      
+      if (spell.attackRoll) {
+        castAction += `\t\t\t\t\t<atktype type="string">${spell.attackRoll.type === 'ranged_spell' ? 'ranged' : 'melee'}</atktype>\n`;
+        castAction += '\t\t\t\t\t<type type="string">cast</type>\n';
+      } else if (spell.savingThrow) {
+        castAction += '\t\t\t\t\t<savemagic type="number">1</savemagic>\n';
+        castAction += `\t\t\t\t\t<savetype type="string">${spell.savingThrow.ability}</savetype>\n`;
+        castAction += '\t\t\t\t\t<type type="string">cast</type>\n';
+        
+        // Add damage handling for save spells
+        if (spell.savingThrow.onSuccess === 'half_damage') {
+          castAction += '\t\t\t\t\t<onmissdamage type="string">half</onmissdamage>\n';
+        }
+      }
+      
+      castAction += '\t\t\t\t\t<order type="number">1</order>\n';
+      castAction += '\t\t\t\t</id-00001>\n';
+      actionIndex++;
+      
+      actions.push(castAction);
+    }
+
+    // Damage action
+    if (spell.damage && spell.damage.rolls.length > 0) {
+      let damageAction = `\t\t\t\t<id-${String(actionIndex).padStart(5, '0')}>\n`;
+      damageAction += '\t\t\t\t\t<damagelist>\n';
+      
+      spell.damage.rolls.forEach((roll, rollIndex) => {
+        const rollId = String(rollIndex + 1).padStart(5, '0');
+        damageAction += `\t\t\t\t\t\t<id-${rollId}>\n`;
+        damageAction += `\t\t\t\t\t\t\t<bonus type="number">${roll.bonus}</bonus>\n`;
+        damageAction += `\t\t\t\t\t\t\t<dice type="dice">${roll.diceCount > 0 ? `${roll.diceCount}d${roll.diceSize}` : ''}</dice>\n`;
+        damageAction += `\t\t\t\t\t\t\t<type type="string">${roll.damageType}</type>\n`;
+        damageAction += `\t\t\t\t\t\t</id-${rollId}>\n`;
+      });
+      
+      damageAction += '\t\t\t\t\t</damagelist>\n';
+      damageAction += `\t\t\t\t\t<order type="number">${actionIndex}</order>\n`;
+      damageAction += '\t\t\t\t\t<type type="string">damage</type>\n';
+      damageAction += `\t\t\t\t</id-${String(actionIndex).padStart(5, '0')}>\n`;
+      
+      actions.push(damageAction);
+      actionIndex++;
+    }
+
+    // Healing action
+    if (spell.healing && spell.healing.rolls.length > 0) {
+      let healAction = `\t\t\t\t<id-${String(actionIndex).padStart(5, '0')}>\n`;
+      healAction += '\t\t\t\t\t<heallist>\n';
+      
+      spell.healing.rolls.forEach((roll, rollIndex) => {
+        const rollId = String(rollIndex + 1).padStart(5, '0');
+        healAction += `\t\t\t\t\t\t<id-${rollId}>\n`;
+        healAction += `\t\t\t\t\t\t\t<bonus type="number">${roll.bonus}</bonus>\n`;
+        healAction += `\t\t\t\t\t\t\t<dice type="dice">${roll.diceCount > 0 ? `${roll.diceCount}d${roll.diceSize}` : ''}</dice>\n`;
+        healAction += `\t\t\t\t\t\t</id-${rollId}>\n`;
+      });
+      
+      healAction += '\t\t\t\t\t</heallist>\n';
+      healAction += `\t\t\t\t\t<order type="number">${actionIndex}</order>\n`;
+      healAction += '\t\t\t\t\t<type type="string">heal</type>\n';
+      healAction += `\t\t\t\t</id-${String(actionIndex).padStart(5, '0')}>\n`;
+      
+      actions.push(healAction);
+      actionIndex++;
+    }
+
+    // Effect action for concentration, buffs, etc.
+    if (spell.concentration || spell.duration.type === 'timed') {
+      let effectAction = `\t\t\t\t<id-${String(actionIndex).padStart(5, '0')}>\n`;
+      
+      if (spell.concentration) {
+        effectAction += '\t\t\t\t\t<label type="string">Concentration</label>\n';
+      } else {
+        effectAction += `\t\t\t\t\t<label type="string">${StringSanitizer.sanitizeForXML(spell.name)} Effect</label>\n`;
+      }
+      
+      if (spell.duration.type === 'timed' && spell.duration.value && spell.duration.unit) {
+        effectAction += `\t\t\t\t\t<durmod type="number">${spell.duration.value}</durmod>\n`;
+        effectAction += `\t\t\t\t\t<durunit type="string">${spell.duration.unit}</durunit>\n`;
+      }
+      
+      effectAction += '\t\t\t\t\t<targeting type="string">self</targeting>\n';
+      effectAction += '\t\t\t\t\t<type type="string">effect</type>\n';
+      effectAction += `\t\t\t\t\t<order type="number">${actionIndex}</order>\n`;
+      effectAction += `\t\t\t\t</id-${String(actionIndex).padStart(5, '0')}>\n`;
+      
+      actions.push(effectAction);
+    }
+
+    if (actions.length > 0) {
+      return `<actions>\n${actions.join('')}\t\t\t</actions>`;
+    }
+    
+    return '<actions />';
+  }
+
+  /**
+   * Generate spell source text for Fantasy Grounds
+   */
+  private generateSpellSource(spell: NormalizedSpell): string {
+    const sources: string[] = [];
+    
+    // Add spell lists that contain this spell (simplified mapping)
+    switch (spell.school.toLowerCase()) {
+      case 'abjuration':
+      case 'divination':
+        sources.push('Cleric', 'Wizard');
+        break;
+      case 'conjuration':
+      case 'enchantment':
+        sources.push('Wizard', 'Sorcerer');
+        break;
+      case 'evocation':
+        sources.push('Wizard', 'Sorcerer', 'Cleric');
+        break;
+      case 'illusion':
+        sources.push('Wizard', 'Bard');
+        break;
+      case 'necromancy':
+        sources.push('Wizard', 'Warlock');
+        break;
+      case 'transmutation':
+        sources.push('Wizard', 'Druid');
+        break;
+    }
+    
+    // Add source reference if available
+    if (spell.sourceReference) {
+      sources.push(spell.sourceReference.book);
+    }
+    
+    return sources.join(', ');
   }
 
   /**

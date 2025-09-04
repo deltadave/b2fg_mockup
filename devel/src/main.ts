@@ -17,6 +17,7 @@ import { characterConverterFacade } from '@/application/facades/CharacterConvert
 import { gameConfigService } from '@/shared/services/GameConfigService';
 import { ObjectSearch } from '@/shared/utils/ObjectSearch';
 import { StringSanitizer } from '@/shared/utils/StringSanitizer';
+import { SpellCSVParser } from '@/shared/utils/SpellCSVParser';
 import { SafeAccess } from '@/shared/utils/SafeAccess';
 import { AbilityScoreUtils } from '@/domain/character/constants/AbilityConstants';
 import { AbilityScoreProcessor } from '@/domain/character/services/AbilityScoreProcessor';
@@ -86,6 +87,7 @@ if (typeof window !== 'undefined') {
   (window as any).gameConfigService = gameConfigService;
   (window as any).ObjectSearch = ObjectSearch;
   (window as any).StringSanitizer = StringSanitizer;
+  (window as any).SpellCSVParser = SpellCSVParser;
   (window as any).SafeAccess = SafeAccess;
   (window as any).AbilityScoreUtils = AbilityScoreUtils;
   (window as any).AbilityScoreProcessor = AbilityScoreProcessor;
@@ -137,6 +139,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.log('✅ Game configuration loaded successfully');
     } catch (error) {
       console.warn('⚠️ Failed to load game configuration, using fallbacks:', error);
+    }
+    
+    // Initialize spell CSV parser
+    try {
+      await SpellCSVParser.initialize();
+      console.log('✅ Spell database loaded successfully');
+    } catch (error) {
+      console.warn('⚠️ Failed to load spell database, spell mappings will be unavailable:', error);
     }
     
     // Start Alpine.js
