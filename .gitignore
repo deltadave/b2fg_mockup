@@ -1,4 +1,35 @@
-#Ignore files build by Visual Studio
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Build outputs
+dist/
+build/
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+devel/dist/*
+legacy/devel/*
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Package manager lock files (keep only one)
+# yarn.lock
+# package-lock.json
+# pnpm-lock.yaml
+
+# TypeScript
+*.tsbuildinfo
+
+# Visual Studio / .NET
 .vs/
 *.pdb
 *.user
@@ -13,75 +44,126 @@
 *.cache
 *.ilk
 *.log
-[Bb]in
 [Dd]ebug*/
-*.sbr
-obj/
 [Rr]elease*/
 _ReSharper*/
-[Oo]ut/
-[Bb]uild/
+*.sbr
+*.sln.docstates
 
-#cmake build directories
+# CMake
 cmake-build*/
-devel/dist/*
-legacy/devel/*
+CMakeCache.txt
+CMakeFiles/
+Makefile
+*.cmake
 
-#claude files
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.layout
+*.sublime-workspace
+*.sublime-project
+
+# AI Assistant files
 .claude/
+.bmad-core/
+.ignore/
+claude.md
 CLAUDE.md
-design-documentation/
-project-documentation/
 
-#project and design documentation
+# Documentation
+devel/docs/
 design-documentation/
 project-documentation/
 high-level.txt
 tech-stack-pref.md
 
-#Ignore some codeblocks files
-.vscode/
-*.layout
+# Logs
+*.log
+logs/
+*.log.*
 
-#ignore some clion files
-.idea/
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
 
-# Windows thumbnail cache files
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
+
+# Gatsby files
+.cache/
+public
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# Windows files
 Thumbs.db
 ehthumbs.db
 ehthumbs_vista.db
-
-# Dump file
 *.stackdump
-
-# Folder config file
 Desktop.ini
-
-# Recycle Bin used on file shares
 $RECYCLE.BIN/
-
-# Windows Installer files
 *.cab
 *.msi
 *.msm
 *.msp
-
-# Windows shortcuts
 *.lnk
 
-# General
-*.DS_Store
+# macOS files
+.DS_Store
 .AppleDouble
 .LSOverride
-
-# Icon must end with two \r
 Icon
-
-
-# Thumbnails
 ._*
-
-# Files that might appear in the root of a volume
 .DocumentRevisions-V100
 .fseventsd
 .Spotlight-V100
@@ -89,11 +171,16 @@ Icon
 .Trashes
 .VolumeIcon.icns
 .com.apple.timemachine.donotpresent
-
-# Directories potentially created on remote AFP share
 .AppleDB
 .AppleDesktop
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Linux files
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
 
